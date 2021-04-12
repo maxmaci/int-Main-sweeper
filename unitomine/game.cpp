@@ -3,42 +3,13 @@
 #include <map>
 #include <array>
 
-/*
-class Matrix {
-private:
-	int rowno;
-	int colno;
-	std::vector<Vector> mat;
-	void init(int, int);
-public:
-	Matrix(int, int);
-	Matrix(Vector);
-	int row_number() const { return rowno; };
-	int col_number() const { return colno; };
-	Vector size() const;
-	Vector col(int) const;
-	Vector row(int) const;
-	//int el(int, int) const;
-	//int& el(int, int);
-	Vector operator[](int) const;	// read row
-	Vector& operator[](int);		// write row
-	Matrix transpose() const;
-	Matrix mul(int) const;
-	Matrix add(const Matrix&) const;
-	Matrix neg() const;
-	Matrix sub(const Matrix&) const;
-	Matrix mul(const Matrix&) const;
-	Matrix pow(int) const;
-	int digits() const;
-};
-*/
-
 class Cella {
 private:
 	bool mina;
 	char stato; // n (normale), s (scavato), b (bandiera) 
 public:
 	Cella(bool, char);												// costruttore
+	void Cambia_stato();
 	friend std::ostream& operator<<(std::ostream&, const Cella&);	// stampa cella su terminale
 };
 
@@ -59,6 +30,7 @@ private:
 	std::vector<Cella> data;
 public:
 	VettoreCella(int);														// costruttore
+	int dimensione() const { return lunghezza; };
 	Cella operator[](int) const;											// leggi elemento di data
 	Cella& operator[](int);													// scrivi elemento di data
 	friend std::ostream& operator<<(std::ostream&, const VettoreCella&);	// stampa vettore cella su terminale
@@ -66,6 +38,7 @@ public:
 
 VettoreCella::VettoreCella(int l = 1) {
 	if (l < 1) throw std::domain_error("dimensioni vettore invalide");
+	lunghezza = l;
 	data.resize(l, Cella());
 }
 
@@ -77,6 +50,12 @@ Cella& VettoreCella::operator[](int i) {
 	return data.at(i);
 }
 
+std::ostream& operator<<(std::ostream& os, const VettoreCella& c) {
+	for (int i = 0; i < c.dimensione(); i++)
+		os << c[i];
+	return os;
+}
+
 class Campo {
 private:
 	int righe;								// righe > 0
@@ -84,6 +63,8 @@ private:
 	std::vector<VettoreCella> campo;
 public:
 	Campo(int, int);					// costruttore
+	int _righe() const { return righe; };
+	int _colonne() const { return colonne; };
 	VettoreCella operator[](int) const;	// leggi riga Campo (come vettore di Cella)
 	VettoreCella& operator[](int);		// scrivi riga Campo (come vettore di Cella)
 	friend std::ostream& operator<<(std::ostream&, const Campo&);
@@ -104,6 +85,16 @@ VettoreCella& Campo::operator[](int i) {
 	return campo.at(i);
 }
 
+std::ostream& operator<<(std::ostream& os, const Campo& c) {
+	for (int i = 0; i < c._righe(); i++) {
+		for (int j = 0; j < c._colonne(); j++) {
+			os << c[i][j];
+		}
+		os << std::endl;
+	}
+	return os;
+}
+
 class Gioco {
 private:
 	int altezza;	// altezza > 0
@@ -113,17 +104,13 @@ public:
 	void giocare();
 };
 
-void Gioco::giocare () {
+void Gioco::giocare() {
 	// ???
 }
 
 int main() {
 	Cella d;
 	Campo c(5, 5);
-	for (int i = 0; i < 5; i++) {
-		for (int j = 0; j < 5; j++) {
-			std::cout << c[i][j];
-		}
-	std::cout << std::endl;
-	}
+	std::cout << c;
+
 }
