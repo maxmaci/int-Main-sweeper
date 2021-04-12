@@ -112,5 +112,4 @@ int main() {
 	Cella d;
 	Campo c(5, 5);
 	std::cout << c;
-
 }
