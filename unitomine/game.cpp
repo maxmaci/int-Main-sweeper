@@ -195,4 +195,7 @@ int main()
 	//std::cout << u8"";
 	//std::cout << u8"⚐";
 	//std::cout << u8"⚑";
+
+
+
 }
