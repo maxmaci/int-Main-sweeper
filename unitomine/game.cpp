@@ -1,6 +1,6 @@
 ﻿#include <iostream>		// per input/output
 #include <vector>		// classe vector
-#include <list>
+#include <string>
 #include <array>
 #include <iomanip>
 #include <ctime>
@@ -95,6 +95,7 @@ public:
 	std::vector<T>& operator[](int);		// scrivi riga Campo
 	template <typename T, int R, int C> friend std::ostream& operator<<(std::ostream&, const Campo<T, R, C>&);
 	void reset();
+	bool nelCampo(int, int) const;
 };
 
 template <typename T, int R, int C>
@@ -146,7 +147,7 @@ void Campo<T, R, C>::reset() {
 }
 
 template <int R, int C>
-void campo_casuale(Campo<bool, R, C>& c, int mine)
+void campo_casuale(Campo<bool, R, C>& campo, int mine)
 {
 	int k = 1;
 	while (k <= mine)
@@ -158,9 +159,9 @@ void campo_casuale(Campo<bool, R, C>& c, int mine)
 				if (k <= mine)
 				{
 					int random = std::rand() % 99;
-					if (random <= (mine / (R * C) * 100) && c[i][j] != 1)
+					if (random <= (mine / (R * C) * 100) && campo[i][j] != 1)
 					{
-						c[i][j] = 1;
+						campo[i][j] = 1;
 						k++;
 					}
 				}
@@ -170,22 +171,61 @@ void campo_casuale(Campo<bool, R, C>& c, int mine)
 }
 
 template <int R, int C>
-void campo_casuale2(Campo<bool, R, C>& c, int mine)
+void campo_casuale2(Campo<bool, R, C>& campo, int mine)
 {
 	int k = 1;
 	while (true)
 	{
 		int random1 = std::rand() % R;
 		int random2 = std::rand() % C;
-		if (c[random1][random2] != 1)
+		if (campo[random1][random2] != 1)
 		{
-			c[random1][random2] = 1;
+			campo[random1][random2] = 1;
 			k++;
 		}
 		if (k > mine) break;
 	}
 }
 
+template <typename T, int R, int C>
+bool Campo<T, R, C>::nelCampo(int i, int j) const
+{
+	return i < 0 || i >= R || j < 0 || j >= C ? false : true;
+}
+
+template <int R, int C>
+int ContaMine(const Campo<bool, R, C>& campo, int i, int j)
+{
+	if (!campo.nelCampo(i, j)) throw std::domain_error("controllo su cella illegittima");
+	if (campo[i][j] == 1) return -1;
+
+	int k = 0;
+
+	for (int n = i - 1; n <= i + 1; n++)
+	{
+		for (int m = j - 1; m <= j + 1; m++)
+		{
+			if (campo.nelCampo(n, m) && campo[n][m] == 1) k++;
+		}
+	}
+	return k;
+}
+
+template <int R, int C>
+Campo<std::string, R, C> ConvertiCampo(const Campo<bool, R, C>& campo)
+{
+	Campo<std::string, R, C> res;
+	for (int i = 0; i < R; i++)
+	{
+		for (int j = 0; j < C; j++)
+		{
+			if (ContaMine(campo, i, j) == -1) res[i][j] = "*";
+			else if (ContaMine(campo, i, j) == 0) res[i][j] = "-";
+			else res[i][j] = std::to_string(ContaMine(campo, i, j)); //
+		}
+	}
+	return res;
+}
 
 /* La classe di Gioco */
 
@@ -223,7 +263,12 @@ int main()
 
 	std::srand(std::time(nullptr));
 
+	Campo<bool, 5, 5> c;
+	c[3][3] = 1; c[4][3] = 1; c[3][4] = 1;
+	std::cout << c << std::endl;
+	std::cout << ConvertiCampo(c) << std::endl;
 	/* test per verificare la "casualità" (molto poco da CPS) dei due metodi di generatozione*/
+	/*
 	double mean = 0;
 	int kk = 0;
 	while (kk <= 20) {
@@ -266,7 +311,6 @@ int main()
 	kk++;
 	system("CLS");
 	}
-	/*
 	int sum;
 	std::cout << "\x1B[41mTexting\033[0m\t\t";
 	std::cout << u8"";
