@@ -10,12 +10,12 @@
 #endif
 
 /*
-Definiamo due tavole da gioco: CampoMine, che contiene le mine, e CampoGiocatore, che è quello che verrà stampato e aggiornato date le mosse del giocatore
-In entrambi i casi definiamo le due tavole come matrici template nell'implementazione "vettore" di "vettori".
+Definiamo due mappe di conversioni, che associano ad un numero il colore
 */
 
 std::map<std::string, int > mappa_converti
 {
+	{"-", 0},
 	{"1", 1},
 	{"2", 2},
 	{"3", 3},
@@ -25,28 +25,27 @@ std::map<std::string, int > mappa_converti
 	{"7", 7},
 	{"8", 8},
 	{u8"◉", -1},
-	{"-", 0},
 	{u8"⚑", -2},
 	{u8"⎕", -3},
 };
 
 std::map<std::string, std::string > mappa_colori
 {
-	{"1", "\x1B[38;2;1;0;254m"},
-	{"2", "\x1B[38;2;1;127;1m"},
-	{"3", "\x1B[38;2;254;0;0m"},
-	{"4", "\x1B[38;2;1;0;128m"},
-	{"5", "\x1B[38;2;129;1;2m"},
-	{"6", "\x1B[38;2;0;128;129m"},
-	{"7", "\x1B[38;2;0;0;0m"},
-	{"8", "\x1B[38;2;128;128;128m"},
-	{u8"◉", "\x1B[38;2;0;0;0m"},
-	{"-", "\x1B[38;2;0;0;0m"},
-	{u8"⚑", "\x1B[38;2;159;0;1m"},
-	{u8"⎕", "\x1B[38;2;0;0;0m"},
+	{"1", "\x1B[38;2;1;0;254m"},		// blu chiaro
+	{"2", "\x1B[38;2;1;127;1m"},		// verde
+	{"3", "\x1B[38;2;254;0;0m"},		// rosso
+	{"4", "\x1B[38;2;1;0;128m"},		// blu scuro
+	{"5", "\x1B[38;2;129;1;2m"},		// amaranto
+	{"6", "\x1B[38;2;0;128;129m"},		// turchese
+	{"7", "\x1B[38;2;0;0;0m"},			// nero
+	{"8", "\x1B[38;2;128;128;128m"},	// grigio scurino
+	{u8"◉", "\x1B[38;2;0;0;0m"},		// nero	
+	{"-", "\x1B[38;2;0;0;0m"},			// nero	
+	{u8"⚑", "\x1B[38;2;159;0;1m"},		// rosso scurino	
+	{u8"⎕", "\x1B[38;2;0;0;0m"},		// nero	
 };
 
-template <typename T, int R, int C>
+template <typename T>
 class Campo
 {
 private:
@@ -54,78 +53,85 @@ private:
 	int colonne;							// colonne > 0
 	std::vector<std::vector<T>> campo;
 public:
-	Campo();								// costruttore
+	Campo(int, int);						// costruttore
 	int _righe() const { return righe; };	
 	int _colonne() const { return colonne; };
 	std::vector<T> operator[](int) const;	// leggi riga Campo
 	std::vector<T>& operator[](int);		// scrivi riga Campo
-	template <typename T, int R, int C> friend std::ostream& operator<<(std::ostream&, const Campo<T, R, C>&);
+	template <typename T> friend std::ostream& operator<<(std::ostream&, const Campo<T>&);
 	void reset();
 	bool nelCampo(int, int) const;
 };
 
-template <typename T, int R, int C>
-Campo<T, R, C>::Campo()
+template <typename T>
+Campo<T>::Campo(int numero_righe, int numero_colonne)
 {
-	if (R < 1 || C < 1) throw std::domain_error("dimensioni campo invalide");
-	righe = R;
-	colonne = C;
+	if (numero_righe < 1 || numero_colonne < 1) throw std::domain_error("dimensioni campo invalide");
+	righe = numero_righe;
+	colonne = numero_colonne;
 	std::vector<T> v;
-	v.resize(C, T());
-	campo.resize(R, v);
-}
-
-template <typename T, int R, int C>
-std::vector<T> Campo<T, R, C>::operator[](int i) const
-{
-	return campo.at(i);
-}
-
-template <typename T, int R, int C>
-std::vector<T>& Campo<T, R, C>::operator[](int i)
-{
-	return campo.at(i);
-}
-
-template <typename T, int R, int C>
-std::ostream& operator<<(std::ostream& os, const Campo<T, R, C>& c)
-{
-	for (int i = 0; i < R; i++)
+	if (std::is_same_v<T, std::string>)
 	{
-		for (int j = 0; j < C; j++)
+		v.resize(numero_colonne, u8"⎕");
+		campo.resize(numero_righe, v);
+	}
+	else
+	{
+		v.resize(numero_colonne, T());
+		campo.resize(numero_righe, v);
+	}
+}
+
+template <typename T>
+std::vector<T> Campo<T>::operator[](int i) const
+{
+	return campo.at(i);
+}
+
+template <typename T>
+std::vector<T>& Campo<T>::operator[](int i)
+{
+	return campo.at(i);
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Campo<T>& campo)
+{
+	for (int i = 0; i < campo._righe(); i++)
+	{
+		for (int j = 0; j < campo._colonne(); j++)
 		{
-			os << c[i][j];
+			os << campo[i][j];
 		}
 		os << std::endl;
 	}
 	return os;
 }
 
-template <int R, int C>
-std::ostream& operator<<(std::ostream& os, const Campo<std::string, R, C>& c)
+std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
 {
 	os << std::setw(3);
-	for (int j = 0; j < C; j++)
+	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << j+1;
 	}
 	os << std::endl;
 	//os << std::setw(2) << std::setfill('-') << std::setw(C) << std::endl;
-	for (int i = 0; i < R; i++)
+	for (int i = 0; i < campo._righe(); i++)
 	{
 		os << i+1 << u8"│";
 		os << "\x1B[48;2;192;192;192m";
-		for (int j = 0; j < C; j++)
+		for (int j = 0; j < campo._colonne(); j++)
 		{
-			os << mappa_colori[c[i][j]] << c[i][j];
+			os << mappa_colori[campo[i][j]] << campo[i][j];
 		}
 		os << "\x1B[0m" << std::endl;
 	}
 	return os;
 }
 
-template <typename T, int R, int C>
-void Campo<T, R, C>::reset() {
+template <typename T>
+void Campo<T>::reset() {
 	for (int i = 0; i < righe; i++)
 	{
 		for (int j = 0; j < colonne; j++)
@@ -138,25 +144,23 @@ void Campo<T, R, C>::reset() {
 			{
 				campo[i][j] = T();
 			}
-			
 		}
 	}
 }
 
-template <int R, int C>
-void campo_casuale(Campo<bool, R, C>& campo, int mine)
+void campo_casuale2(Campo<bool>& campo, int mine)
 {
 	int k = 1;
 	while (k <= mine)
 	{
-		for (int i = 0; i < R; i++)
+		for (int i = 0; i < campo._righe(); i++)
 		{
-			for (int j = 0; j < C; j++)
+			for (int j = 0; j < campo._colonne(); j++)
 			{
 				if (k <= mine)
 				{
 					int random = std::rand() % 99;
-					if (random <= (mine / (R * C) * 100) && campo[i][j] != 1)
+					if (random <= (mine / (campo._righe() * campo._colonne()) * 100) && campo[i][j] != 1)
 					{
 						campo[i][j] = 1;
 						k++;
@@ -167,14 +171,13 @@ void campo_casuale(Campo<bool, R, C>& campo, int mine)
 	}
 }
 
-template <int R, int C>
-void campo_casuale2(Campo<bool, R, C>& campo, int mine)
+void campo_casuale(Campo<bool>& campo, int mine)
 {
 	int k = 1;
 	while (true)
 	{
-		int random1 = std::rand() % R;
-		int random2 = std::rand() % C;
+		int random1 = std::rand() % campo._righe();
+		int random2 = std::rand() % campo._colonne();
 		if (campo[random1][random2] != 1)
 		{
 			campo[random1][random2] = 1;
@@ -184,14 +187,13 @@ void campo_casuale2(Campo<bool, R, C>& campo, int mine)
 	}
 }
 
-template <typename T, int R, int C>
-bool Campo<T, R, C>::nelCampo(int i, int j) const
+template <typename T>
+bool Campo<T>::nelCampo(int i, int j) const
 {
-	return i >= 0 && i < R && j >= 0 && j < C;
+	return i >= 0 && i < righe && j >= 0 && j < colonne;
 }
 
-template <int R, int C>
-int ContaMine(const Campo<bool, R, C>& campo, int i, int j)
+int conta_mine(const Campo<bool>& campo, int i, int j)
 {
 	if (!campo.nelCampo(i, j)) throw std::domain_error("controllo su cella illegittima");
 	if (campo[i][j] == 1) return -1;
@@ -208,24 +210,52 @@ int ContaMine(const Campo<bool, R, C>& campo, int i, int j)
 	return k;
 }
 
-template <int R, int C>
-Campo<std::string, R, C> ConvertiCampo(const Campo<bool, R, C>& campo)
+Campo<std::string> converti_campo(const Campo<bool>& campo)
 {
-	Campo<std::string, R, C> res;
-	for (int i = 0; i < R; i++)
+	Campo<std::string> res(campo._righe(), campo._colonne());
+	for (int i = 0; i < campo._righe(); i++)
 	{
-		for (int j = 0; j < C; j++)
+		for (int j = 0; j < campo._colonne(); j++)
 		{
-			if (ContaMine(campo, i, j) == -1) res[i][j] = u8"◉";
-			else if (ContaMine(campo, i, j) == 0) res[i][j] = "-";
-			else res[i][j] = std::to_string(ContaMine(campo, i, j));
+			if (conta_mine(campo, i, j) == -1) res[i][j] = u8"◉";
+			else if (conta_mine(campo, i, j) == 0) res[i][j] = "-";
+			else res[i][j] = std::to_string(conta_mine(campo, i, j));
 		}
 	}
 	return res;
 }
 
-template <int R, int C>
-void cambia_stato(Campo<std::string, R, C>& campo_giocatore, const Campo<bool, R, C>& campo_gioco, int i, int j, char comando)
+void scava_celle(Campo<std::string>& campo_giocatore, const Campo<bool>& campo_gioco, int i, int j)
+{
+	if (campo_giocatore[i][j] != "-")
+	{
+		return;
+	}
+	
+	for (int n = i - 1; n <= i + 1; n++)
+	{
+		for (int m = j - 1; m <= j + 1; m++)
+		{
+			if (campo_giocatore.nelCampo(n, m))
+			{
+				if (campo_giocatore[n][m] == u8"⚑" || campo_gioco[n][m])
+				{
+					break;
+				}	
+				else if (campo_giocatore[n][m] == u8"⎕")
+				{
+					if (conta_mine(campo_gioco, n, m) == 0) campo_giocatore[n][m] = "-";
+					else campo_giocatore[n][m] = std::to_string(conta_mine(campo_gioco, n, m));
+
+					scava_celle(campo_giocatore, campo_gioco, n, m);
+				}
+			}
+		}
+	}
+	return;
+}
+
+void cambia_stato(Campo<std::string>& campo_giocatore, const Campo<bool>& campo_gioco, int i, int j, char comando)
 {
 	if (comando != 'B' && comando != 'S') throw std::invalid_argument("comando illecito");
 	if (comando == 'B')
@@ -255,46 +285,12 @@ void cambia_stato(Campo<std::string, R, C>& campo_giocatore, const Campo<bool, R
 		}
 		else
 		{
-			if (ContaMine(campo_gioco, i, j) == 0) campo_giocatore[i][j] = "-";
-			else campo_giocatore[i][j] = std::to_string(ContaMine(campo_gioco, i, j));
-			//if (mappa_converti[campo_giocatore[i][j]] > 0) {
-			//	return;
-			//}
+			if (conta_mine(campo_gioco, i, j) == 0) campo_giocatore[i][j] = "-";
+			else campo_giocatore[i][j] = std::to_string(conta_mine(campo_gioco, i, j));
 			scava_celle(campo_giocatore, campo_gioco, i, j);
 			return;
 		}
 	}
-}
-
-template <int R, int C>
-void scava_celle(Campo<std::string, R, C>& campo_giocatore, const Campo<bool, R, C>& campo_gioco, int i, int j)
-{
-	if (campo_giocatore[i][j] != "-")
-	{
-		return;
-	}
-	
-	for (int n = i - 1; n <= i + 1; n++)
-	{
-		for (int m = j - 1; m <= j + 1; m++)
-		{
-			if (campo_giocatore.nelCampo(n, m))
-			{
-				if (campo_giocatore[n][m] == u8"⚑" || campo_gioco[n][m])
-				{
-					break;
-				}	
-				else if (campo_giocatore[n][m] == u8"⎕")
-				{
-					if (ContaMine(campo_gioco, n, m) == 0) campo_giocatore[n][m] = "-";
-					else campo_giocatore[n][m] = std::to_string(ContaMine(campo_gioco, n, m));
-
-					scava_celle(campo_giocatore, campo_gioco, n, m);
-				}
-			}
-		}
-	}
-	return;
 }
 
 /* La classe di Gioco */
@@ -320,7 +316,7 @@ void Gioco::rivela()
 	// ???
 }
 
-// TO DO: comando che interviene e termina la partita se vede in campo_giocatore un asterisco(metodo di Gioco)
+// TO DO: comando che interviene e termina la partita se vede in campo_giocatore un asterisco (metodo di Gioco)
 
 int main()
 {
@@ -334,7 +330,54 @@ int main()
 #endif
 
 	std::srand(std::time(nullptr));
+	
+	int altezza;
+	int larghezza;
+	int mine;
+	std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl;
+	std::cin >> altezza >> larghezza >> mine;
+	
+	Campo<bool> c(altezza, larghezza);
+	Campo<std::string> c_char(altezza, larghezza);
+	campo_casuale(c, mine);
 
+	int x;
+	int y;
+	char comando;
+	while (true)
+	{
+		std::cout << c_char << std::endl;
+		while (true)
+		{
+			std::cout << "Fai la tua mossa (x, y, comando). Altrimenti, scrivi un numero negativo per le opzioni." << std::endl;
+			std::cin >> x;
+			if (x < 0) break;
+			std::cin >> y;
+			std::cin >> comando;
+			cambia_stato(c_char, c, x-1, y-1, comando);
+			std::cout << c_char << std::endl;
+		}
+		std::cout << "Vuoi ricominciare la stessa partita (scrivi R), rivelare il campo (scrivi V) o uscire dal gioco (scrivi U)?\a" << std::endl;
+		do
+		{
+			std::cin >> comando;
+			if (comando != 'R' && comando != 'U' && comando != 'V') {
+				std::cout << "Comando non conosciuto, riprova!" << std::endl;
+			}
+			if (comando == 'V')
+			{
+				std::cout << converti_campo(c);
+			}
+		}
+		while (comando != 'R' && comando != 'U');
+		if (comando == 'U') break;
+		else
+		{
+			c_char.reset();
+		}
+	}
+
+	/*
 	Campo<bool, 9, 9> c;
 	Campo<std::string, 9, 9> c_char;
 	c[0][6] = 1;
@@ -352,36 +395,8 @@ int main()
 			c_char[i][j] = u8"⎕";
 		}
 	}
-	//std::cout << c << std::endl;
-	//std::cout << ConvertiCampo(c) << std::endl;
-	//std::cout << c_char << std::endl;
-	int x;
-	int y;
-	char comando;
-	while (true)
-	{
-		std::cout << c_char << std::endl;
-		while (true)
-		{
-			std::cout << "Fai la tua mossa (x, y, infine comando), altrimenti scrivi un numero negativo per uscire o resettare." << std::endl;
-			std::cin >> x;
-			if (x < 0) break;
-			std::cin >> y;
-			std::cin >> comando;
-			cambia_stato(c_char, c, x-1, y-1, comando);
-			std::cout << c_char << std::endl;
-		}
-		std::cout << "Vuoi ricominciare la stessa partita (scrivi R) o uscire dal gioco (scrivi U)?\a" << std::endl;
-		do
-		{
-			std::cin >> comando;
-			if (comando != 'R' && comando != 'U') {
-				std::cout << "Comando non conosciuto, riprova!" << std::endl;
-			}
-		} while (comando != 'R' && comando != 'U');
-		if (comando == 'U') break;
-		c_char.reset();
-	}
+	*/
+	//Campo<std::string, 9, 9> c_char = converti_campo(c);
 	//rgba(1, 0, 254, 255)
 	/*
 	std::cout << "\x1B[48;2;192;192;192m\x1B[38;2;1;0;254m1\033[0m" << std::endl;		// 1 - blu chiaro
