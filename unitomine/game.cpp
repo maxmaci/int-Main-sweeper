@@ -59,6 +59,7 @@ public:
 	std::vector<T> operator[](int) const;	// leggi riga Campo
 	std::vector<T>& operator[](int);		// scrivi riga Campo
 	template <typename T> friend std::ostream& operator<<(std::ostream&, const Campo<T>&);
+	void resize(int, int, T);
 	void reset();
 	bool nelCampo(int, int) const;
 };
@@ -73,13 +74,12 @@ Campo<T>::Campo(int numero_righe, int numero_colonne)
 	if (std::is_same_v<T, std::string>)
 	{
 		v.resize(numero_colonne, u8"⎕");
-		campo.resize(numero_righe, v);
 	}
 	else
 	{
 		v.resize(numero_colonne, T());
-		campo.resize(numero_righe, v);
 	}
+	campo.resize(numero_righe, v);
 }
 
 template <typename T>
@@ -146,6 +146,13 @@ void Campo<T>::reset() {
 			}
 		}
 	}
+}
+
+template <typename T>
+void Campo<T>::resize(int altezza, int larghezza, T elemento) {
+	std::vector<T> v;
+	v.resize(larghezza, T());
+	campo.resize(altezza, v);
 }
 
 void campo_casuale2(Campo<bool>& campo, int mine)
@@ -331,50 +338,88 @@ int main()
 
 	std::srand(std::time(nullptr));
 	
+	bool rivelato = false;
+
 	int altezza;
 	int larghezza;
 	int mine;
+
+	int x;
+	int y;
+	char comando;
+
 	std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl;
 	std::cin >> altezza >> larghezza >> mine;
 	
 	Campo<bool> c(altezza, larghezza);
 	Campo<std::string> c_char(altezza, larghezza);
 	campo_casuale(c, mine);
-
-	int x;
-	int y;
-	char comando;
+	
+	/* TO DO: controllare resize */
 	while (true)
 	{
 		std::cout << c_char << std::endl;
 		while (true)
 		{
-			std::cout << "Fai la tua mossa (x, y, comando). Altrimenti, scrivi un numero negativo per le opzioni." << std::endl;
+			std::cout << "Fai la tua mossa (x, y, comando).\n Altrimenti, scrivi un numero negativo per le opzioni." << std::endl;
 			std::cin >> x;
 			if (x < 0) break;
-			std::cin >> y;
-			std::cin >> comando;
+			std::cin >> y >> comando;
 			cambia_stato(c_char, c, x-1, y-1, comando);
 			std::cout << c_char << std::endl;
+#ifdef _WIN32
+			system("CLS");
+#endif
+
 		}
-		std::cout << "Vuoi ricominciare la stessa partita (scrivi R), rivelare il campo (scrivi V) o uscire dal gioco (scrivi U)?\a" << std::endl;
+
+		std::cout	<< "• Ricominciare la partita?\t (R)\n"
+					<< "• Rivelare il campo?\t (V)\n"
+					<< "• Iniziarne una nuova?\t (N)\n"
+					<< "• Uscire dal gioco?\t (U)" << std::endl;
+
 		do
 		{
 			std::cin >> comando;
-			if (comando != 'R' && comando != 'U' && comando != 'V') {
-				std::cout << "Comando non conosciuto, riprova!" << std::endl;
-			}
-			if (comando == 'V')
+			if (comando == 'V' && rivelato != true)
 			{
 				std::cout << converti_campo(c);
+				rivelato = true;
+
+				std::cout	<< "• Iniziarne una nuova?\t (N)\n"
+							<< "• Uscire dal gioco?\t (U)" << std::endl;
+			}
+			else if (comando == 'R' && rivelato != true)
+			{
+				c_char.reset();
+				break;
+			}
+			else if (comando == 'N')
+			{
+				std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl;
+				std::cin >> altezza >> larghezza >> mine;
+
+				c.reset();
+				c_char.reset();
+				c.resize(altezza, larghezza, 0);
+				c_char.resize(altezza, larghezza, u8"⎕");
+				std::cout << c_char << std::endl;
+				campo_casuale(c, mine);
+				std::cout << c << std::endl;
+				break;
+			}
+			else if (comando == 'U')
+			{
+				break;
+			}
+			else
+			{
+				std::cout << "Comando non riconosciuto. Riprova!" << std::endl;
 			}
 		}
-		while (comando != 'R' && comando != 'U');
+		while (true);
 		if (comando == 'U') break;
-		else
-		{
-			c_char.reset();
-		}
+		rivelato = false;
 	}
 
 	/*
