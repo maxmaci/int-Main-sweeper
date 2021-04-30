@@ -8,7 +8,7 @@
 #ifdef _WIN32
 // Se compilato su un computer con Windows includiamo la libreria windows.h, necessaria per la compatibilità UTF-8.
 // È consigliato usare Dejavù Sans Mono dato che supporta molti caratteri unicode.
-// Per motivi di incompatibilità di macro della libreria, useremo la notazione con parentesi per (std::min) and (std::max)
+// Per motivi di incompatibilità di macro della libreria, useremo la notazione con parentesi per (std::min) and (std::max).
 #include <windows.h>
 #endif
 
@@ -367,6 +367,7 @@ void Gioco::scava_celle(int i, int j)
 
 void Gioco::gioca(int i, int j, char comando)
 {
+	comando = std::toupper(comando);
 	if (comando != 'B' && comando != 'T' && comando != 'S') throw std::invalid_argument("comando illecito");
 	if (comando == 'B')
 	{
@@ -409,6 +410,7 @@ void Gioco::gioca(int i, int j, char comando)
 	}
 }
 
+/* TO DO: rimuovere se non utilizzato */
 void Gioco::randomizza_campo()
 {
 	int k = 1;
@@ -430,12 +432,23 @@ void Gioco::randomizza_campo(int i, int j)
 	int k = 1;
 	while (true)
 	{
-		int random1 = std::rand() % campo_gioco._righe();
-		int random2 = std::rand() % campo_gioco._colonne();
-		if (((random1 < i-1 || random1 > i+1) || (random2 < j - 1 || random2 > j + 1)) && campo_gioco[random1][random2] != 1)
+		int random1 = std::rand() % altezza;
+		int random2 = std::rand() % larghezza;
+		if (mine >= altezza * larghezza - 8)
 		{
-			campo_gioco[random1][random2] = 1;
-			k++;
+			if ((random1 != i || random2 != j) && campo_gioco[random1][random2] != 1)
+			{
+				campo_gioco[random1][random2] = 1;
+				k++;
+			}
+		}
+		else
+		{
+			if (((random1 < i - 1 || random1 > i + 1) || (random2 < j - 1 || random2 > j + 1)) && campo_gioco[random1][random2] != 1)
+			{
+				campo_gioco[random1][random2] = 1;
+				k++;
+			}
 		}
 		if (k > mine) break;
 	}
@@ -449,11 +462,13 @@ void Gioco::reset()
 	reset_numero_bandiere();
 }
 
-void Gioco::aggiorna(int altezza_input, int larghezza_input, int mine_input)
+void Gioco::aggiorna(int input_altezza, int input_larghezza, int input_mine)
 {
-	altezza = altezza_input;
-	larghezza = larghezza_input;
-	mine = mine_input;
+	if (input_altezza < 1 || input_larghezza < 1) throw std::domain_error("dimensioni del campo invalide");
+	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
+	altezza = input_altezza;
+	larghezza = input_larghezza;
+	mine = input_mine;
 	campo_gioco.resize(altezza, larghezza, 0);
 	campo_giocatore.resize(altezza, larghezza, u8"⎕");
 }
@@ -629,6 +644,7 @@ int main()
 				break;
 			case 5:
 				std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl;
+				std::cout << "> ";
 				std::cin >> altezza >> larghezza >> mine;
 				gioco.aggiorna(altezza, larghezza, mine);
 				uscita_opzioni_menu = true;
