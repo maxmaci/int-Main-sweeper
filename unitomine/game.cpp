@@ -432,7 +432,7 @@ void Gioco::randomizza_campo(int i, int j)
 	{
 		int random1 = std::rand() % campo_gioco._righe();
 		int random2 = std::rand() % campo_gioco._colonne();
-		if ((random1 != i || random2 != j) && campo_gioco[random1][random2] != 1)
+		if (((random1 < i-1 || random1 > i+1) || (random2 < j - 1 || random2 > j + 1)) && campo_gioco[random1][random2] != 1)
 		{
 			campo_gioco[random1][random2] = 1;
 			k++;
