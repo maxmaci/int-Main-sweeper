@@ -1,8 +1,8 @@
 ﻿#include <iostream>		// std::cout / std::cin
 #include <string>		// classe string
 #include <vector>		// classe vector
-#include <map>			// classe mappa
-#include<iterator>
+#include <map>			// classe map
+#include <iterator>		// classe map
 #include <iomanip>		// std::setw() / std::setfill()
 #include <ctime>
 
@@ -401,12 +401,14 @@ Gioco::Gioco(int input_altezza, int input_larghezza, int input_mine)
 	campo_giocatore = Campo<std::string>(altezza, larghezza);
 }
 
+/* TO DO: studiare una versione più efficiente che non vadi in overflow */
+
 void Gioco::scava_celle(int i, int j)
 {
 	if (campo_giocatore[i][j] != "-")
-{
-	return;
-}
+	{
+		return;
+	}
 
 	for (int n = i - 1; n <= i + 1; n++)
 	{
@@ -568,7 +570,7 @@ void Gioco::sconfitta(int x, int y)
 	}
 }
 
-/* TO DO: mettere il check in modo che dia vittoria se tutte le celle senza mine sono state scavate */
+/* TO DO: controllare che non abbia bug */
 
 void Gioco::vittoria()
 {
@@ -796,7 +798,6 @@ int main()
 							<< u8" quando chiaramente\nnon ti mostrerà nulla di importante?"
 							<< u8" Piuttosto che perdere tempo così, potresti chiederti\n"
 							<< u8"se c'è una risposta alla Vita, all'Universo, al tutto." << std::endl;
-				std::cout << "> ";
 				break;
 			}
 		}
@@ -1000,6 +1001,10 @@ int main()
 		in_gioco = true;
 	}
 }
+
+/* TO DO: MOLTO IMPORTANTE: Capire i limiti del campo. Provando a caso un campo di dimensioni maggiori di 44x43 (suppergiù) con poche mine (1,2) genera il campo,
+	ma non permette di scavare senza andare in overflow! Il sospetto è un grosso, gigante problema con la ricorsività della funzione di scavo */
+
 
 /* VECCHIA VERSIONE DELLA LETTURA INPUT + TENTATIVI*/
 /* TO DO: Eliminare non appena abbiamo debuggato e testato per bene il metodo di input nuovo */
