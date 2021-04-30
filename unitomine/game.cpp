@@ -1,8 +1,9 @@
-﻿#include <iostream>		// per input/output
+﻿#include <iostream>		// std::cout / std::cin
+#include <string>		// classe string
 #include <vector>		// classe vector
-#include <string>
-#include <map>
-#include <iomanip>
+#include <map>			// classe mappa
+#include<iterator>
+#include <iomanip>		// std::setw() / std::setfill()
 #include <ctime>
 
 #ifdef _WIN32
@@ -18,7 +19,7 @@
 // (con alcuni valori inutilizzati ma presenti per 'debugging'), la seconda invece associa ad ogni carattere un numero e ci serve per la stampa
 // del campo visto dal giocatore
 
-/* TO DO: dove usiamo la mappa converti? possiamo eliminarla */
+/* TO DO: dove usiamo la mappa converti? possiamo eliminarla? */
 std::map<std::string, int > mappa_converti
 {
 	{"-", 0},
@@ -59,15 +60,29 @@ private:
 	int colonne;							// colonne > 0
 	std::vector<std::vector<T>> campo;
 public:
+	/* COSTRUTTORE */
 	Campo(int = 1, int = 1);						// costruttore
+
+	/* LETTORE NUMERO DI RIGHE/COLONNE */
 	int _righe() const { return righe; };	
 	int _colonne() const { return colonne; };
-	std::vector<T> operator[](int) const;	// leggi riga Campo
-	std::vector<T>& operator[](int);		// scrivi riga Campo
+
+	/* LETTURA/SCRITTURA DELLE RIGHE */
+	std::vector<T> operator[](int) const;					// leggi riga Campo
+	std::vector<T>& operator[](int);						// scrivi riga Campo
+	
+	/* OVERLOADING OPERATORE >> (GENERICO, USATO QUASI ESCLUSIVAMENTE PER T = BOOL - VERSIONE PER T = STD::STRING SOTTO?) */
+	/* TO DO: mettere in public l'altro overloading (se possibile) */
 	template <typename T> friend std::ostream& operator<<(std::ostream&, const Campo<T>&);
+
+	/* METODI PER MODIFICARE IL CAMPO (DIMENSIONI, RESET) */
 	void resize(int, int, T);
 	void reset();
+
+	/* METODI PER INFORMAZIONI SUL CAMPO */
 	bool nel_campo(int, int) const;
+	bool is_nullo(int, int) const;
+	int conta_tutti_nulli() const;
 };
 
 template <typename T>
@@ -195,6 +210,10 @@ void Campo<T>::resize(int altezza, int larghezza, T elemento) {
 	}
 }
 
+/* TO DO: scegliere quale versione di campo casuale tenere */
+/* TO DO: rimuovere le versioni di campo casuali non in classe */
+
+/*
 void campo_casuale2(Campo<bool>& campo, int mine)
 {
 	int k = 1;
@@ -218,9 +237,6 @@ void campo_casuale2(Campo<bool>& campo, int mine)
 	}
 }
 
-/* TO DO: scegliere quale versione di campo casuale tenere*/
-/* TO DO: far sì che il campo casuale venga generato DOPO il primo 'click'*/
-
 void campo_casuale(Campo<bool>& campo, int mine)
 {
 	int k = 1;
@@ -236,11 +252,54 @@ void campo_casuale(Campo<bool>& campo, int mine)
 		if (k > mine) break;
 	}
 }
+*/
 
 template <typename T>
 bool Campo<T>::nel_campo(int i, int j) const
 {
 	return i >= 0 && i < righe && j >= 0 && j < colonne;
+}
+
+template <typename T>
+bool Campo<T>::is_nullo(int i, int j) const
+{
+	return campo[i][j] == T();
+}
+
+template <>
+bool Campo<std::string>::is_nullo(int i, int j) const
+{
+	return campo[i][j] == u8"⎕" || campo[i][j] == u8"⚑";
+}
+
+template <typename T>
+int Campo<T>::conta_tutti_nulli() const
+{
+	int k = 0;
+
+	for (int i = 0; i < righe; i++)
+	{
+		for (int j = 0; j < colonne; j++)
+		{
+			if (is_nullo(i, j)) k++;
+		}
+	}
+	return k;
+}
+
+template <>
+int Campo<std::string>::conta_tutti_nulli() const
+{
+	int k = 0;
+
+	for (int i = 0; i < righe; i++)
+	{
+		for (int j = 0; j < colonne; j++)
+		{
+			if (is_nullo(i, j)) k++;
+		}
+	}
+	return k;
 }
 
 int conta_mine(const Campo<bool>& campo, int i, int j)
@@ -273,6 +332,13 @@ Campo<std::string> converti_campo(const Campo<bool>& campo)
 		}
 	}
 	return res;
+}
+
+/* TO DO: spostarlo in posizione migliore? */
+
+bool comando_lecito(char comando)
+{
+	return comando == 'B' || comando == 'T' || comando == 'S';
 }
 
 /* La classe di Gioco */
@@ -368,7 +434,7 @@ void Gioco::scava_celle(int i, int j)
 void Gioco::gioca(int i, int j, char comando)
 {
 	comando = std::toupper(comando);
-	if (comando != 'B' && comando != 'T' && comando != 'S') throw std::invalid_argument("comando illecito");
+	if (!comando_lecito(comando)) throw std::invalid_argument("comando illecito");
 	if (comando == 'B')
 	{
 		if (campo_giocatore[i][j] == u8"⎕")
@@ -391,13 +457,13 @@ void Gioco::gioca(int i, int j, char comando)
 	}
 	else
 	{
-		if (campo_gioco[i][j])
+		if (campo_giocatore[i][j] == u8"⚑")
 		{
-			sconfitta(i, j);
 			return;
 		}
-		else if (campo_giocatore[i][j] == u8"⚑")
+		else if (campo_gioco[i][j])
 		{
+			sconfitta(i, j);
 			return;
 		}
 		else
@@ -410,7 +476,7 @@ void Gioco::gioca(int i, int j, char comando)
 	}
 }
 
-/* TO DO: rimuovere se non utilizzato */
+/*  
 void Gioco::randomizza_campo()
 {
 	int k = 1;
@@ -426,6 +492,7 @@ void Gioco::randomizza_campo()
 		if (k > mine) break;
 	}
 }
+*/
 
 void Gioco::randomizza_campo(int i, int j)
 {
@@ -501,6 +568,25 @@ void Gioco::sconfitta(int x, int y)
 	}
 }
 
+/* TO DO: mettere il check in modo che dia vittoria se tutte le celle senza mine sono state scavate */
+
+void Gioco::vittoria()
+{
+	int mine_identificate = 0;
+	for (int i = 0; i < altezza; i++)
+	{
+		for (int j = 0; j < larghezza; j++)
+		{
+			if (campo_giocatore.is_nullo(i, j) && campo_gioco[i][j] == 1) mine_identificate++;
+		}
+	}
+	if (mine_identificate == mine)
+	{
+		status = 'V';
+	}
+}
+
+/*
 void Gioco::vittoria()
 {
 	int mine_segnalate = 0;
@@ -515,6 +601,45 @@ void Gioco::vittoria()
 	{
 		status = 'V';
 	}
+}
+*/
+
+/* FUNZIONI PER LA LETTURA DI INPUT */
+
+// pulisce il buffer del cin e ignora tutto quello dopo il carattere in input
+void pulisci_cin()
+{
+	std::cin.clear();
+	std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+}
+
+std::vector<std::string> separa_spazi(std::string input)
+{
+	std::vector<std::string> res;
+	std::string temp;
+	for (int i = 0; i < input.size(); i++)
+	{
+		temp.push_back(input[i]);
+		if (std::isspace(input[i+1]) || i == input.size() - 1)
+		{
+			//std::cout << temp << " "; /* TO DO: toglierlo quando siamo sicuri funzioni tutto */ 
+			res.push_back(temp);
+			temp.resize(0);
+			i++;
+		}
+	}
+	return res;
+}
+
+bool solo_numeri(std::string input)
+{
+	std::string::const_iterator it = input.cbegin();
+	while (it != input.cend())
+	{
+		if (!std::isdigit(*it)) return false;
+		else it++;
+	}
+	return true;
 }
 
 /* TO DO: classe Risolutore? Potrebbe sfruttare i comandi predisposti per gioco, tenendo 'più pulito' il codice*/
@@ -540,15 +665,15 @@ int main()
 
 	// Variabili per inserire le dimensioni e il numero di mine del campo personalizzato 
 
-	int altezza;
-	int larghezza;
-	int mine;
+	int altezza = 9;
+	int larghezza = 9;
+	int mine = 10;
 
 	// Variabili per comandi di gioco: coordinate della cella + comando dell'azione
 
-	int x;
-	int y;
-	char comando;
+	int x = 0;
+	int y = 0;
+	char comando = 'S';
 
 	// Variabili di controllo dei menù di gioco
 
@@ -568,6 +693,9 @@ int main()
 
 	// uscita_opzioni : se è 'false', esce dal ciclo del gioco per tornare al menù principale oppure per uscire dal programma
 	bool in_gioco = false;
+
+	// mossa_lecita : finché l'input fornito dal giocatore per la mossa NON è in uno dei formati corretti, questa flag non viene posta come true
+	bool mossa_lecita = false;
 
 	// campo_rivelato : se è 'true', non permette al giocatore di visualizzare ancora la tabella o rigiocare la stessa tabella.
 
@@ -611,6 +739,8 @@ int main()
 			// OPPURE uscire dal gioco. Se il comando non è uno di questi sei OPPURE il numero 42 (altro piccolo Easter Egg) non fa nulla
 			// eccetto segnalare al giocatore che il commando non è riconosciuto e ripropone il prompt.
 
+		/* TO DO: mettere questo lettore input come l'altro in gioco */
+
 		std::cout << "Seleziona un opzione scrivendo il numero corrispondendente nel prompt:" << std::endl;
 		std::cout	<< u8"• PRINCIPIANTE \t\t(Campo  9 x  9, 10 mine) \t(1)\n"
 					<< u8"• INTERMEDIO \t\t(Campo 16 x 16, 40 mine) \t(2)\n"
@@ -623,6 +753,7 @@ int main()
 		{
 			std::cout << "> ";
 			std::cin >> comando_opzioni;
+			pulisci_cin();
 
 			switch (comando_opzioni)
 			{
@@ -646,6 +777,7 @@ int main()
 				std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl;
 				std::cout << "> ";
 				std::cin >> altezza >> larghezza >> mine;
+				pulisci_cin();
 				gioco.aggiorna(altezza, larghezza, mine);
 				uscita_opzioni_menu = true;
 				break;
@@ -664,6 +796,7 @@ int main()
 							<< u8" quando chiaramente\nnon ti mostrerà nulla di importante?"
 							<< u8" Piuttosto che perdere tempo così, potresti chiederti\n"
 							<< u8"se c'è una risposta alla Vita, all'Universo, al tutto." << std::endl;
+				std::cout << "> ";
 				break;
 			}
 		}
@@ -678,28 +811,90 @@ int main()
 			while (gioco._status() == '-')
 			{
 				std::cout << gioco._campo_giocatore() << std::endl;
-				std::cout << "Inserisci una mossa nel formato 'x y comando'.\nAltrimenti, scrivi un numero negativo per le opzioni." << std::endl;
-				std::cout << "> ";
-				std::cin >> x >> y >> comando;
-				//std::cin.clear();
-				//std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+				std::cout << u8"Inserisci una mossa nel formato 'x y comando' oppure anche solo 'x y' se intendi scavare quella cella.\nPer il menù delle opzioni, scrivi nel prompt 'O'." << std::endl;
+				std::cout << "Hai messo " << gioco._numero_bandiere() << " bandiere su " << gioco._mine() << " mine presenti." << std::endl;
+				while (!mossa_lecita)
+				{
+					std::string input_gioco;
+					std::cout << "> "; 
+					std::getline(std::cin, input_gioco);
 
-				if (x < 0) break;
+					/* INTERPRETAZIONE DELL'INPUT */
+					// Prende la stringa (ergo, le coordinate e l'azione) data in input e provvede a spezzarla in un vettore di n parole
+					std::vector<std::string> v = separa_spazi(input_gioco);
+
+					switch (v.size())
+					{
+					case 1:
+						if (v[0].size() > 1 || std::toupper(v[0][0]) != 'O') break; // throw std::domain_error("comando non valido");
+						
+						comando = 'O';
+
+						mossa_lecita = true;
+						break;
+					case 2:
+						if (!solo_numeri(v[0]) || !solo_numeri(v[1])) break;																				//throw std::domain_error("comando non valido");
+						if (!gioco._campo_giocatore().nel_campo(std::stoi(v[0]) - 1, std::stoi(v[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
+						
+
+						x = std::stoi(v[0]);
+						y = std::stoi(v[1]);
+						comando = 'S';
+						
+						mossa_lecita = true;
+						break;
+					case 3:
+						if (!gioco._campo_giocatore().nel_campo(std::stoi(v[0])-1, std::stoi(v[1]) - 1)) break;		// throw std::domain_error("coordinate non valide");
+						if (v[2].size() > 1 || !comando_lecito(std::toupper(v[2][0]))) break;						// throw std::domain_error("comando non valido");
+						
+						x = std::stoi(v[0]);
+						y = std::stoi(v[1]);
+						comando = std::toupper(v[2][0]);
+						
+						mossa_lecita = true;
+						break;
+					default:
+						break;
+					}
+
+					if (!mossa_lecita)
+					{
+						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+					}
+					
+				}
+				
+				mossa_lecita = false;
+
+				// Esce dalla partita per le opzioni
+				if (comando == 'O') break;
+
+				/* RANDOMIZZATORE: */
+				// Se la mossa è la prima della partita (eccetto il caso in cui si ricominci) il campo
+				// viene popolato dalle mine secondo le regole di 'randomizza_campo'
 				if (!prima_mossa_effettuata)
 				{
 					gioco.randomizza_campo(x - 1, y - 1);
 					prima_mossa_effettuata = true;
 				}
 				gioco.gioca(x - 1, y - 1, comando);
-				if (gioco._numero_bandiere() == gioco._mine())
+
+				/* TO DO: fare in modo che si vinca se sono state scavate tutte le celle non minate*/
+				// controllo della vittoria
+				if (gioco._campo_giocatore().conta_tutti_nulli() == gioco._mine())
 				{
 					gioco.vittoria();
 				}
 			}
+
+			// NON entra nelle opzioni se il gioco è stato vinto o perso.
+
 			if (gioco._status() == 'S' || gioco._status() == 'V')
 			{
 				break;
 			}
+
+			/* TO DO: mettere questo lettore input come l'altro in gioco */
 
 			std::cout	<< "OPZIONI:\n"
 						<< u8"• Torna al gioco.\t\t(1)\n"
@@ -712,6 +907,7 @@ int main()
 			while (!uscita_opzioni_gioco)
 			{
 			std::cin >> comando_opzioni;
+			pulisci_cin();
 
 			switch (comando_opzioni)
 			{
@@ -751,7 +947,8 @@ int main()
 				uscita_programma = true;
 				break;
 			default:
-				std::cout << "Comando non riconosciuto. Riprova!" << std::endl;
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+				std::cout << "> ";
 				break;
 			}
 			}
@@ -773,10 +970,12 @@ int main()
 			}
 			std::cout	<< u8"• Torna al menù principale.\t (1)\n"
 						<< u8"• Esci dal gioco.\t\t (2)" << std::endl;
-			std::cout << "> ";
+
 			while (!uscita_opzioni_gioco)
 			{
+				std::cout << "> ";
 				std::cin >> comando_opzioni;
+				pulisci_cin();
 
 				switch (comando_opzioni)
 				{
@@ -801,3 +1000,32 @@ int main()
 		in_gioco = true;
 	}
 }
+
+/* VECCHIA VERSIONE DELLA LETTURA INPUT + TENTATIVI*/
+/* TO DO: Eliminare non appena abbiamo debuggato e testato per bene il metodo di input nuovo */
+//pulisci_cin();
+
+				/*
+				std::cin >> x >> y >> comando;
+				std::cin.clear();
+				std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+				std::cout << "What is your name? ";
+				std::string name;
+				std::getline(std::cin, name);
+				std::cout << "Hello " << name << ", nice to meet you.\n";
+				*/
+
+				/*do
+				{
+					std::cout << "Sei qua";
+					if (!(std::cin >> comando))
+					{
+						std::cout << "Comando non riconosciuto o lecito. Riprova!";
+						std::cin.clear();
+						std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+					};
+				}
+				while (comando_lecito(std::toupper(comando)));
+				std::cout << "Sei quo";
+				std::cout << "> ";*/
+				//std::cin >> x >> y;
