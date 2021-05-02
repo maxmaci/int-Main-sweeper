@@ -58,9 +58,6 @@ public:
 	std::vector<T> operator[](int i) const	{ return campo.at(i); };		// legge la riga i-esima del campo
 	std::vector<T>& operator[](int i)		{ return campo.at(i); };		// scrive la riga del campo
 
-	/* OVERLOADING OPERATORE >> (per la specializzazione di std::string, vedi sotto) */
-	template <typename T> friend std::ostream& operator<<(std::ostream&, const Campo<T>&);
-
 	/* METODI PER MODIFICARE IL CAMPO (DIMENSIONI, RESET) */
 	void resize(int, int, T);
 	void reset();

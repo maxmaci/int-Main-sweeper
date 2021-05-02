@@ -64,6 +64,26 @@ int main()
 	SetConsoleOutputCP(CP_UTF8);
 	// Abilita il buffering per evitare che Visual Studio tagli le sequenze di byte UTF-8
 	setvbuf(stdout, nullptr, _IOFBF, 1000);
+
+	// Mette l'output in modo da obbligare l'uso di sequenze virtuali del terminale.
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hOut == INVALID_HANDLE_VALUE)
+	{
+		return GetLastError();
+	}
+
+	DWORD dwMode = 0;
+	if (!GetConsoleMode(hOut, &dwMode))
+	{
+		return GetLastError();
+	}
+
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (!SetConsoleMode(hOut, dwMode))
+	{
+		return GetLastError();
+	}
+
 #endif
 
 /* VARIABILI DI GIOCO/OPZIONI */
