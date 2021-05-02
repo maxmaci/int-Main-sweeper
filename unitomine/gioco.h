@@ -30,8 +30,7 @@ public:
 	Campo<std::string> _campo_giocatore() { return campo_giocatore; };
 
 	/* FUNZIONI DI GENERAZIONE DEL CAMPO */
-	void randomizza_campo();								// randomizza il campo con le mine 
-	void randomizza_campo(int, int);
+	void randomizza_campo(int, int);						// randomizza il campo con le mine 
 
 	/* FUNZIONI DI RESET */
 	void reset_gioco() { campo_gioco.reset(); };			// pulisce il campo da gioco dalle mine
@@ -52,16 +51,15 @@ public:
 };
 
 Gioco::Gioco(int input_altezza, int input_larghezza, int input_mine)
+	: campo_gioco(input_altezza, input_larghezza), campo_giocatore(input_altezza, input_larghezza, u8"⎕")
 {
-	if (input_altezza < 1 || input_larghezza < 1) throw std::domain_error("dimensioni del campo invalide");
+	//if (input_altezza < 1 || input_larghezza < 1) throw std::domain_error("dimensioni del campo invalide"); // TO DO: il check lo fa già campo, c'è motivo di ritestarlo
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	altezza = input_altezza;
 	larghezza = input_larghezza;
 	mine = input_mine;
 	numero_bandiere = 0;
 	status = '-';
-	campo_gioco = Campo<bool>(altezza, larghezza);
-	campo_giocatore = Campo<std::string>(altezza, larghezza);
 }
 
 bool comando_lecito(char comando)
@@ -185,7 +183,7 @@ void Gioco::reset()
 
 void Gioco::aggiorna(int input_altezza, int input_larghezza, int input_mine)
 {
-	if (input_altezza < 1 || input_larghezza < 1) throw std::domain_error("dimensioni del campo invalide");
+	if (input_altezza < 1 || input_altezza > 99 || input_larghezza < 1 || input_larghezza > 99) throw std::domain_error("dimensioni del campo invalide");
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	altezza = input_altezza;
 	larghezza = input_larghezza;
@@ -196,12 +194,12 @@ void Gioco::aggiorna(int input_altezza, int input_larghezza, int input_mine)
 
 Campo<std::string> Gioco::rivela()
 {
-	Campo<std::string> res(altezza, larghezza);
+	Campo<std::string> res(altezza, larghezza, u8"⎕");
 	for (int i = 0; i < altezza; i++)
 	{
 		for (int j = 0; j < larghezza; j++)
 		{
-			if (conta_mine(campo_gioco, i, j) == -1) res[i][j] = u8"◉";
+			if (conta_mine(campo_gioco, i, j) == -1) res[i][j] = u8"✱";
 			else if (conta_mine(campo_gioco, i, j) == 0) res[i][j] = "-";
 			else res[i][j] = std::to_string(conta_mine(campo_gioco, i, j));
 		}
@@ -211,13 +209,13 @@ Campo<std::string> Gioco::rivela()
 
 void Gioco::sconfitta(int x, int y)
 {
-	campo_giocatore[x][y] = u8"\x1B[48;2;159;0;1m\x1B[38;2;255;255;255m◉\x1B[48;2;192;192;192m";
+	campo_giocatore[x][y] = u8"\x1B[48;2;159;0;1m\x1B[38;2;255;255;255m✱\x1B[48;2;192;192;192m";
 	status = 'S';
 	for (int i = 0; i < altezza; i++)
 	{
 		for (int j = 0; j < larghezza; j++)
 		{
-			if ((i != x || j != y) && conta_mine(campo_gioco, i, j) == -1) campo_giocatore[i][j] = u8"◉";
+			if ((i != x || j != y) && conta_mine(campo_gioco, i, j) == -1) campo_giocatore[i][j] = u8"✱";
 		}
 	}
 }

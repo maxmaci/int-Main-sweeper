@@ -28,7 +28,7 @@ std::map<std::string, std::string > mappa_colori
 	{"6", "\x1B[38;2;0;128;129m"},		// turchese
 	{"7", "\x1B[38;2;0;0;0m"},			// nero
 	{"8", "\x1B[38;2;128;128;128m"},	// grigio scurino
-	{u8"◉", "\x1B[38;2;0;0;0m"},		// nero	
+	{u8"✱", "\x1B[38;2;0;0;0m"},		// nero	
 	{"-", "\x1B[38;2;0;0;0m"},			// nero	
 	{u8"⚑", "\x1B[38;2;159;0;1m"},		// rosso scurino	
 	{u8"⎕", "\x1B[38;2;0;0;0m"},		// nero	
@@ -38,23 +38,27 @@ template <typename T>
 class Campo
 {
 private:
-	int	righe;								// righe > 0
-	int colonne;							// colonne > 0
+	/* CAMPI */
+	int	righe;								// 0 < righe < 100
+	int colonne;							// 0 < colonne < 100
 	std::vector<std::vector<T> > campo;
+
+	/* INIZIALIZZATORI DEI COSTRUTTORI */
+	void init(int, int, T);
 public:
-	/* COSTRUTTORE */
-	Campo(int = 1, int = 1);						// costruttore
+	/* COSTRUTTORI */
+	Campo(int, int);														// costruttore con valore di default delle celle pari a T()
+	Campo(int, int, T);														// costruttore con valore di default delle celle dato in input iniziale
 
 	/* LETTORE NUMERO DI RIGHE/COLONNE */
-	int _righe() const { return righe; };
-	int _colonne() const { return colonne; };
+	int _righe() const						{ return righe; };				// legge la riga del campo
+	int _colonne() const					{ return colonne; };
 
 	/* LETTURA/SCRITTURA DELLE RIGHE */
-	std::vector<T> operator[](int) const;					// leggi riga Campo
-	std::vector<T>& operator[](int);						// scrivi riga Campo
+	std::vector<T> operator[](int i) const	{ return campo.at(i); };		// legge la riga i-esima del campo
+	std::vector<T>& operator[](int i)		{ return campo.at(i); };		// scrive la riga del campo
 
-	/* OVERLOADING OPERATORE >> (GENERICO, USATO QUASI ESCLUSIVAMENTE PER T = BOOL - VERSIONE PER T = STD::STRING SOTTO?) */
-	/* TO DO: mettere in public l'altro overloading (se possibile) */
+	/* OVERLOADING OPERATORE >> (per la specializzazione di std::string, vedi sotto) */
 	template <typename T> friend std::ostream& operator<<(std::ostream&, const Campo<T>&);
 
 	/* METODI PER MODIFICARE IL CAMPO (DIMENSIONI, RESET) */
@@ -64,37 +68,28 @@ public:
 	/* METODI PER INFORMAZIONI SUL CAMPO */
 	bool nel_campo(int, int) const;
 	bool is_nullo(int, int) const;
-	int conta_tutti_nulli() const;
+	int conta_nulli() const;
 };
+
+template <typename T>
+void Campo<T>::init(int numero_righe, int numero_colonne, T elemento)
+{
+	if (numero_righe < 1  || numero_righe > 99 || numero_colonne < 1 || numero_colonne > 99) throw std::domain_error("dimensioni del campo invalide");
+	righe = numero_righe;
+	colonne = numero_colonne;
+	campo.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
+}
 
 template <typename T>
 Campo<T>::Campo(int numero_righe, int numero_colonne)
 {
-	if (numero_righe < 1 || numero_colonne < 1) throw std::domain_error("dimensioni campo invalide");
-	righe = numero_righe;
-	colonne = numero_colonne;
-	std::vector<T> v;
-	if (std::is_same_v<T, std::string>)	// TO DO: è presente in C++17 mi pare, controllare se è compatibile in altro modo
-	{
-		v.resize(numero_colonne, u8"⎕");
-	}
-	else
-	{
-		v.resize(numero_colonne, T());
-	}
-	campo.resize(numero_righe, v);
+	init(numero_righe, numero_colonne, T());
 }
 
 template <typename T>
-std::vector<T> Campo<T>::operator[](int i) const
+Campo<T>::Campo(int numero_righe, int numero_colonne, T elemento)
 {
-	return campo.at(i);
-}
-
-template <typename T>
-std::vector<T>& Campo<T>::operator[](int i)
-{
-	return campo.at(i);
+	init(numero_righe, numero_colonne, elemento);
 }
 
 template <typename T>
@@ -111,24 +106,11 @@ std::ostream& operator<<(std::ostream& os, const Campo<T>& campo)
 	return os;
 }
 
-/* TO DO: se mettiamo limite massimo 99x99, bypassarlo completamente (e lo stesso vale per operator<<) */
-
-int cifre(int i)
-{
-	i = std::abs(i);
-	int cifre = 1;
-	while (i > 9) {
-		i = i / 10;
-		cifre++;
-	}
-	return cifre;
-}
-
-/* TO DO: mettere a posto il printing con n = 10 (manca una colonna vuota)*/
+/* TO DO: mettere a posto il printing in basso*/
 
 std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
 {
-	os << std::setw(cifre(campo._righe() - 1)) << std::setfill(' ') << " ";
+	os << std::setw(3) << std::setfill(' ');
 	for (int j = 0; j < campo._colonne() + 1; j++)
 	{
 		if (j > 9)
@@ -141,28 +123,53 @@ std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
 		}
 	}
 	os << std::endl;
-	os << " " << " " << std::setw(cifre(campo._righe() - 1)) << std::setfill(' ');
+	os << std::setw(4) << std::setfill(' ');
 	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << (j + 1) % 10;
 	}
 	os << std::endl;
-	os << std::right << std::setw(cifre(campo._righe() - 1)) << std::setfill(' ') << " " << u8"┌";
+	os << std::right << std::setw(2) << std::setfill(' ') << " " << u8"┌";
 	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << u8"─";
 	}
-	os << std::endl;
+	os << u8"┐" << std::endl;
 	for (int i = 0; i < campo._righe(); i++)
 	{
-		os << std::right << std::setw(cifre(campo._righe() - 1)) << std::setfill(' ') << i + 1 << u8"│";
+		os << std::right << std::setw(2) << std::setfill(' ') << i + 1 << u8"│";
 		os << "\x1B[48;2;192;192;192m";
 		for (int j = 0; j < campo._colonne(); j++)
 		{
 			os << mappa_colori[campo[i][j]] << campo[i][j];
 		}
-		os << "\x1B[0m" << std::endl;
+		os << "\x1B[0m" << u8"│" << std::left << std::setw(2) << std::setfill(' ') << i + 1 << std::endl;
 	}
+	os << std::right << std::setw(2) << std::setfill(' ') << " " << u8"└";
+	for (int j = 0; j < campo._colonne(); j++)
+	{
+		os << u8"─";
+	}
+	os << u8"┘" << std::endl;
+	os << std::setw(3) << std::setfill(' ');
+	for (int j = 0; j < campo._colonne() + 1; j++)
+	{
+		if (j > 9)
+		{
+			os << (j / 10) % 10;
+		}
+		else
+		{
+			os << " ";
+		}
+	}
+	os << std::endl;
+	os << std::setw(4) << std::setfill(' ');
+	for (int j = 0; j < campo._colonne(); j++)
+	{
+		os << (j + 1) % 10;
+	}
+	os << std::endl;
 	return os;
 }
 
@@ -214,7 +221,7 @@ bool Campo<std::string>::is_nullo(int i, int j) const
 }
 
 template <typename T>
-int Campo<T>::conta_tutti_nulli() const
+int Campo<T>::conta_nulli() const
 {
 	int k = 0;
 
@@ -228,22 +235,7 @@ int Campo<T>::conta_tutti_nulli() const
 	return k;
 }
 
-template <>
-int Campo<std::string>::conta_tutti_nulli() const
-{
-	int k = 0;
-
-	for (int i = 0; i < righe; i++)
-	{
-		for (int j = 0; j < colonne; j++)
-		{
-			if (is_nullo(i, j)) k++;
-		}
-	}
-	return k;
-}
-
-/* TO DO: spostare in una classe (?) */
+/* TO DO: spostare nella classe gioco */
 
 int conta_mine(const Campo<bool>& campo, int i, int j)
 {
@@ -262,27 +254,6 @@ int conta_mine(const Campo<bool>& campo, int i, int j)
 	return k;
 }
 
-/* TO DO: non lo uso, magari cancellarlo */
-
-/*
-bool ha_vicini_nulli(const Campo<std::string>& campo, int i, int j)
-{
-	if (!campo.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-	if (campo[i][j] == u8"-") return true;
-
-	// controlli
-	if (campo.nel_campo(i - 1, j - 1) && campo[i - 1][j] == u8"-") return true;
-	if (campo.nel_campo(i - 1, j) && campo[i][j + 1] == u8"-") return true;
-	if (campo.nel_campo(i - 1, j + 1) && campo[i][j + 1] == u8"-") return true;
-	if (campo.nel_campo(i, j - 1) && campo[i][j - 1] == u8"-") return true;
-	if (campo.nel_campo(i, j + 1) && campo[i][j + 1] == u8"-") return true;
-	if (campo.nel_campo(i + 1, j - 1) && campo[i + 1][j] == u8"-") return true;
-	if (campo.nel_campo(i + 1, j) && campo[i + 1][j] == u8"-") return true;
-	if (campo.nel_campo(i + 1, j + 1) && campo[i + 1][j] == u8"-") return true;
-	return false;
-}
-*/
-
 Campo<std::string> converti_campo(const Campo<bool>& campo)
 {
 	Campo<std::string> res(campo._righe(), campo._colonne());
@@ -290,7 +261,7 @@ Campo<std::string> converti_campo(const Campo<bool>& campo)
 	{
 		for (int j = 0; j < campo._colonne(); j++)
 		{
-			if (conta_mine(campo, i, j) == -1) res[i][j] = u8"◉";
+			if (conta_mine(campo, i, j) == -1) res[i][j] = u8"✱";
 			else if (conta_mine(campo, i, j) == 0) res[i][j] = "-";
 			else res[i][j] = std::to_string(conta_mine(campo, i, j));
 		}

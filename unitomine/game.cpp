@@ -290,7 +290,7 @@ int main()
 
 				/* TO DO: controllare che sia lecito come controllo */
 				// controllo della vittoria
-				if (gioco._campo_giocatore().conta_tutti_nulli() == gioco._mine())
+				if (gioco._campo_giocatore().conta_nulli() == gioco._mine())
 				{
 					gioco.vittoria();
 				}
@@ -323,15 +323,28 @@ int main()
 				switch (comando_opzioni)
 				{
 				case 1:
-					uscita_opzioni_gioco = true;
+					if (!campo_rivelato)
+					{
+						uscita_opzioni_gioco = true;
+					}
+					else
+					{
+						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+						std::cout << "> ";
+					}
 					break;
 				case 2:
 					if (!campo_rivelato)
 					{
 						gioco.reset_giocatore();
 						gioco.reset_numero_bandiere();
+						uscita_opzioni_gioco = true;
 					}
-					uscita_opzioni_gioco = true;
+					else
+					{
+						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+						std::cout << "> ";
+					}
 					break;
 				case 3:
 					if (!campo_rivelato)
@@ -343,6 +356,11 @@ int main()
 						std::cout << "OPZIONI:\n"
 									<< u8"• Torna al menù principale.\t (4)\n"
 									<< u8"• Esci dal gioco.\t\t (5)" << std::endl;
+						std::cout << "> ";
+					}
+					else
+					{
+						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
 						std::cout << "> ";
 					}
 					break;
@@ -373,11 +391,11 @@ int main()
 			
 			if (gioco._status() == 'S')
 			{
-				std::cout << u8"OH NO! Hai perso. Cosa vuoi fare ora?\n";
+				std::cout << u8"OH NO! Hai perso. ☹\nCosa vuoi fare ora?\n";
 			}
 			else
 			{
-				std::cout << u8"HAI VINTO! Cosa vuoi fare ora?\n";
+				std::cout << u8"HAI VINTO! ☺\nCosa vuoi fare ora?\n";
 			}
 			std::cout	<< u8"• Torna al menù principale.\t (1)\n"
 						<< u8"• Esci dal gioco.\t\t (2)" << std::endl;
