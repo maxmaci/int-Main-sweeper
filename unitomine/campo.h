@@ -16,26 +16,7 @@
 
 /* MAPPE */
 
-// Definiamo due mappe: la prima associa ad un carattere del campo visibile dal giocatore un numero e ci servirà per il conteggio delle mine 
-// (con alcuni valori inutilizzati ma presenti per 'debugging'), la seconda invece associa ad ogni carattere un numero e ci serve per la stampa
-// del campo visto dal giocatore
-
-/* TO DO: dove usiamo la mappa converti? possiamo eliminarla? */
-std::map<std::string, int > mappa_converti
-{
-	{"-", 0},
-	{"1", 1},
-	{"2", 2},
-	{"3", 3},
-	{"4", 4},
-	{"5", 5},
-	{"6", 6},
-	{"7", 7},
-	{"8", 8},
-	{u8"◉", -1},
-	{u8"⚑", -2},
-	{u8"⎕", -3},
-};
+// Definiamo una mappa che associa ad ogni carattere un numero, ci serve per la stampa del campo visto dal giocatore.
 
 std::map<std::string, std::string > mappa_colori
 {
@@ -59,7 +40,7 @@ class Campo
 private:
 	int	righe;								// righe > 0
 	int colonne;							// colonne > 0
-	std::vector<std::vector<T>> campo;
+	std::vector<std::vector<T> > campo;
 public:
 	/* COSTRUTTORE */
 	Campo(int = 1, int = 1);						// costruttore
@@ -93,7 +74,7 @@ Campo<T>::Campo(int numero_righe, int numero_colonne)
 	righe = numero_righe;
 	colonne = numero_colonne;
 	std::vector<T> v;
-	if (std::is_same_v<T, std::string>)
+	if (std::is_same_v<T, std::string>)	// TO DO: è presente in C++17 mi pare, controllare se è compatibile in altro modo
 	{
 		v.resize(numero_colonne, u8"⎕");
 	}
@@ -129,6 +110,8 @@ std::ostream& operator<<(std::ostream& os, const Campo<T>& campo)
 	}
 	return os;
 }
+
+/* TO DO: se mettiamo limite massimo 99x99, bypassarlo completamente (e lo stesso vale per operator<<) */
 
 int cifre(int i)
 {
@@ -212,50 +195,6 @@ void Campo<T>::resize(int altezza, int larghezza, T elemento) {
 	}
 }
 
-/* TO DO: scegliere quale versione di campo casuale tenere */
-/* TO DO: rimuovere le versioni di campo casuali non in classe */
-
-/*
-void campo_casuale2(Campo<bool>& campo, int mine)
-{
-	int k = 1;
-	while (k <= mine)
-	{
-		for (int i = 0; i < campo._righe(); i++)
-		{
-			for (int j = 0; j < campo._colonne(); j++)
-			{
-				if (k <= mine)
-				{
-					int random = std::rand() % 99;
-					if (random <= (mine / (campo._righe() * campo._colonne()) * 100) && campo[i][j] != 1)
-					{
-						campo[i][j] = 1;
-						k++;
-					}
-				}
-			}
-		}
-	}
-}
-
-void campo_casuale(Campo<bool>& campo, int mine)
-{
-	int k = 1;
-	while (true)
-	{
-		int random1 = std::rand() % campo._righe();
-		int random2 = std::rand() % campo._colonne();
-		if (campo[random1][random2] != 1)
-		{
-			campo[random1][random2] = 1;
-			k++;
-		}
-		if (k > mine) break;
-	}
-}
-*/
-
 template <typename T>
 bool Campo<T>::nel_campo(int i, int j) const
 {
@@ -304,6 +243,8 @@ int Campo<std::string>::conta_tutti_nulli() const
 	return k;
 }
 
+/* TO DO: spostare in una classe (?) */
+
 int conta_mine(const Campo<bool>& campo, int i, int j)
 {
 	if (!campo.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
@@ -321,6 +262,9 @@ int conta_mine(const Campo<bool>& campo, int i, int j)
 	return k;
 }
 
+/* TO DO: non lo uso, magari cancellarlo */
+
+/*
 bool ha_vicini_nulli(const Campo<std::string>& campo, int i, int j)
 {
 	if (!campo.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
@@ -337,6 +281,7 @@ bool ha_vicini_nulli(const Campo<std::string>& campo, int i, int j)
 	if (campo.nel_campo(i + 1, j + 1) && campo[i + 1][j] == u8"-") return true;
 	return false;
 }
+*/
 
 Campo<std::string> converti_campo(const Campo<bool>& campo)
 {
@@ -351,13 +296,6 @@ Campo<std::string> converti_campo(const Campo<bool>& campo)
 		}
 	}
 	return res;
-}
-
-/* TO DO: spostarlo in posizione migliore? */
-
-bool comando_lecito(char comando)
-{
-	return comando == 'B' || comando == 'T' || comando == 'S';
 }
 
 #endif // __CAMPO_H__

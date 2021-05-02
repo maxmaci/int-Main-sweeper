@@ -43,7 +43,6 @@ public:
 	/* FUNZIONI DI GIOCO */
 	void aggiorna(int, int, int);							// aggiorna il campo da gioco e del giocatore con nuovi valori di altezza, larghezza e mine
 	void scava_celle(int, int, Campo<bool>&);				// funzione che 'scava' le celle
-	// void scava_celle2(int, int);							// funzione ricorsiva che 'scava' le celle
 	void gioca(int, int, char);								// compie le azioni di gioco
 
 	/* FUNZIONI DI STATUS */
@@ -65,24 +64,26 @@ Gioco::Gioco(int input_altezza, int input_larghezza, int input_mine)
 	campo_giocatore = Campo<std::string>(altezza, larghezza);
 }
 
-void Gioco::scava_celle(int i, int j, Campo<bool>& temp)
+bool comando_lecito(char comando)
+{
+	return comando == 'B' || comando == 'T' || comando == 'S';
+}
+
+void Gioco::scava_celle(int i, int j, Campo<bool>& processate)
 {
 	std::vector<std::pair<int, int> > coda;
 	coda.push_back(std::pair<int, int>(i, j));
 	while (coda.size() != 0)
 	{
 		std::pair<int, int> cella = coda[0];
-		//std::cout << "coda:" << coda.size() << " / " << cella.first << ", " << cella.second << std::endl;
 		coda.erase(coda.begin());
 
-		if (campo_giocatore.nel_campo(cella.first, cella.second) && !campo_gioco[cella.first][cella.second] && !temp[cella.first][cella.second])
+		if (campo_giocatore.nel_campo(cella.first, cella.second) && campo_giocatore[cella.first][cella.second] != u8"⚑" && !campo_gioco[cella.first][cella.second] && !processate[cella.first][cella.second])
 		{
-			if (conta_mine(campo_gioco, cella.first, cella.second) == 0) campo_giocatore[cella.first][cella.second] = "-";
+			if (conta_mine(campo_gioco, cella.first, cella.second) == 0) campo_giocatore[cella.first][cella.second] = "-";          //TO DO: Rendere funzione
 			else campo_giocatore[cella.first][cella.second] = std::to_string(conta_mine(campo_gioco, cella.first, cella.second));
 
-			temp[cella.first][cella.second] = true;
-			//std::cout << campo_giocatore;
-			//system("PAUSE");
+			processate[cella.first][cella.second] = true;
 			if (conta_mine(campo_gioco, cella.first, cella.second) == 0) // controlla che la casella non sia un fiore; in caso contrario non aggiungerà i nodi alla coda
 			{
 				coda.push_back(std::pair<int, int>(cella.first - 1, cella.second - 1));
@@ -98,37 +99,6 @@ void Gioco::scava_celle(int i, int j, Campo<bool>& temp)
 	}
 	return;
 }
-
-/*
-void Gioco::scava_celle2(int i, int j)
-{
-	if (campo_giocatore[i][j] != "-")
-	{
-		return;
-	}
-
-	for (int n = i - 1; n <= i + 1; n++)
-	{
-		for (int m = j - 1; m <= j + 1; m++)
-		{
-			if (campo_giocatore.nel_campo(n, m))
-			{
-				if (campo_giocatore[n][m] == u8"⚑" || campo_gioco[n][m])
-				{
-					break;
-				}
-				else if (campo_giocatore[n][m] == u8"⎕")
-				{
-					if (conta_mine(campo_gioco, n, m) == 0) campo_giocatore[n][m] = "-";
-					else campo_giocatore[n][m] = std::to_string(conta_mine(campo_gioco, n, m));
-					scava_celle2(n, m);
-				}
-			}
-		}
-	}
-	return;
-}
-*/
 
 void Gioco::gioca(int i, int j, char comando)
 {
@@ -167,34 +137,16 @@ void Gioco::gioca(int i, int j, char comando)
 		}
 		else
 		{
-			Campo<bool> temp(altezza, larghezza);
-
 			if (conta_mine(campo_gioco, i, j) == 0) campo_giocatore[i][j] = "-";
 			else campo_giocatore[i][j] = std::to_string(conta_mine(campo_gioco, i, j));
-				
-			scava_celle(i, j, temp);
+			
+			Campo<bool> processate(altezza, larghezza);
+
+			scava_celle(i, j, processate);
 			return;
 		}
 	}
 }
-
-/*
-void Gioco::randomizza_campo()
-{
-	int k = 1;
-	while (true)
-	{
-		int random1 = std::rand() % campo_gioco._righe();
-		int random2 = std::rand() % campo_gioco._colonne();
-		if (campo_gioco[random1][random2] != 1)
-		{
-			campo_gioco[random1][random2] = 1;
-			k++;
-		}
-		if (k > mine) break;
-	}
-}
-*/
 
 void Gioco::randomizza_campo(int i, int j)
 {

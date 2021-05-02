@@ -2,6 +2,20 @@
 
 #include "gioco.h"
 
+/* Classe Risolutore */
+class Risolutore
+{
+private:
+	Gioco giocata_attuale;		// ...
+	Gioco giocata_precedente;	// ...
+public:
+	Risolutore(Gioco);
+	void metodo_meccanico();
+	// qualcosa di più efficace che il metodo prob.
+	void metodo_probabilistico();
+	void risolve();
+};
+
 /* FUNZIONI PER LA LETTURA DI INPUT */
 
 // pulisce il buffer del cin e ignora tutto quello dopo il carattere in input
@@ -20,7 +34,6 @@ std::vector<std::string> separa_spazi(std::string input)
 		temp.push_back(input[i]);
 		if (std::isspace(input[i+1]) || i == input.size() - 1)
 		{
-			//std::cout << temp << " "; /* TO DO: toglierlo quando siamo sicuri funzioni tutto */ 
 			res.push_back(temp);
 			temp.resize(0);
 			i++;
@@ -39,8 +52,6 @@ bool solo_numeri(std::string input)
 	}
 	return true;
 }
-
-/* TO DO: classe Risolutore? Potrebbe sfruttare i comandi predisposti per gioco, tenendo 'più pulito' il codice*/
 
 int main()
 {
@@ -168,9 +179,9 @@ int main()
 			case 4:
 				std::cout << "We're no stranger to love..." << std::endl;
 				uscita_opzioni_menu = true;
-				break;
+				break; /* TO DO: metterci la tabella */
 			case 5:
-				std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl;
+				std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl; // TO DO: evitare errori di crash
 				std::cout << "> ";
 				std::cin >> altezza >> larghezza >> mine;
 				pulisci_cin();
@@ -191,13 +202,15 @@ int main()
 							<< comando_opzioni
 							<< u8" quando chiaramente\nnon ti mostrerà nulla di importante?"
 							<< u8" Piuttosto che perdere tempo così, potresti chiederti\n"
-							<< u8"se c'è una risposta alla Vita, all'Universo, al tutto." << std::endl;
+							<< u8"se c'è una risposta alla Vita, all'Universo, al Tutto." << std::endl;
 				break;
 			}
 		}
 			
 	uscita_opzioni_menu = false;
 	in_gioco = true;
+
+	/* TO DO: menù per chiedere risolutore */
 
 	/* LOOP DI GIOCO*/
 	// A meno di uscire per tornare al menù principale, tutte le azioni vengono svolte in questo loop
@@ -213,6 +226,7 @@ int main()
 					std::string input_gioco;
 					std::cout << "> "; 
 					std::getline(std::cin, input_gioco);
+					/* TO DO: check sulla lunghezza stringa */
 
 					/* INTERPRETAZIONE DELL'INPUT */
 					// Prende la stringa (ergo, le coordinate e l'azione) data in input e provvede a spezzarla in un vettore di n parole
@@ -228,10 +242,9 @@ int main()
 						mossa_lecita = true;
 						break;
 					case 2:
-						if (!solo_numeri(v[0]) || !solo_numeri(v[1])) break;																				//throw std::domain_error("comando non valido");
+						if (!solo_numeri(v[0]) || !solo_numeri(v[1])) break;										//throw std::domain_error("comando non valido");
 						if (!gioco._campo_giocatore().nel_campo(std::stoi(v[0]) - 1, std::stoi(v[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
 						
-
 						x = std::stoi(v[0]);
 						y = std::stoi(v[1]);
 						comando = 'S';
@@ -239,6 +252,7 @@ int main()
 						mossa_lecita = true;
 						break;
 					case 3:
+						// TO DO: controllare qualche caso
 						if (!gioco._campo_giocatore().nel_campo(std::stoi(v[0])-1, std::stoi(v[1]) - 1)) break;		// throw std::domain_error("coordinate non valide");
 						if (v[2].size() > 1 || !comando_lecito(std::toupper(v[2][0]))) break;						// throw std::domain_error("comando non valido");
 						
@@ -274,7 +288,7 @@ int main()
 				}
 				gioco.gioca(x - 1, y - 1, comando);
 
-				/* TO DO: fare in modo che si vinca se sono state scavate tutte le celle non minate*/
+				/* TO DO: controllare che sia lecito come controllo */
 				// controllo della vittoria
 				if (gioco._campo_giocatore().conta_tutti_nulli() == gioco._mine())
 				{
@@ -399,36 +413,3 @@ int main()
 		in_gioco = true;
 	}
 }
-
-/* TO DO: MOLTO IMPORTANTE: Capire i limiti del campo. Provando a caso un campo di dimensioni maggiori di 44x43 (suppergiù) con poche mine (1,2) genera il campo,
-	ma non permette di scavare senza andare in overflow! Il sospetto è un grosso, gigante problema con la ricorsività della funzione di scavo */
-
-
-/* VECCHIA VERSIONE DELLA LETTURA INPUT + TENTATIVI*/
-/* TO DO: Eliminare non appena abbiamo debuggato e testato per bene il metodo di input nuovo */
-//pulisci_cin();
-
-				/*
-				std::cin >> x >> y >> comando;
-				std::cin.clear();
-				std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
-				std::cout << "What is your name? ";
-				std::string name;
-				std::getline(std::cin, name);
-				std::cout << "Hello " << name << ", nice to meet you.\n";
-				*/
-
-				/*do
-				{
-					std::cout << "Sei qua";
-					if (!(std::cin >> comando))
-					{
-						std::cout << "Comando non riconosciuto o lecito. Riprova!";
-						std::cin.clear();
-						std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
-					};
-				}
-				while (comando_lecito(std::toupper(comando)));
-				std::cout << "Sei quo";
-				std::cout << "> ";*/
-				//std::cin >> x >> y;
