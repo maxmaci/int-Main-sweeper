@@ -6,6 +6,7 @@
 #include <vector>		// classe vector
 #include <map>			// classe map
 #include <iomanip>		// std::setw() / std::setfill()
+#include <chrono>
 
 #ifdef _WIN32
 // Se compilato su un computer con Windows includiamo la libreria windows.h, necessaria per la compatibilità UTF-8.
@@ -60,7 +61,7 @@ public:
 
 	/* METODI PER MODIFICARE IL CAMPO (DIMENSIONI, RESET) */
 	void resize(int, int, T);
-	void reset();
+	void reset(T = T());
 
 	/* METODI PER INFORMAZIONI SUL CAMPO */
 	bool nel_campo(int, int) const;
@@ -103,23 +104,35 @@ std::ostream& operator<<(std::ostream& os, const Campo<T>& campo)
 	return os;
 }
 
-/* TO DO: mettere a posto il printing in basso*/
+std::ostream& linea_orizzontale(std::ostream& os, const int& lunghezza)
+{
+	for (int j = 0; j < lunghezza; j++)
+	{
+		os << u8"─";
+	}
+	return os;
+}
 
 std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
 {
-	os << std::setw(3) << std::setfill(' ');
-	for (int j = 0; j < campo._colonne() + 1; j++)
+	auto start = std::chrono::steady_clock::now();
+	
+	if (campo._colonne() > 9)
 	{
-		if (j > 9)
+		os << std::setw(3) << std::setfill(' ');
+		for (int j = 0; j < campo._colonne() + 1; j++)
 		{
-			os << (j / 10) % 10;
+			if (j > 9)
+			{
+				os << (j / 10) % 10;
+			}
+			else
+			{
+				os << " ";
+			}
 		}
-		else
-		{
-			os << " ";
-		}
+		os << std::endl;
 	}
-	os << std::endl;
 	os << std::setw(4) << std::setfill(' ');
 	for (int j = 0; j < campo._colonne(); j++)
 	{
@@ -148,42 +161,45 @@ std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
 		os << u8"─";
 	}
 	os << u8"┘" << std::endl;
-	os << std::setw(3) << std::setfill(' ');
-	for (int j = 0; j < campo._colonne() + 1; j++)
+	if (campo._colonne() > 9)
 	{
-		if (j > 9)
+		os << std::setw(3) << std::setfill(' ');
+		for (int j = 0; j < campo._colonne() + 1; j++)
 		{
-			os << (j / 10) % 10;
+			if (j > 9)
+			{
+				os << (j / 10) % 10;
+			}
+			else
+			{
+				os << " ";
+			}
 		}
-		else
-		{
-			os << " ";
-		}
+		os << std::endl;
 	}
-	os << std::endl;
 	os << std::setw(4) << std::setfill(' ');
 	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << (j + 1) % 10;
 	}
 	os << std::endl;
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
 	return os;
 }
 
 template <typename T>
-void Campo<T>::reset() {
+void Campo<T>::reset(T elemento) {
 	for (int i = 0; i < righe; i++)
 	{
 		for (int j = 0; j < colonne; j++)
 		{
-			if (std::is_same_v<T, std::string>)
-			{
-				campo[i][j] = u8"⎕";
-			}
-			else
-			{
-				campo[i][j] = T();
-			}
+			campo[i][j] = elemento;
 		}
 	}
 }
@@ -230,40 +246,6 @@ int Campo<T>::conta_nulli() const
 		}
 	}
 	return k;
-}
-
-/* TO DO: spostare nella classe gioco */
-
-int conta_mine(const Campo<bool>& campo, int i, int j)
-{
-	if (!campo.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-	if (campo[i][j] == 1) return -1;
-
-	int k = 0;
-
-	for (int n = i - 1; n <= i + 1; n++)
-	{
-		for (int m = j - 1; m <= j + 1; m++)
-		{
-			if (campo.nel_campo(n, m) && campo[n][m] == 1) k++;
-		}
-	}
-	return k;
-}
-
-Campo<std::string> converti_campo(const Campo<bool>& campo)
-{
-	Campo<std::string> res(campo._righe(), campo._colonne());
-	for (int i = 0; i < campo._righe(); i++)
-	{
-		for (int j = 0; j < campo._colonne(); j++)
-		{
-			if (conta_mine(campo, i, j) == -1) res[i][j] = u8"✱";
-			else if (conta_mine(campo, i, j) == 0) res[i][j] = "-";
-			else res[i][j] = std::to_string(conta_mine(campo, i, j));
-		}
-	}
-	return res;
 }
 
 #endif // __CAMPO_H__

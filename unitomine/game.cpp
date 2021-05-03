@@ -16,41 +16,212 @@ public:
 	void risolve();
 };
 
-/* FUNZIONI PER LA LETTURA DI INPUT */
+/* FUNZIONI MENÙ */
 
-// pulisce il buffer del cin e ignora tutto quello dopo il carattere in input
-void pulisci_cin()
+/* CONTROLLI sulla validità dell'input */
+bool input_menu_lecito(std::vector<std::string> input)
 {
-	std::cin.clear();
-	std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+	return input.size() == 1 && solo_numeri(input[0]);
 }
 
-std::vector<std::string> separa_spazi(std::string input)
+bool input_personalizzata_lecito(std::vector<std::string> input)
 {
-	std::vector<std::string> res;
-	std::string temp;
-	for (int i = 0; i < input.size(); i++)
+	return input.size() == 3 && solo_numeri(input[0]) && solo_numeri(input[1]) && solo_numeri(input[2]);
+}
+
+void partita_personalizzata(Gioco& gioco)
+{
+	std::cout << "Inserisci altezza, larghezza e numero di mine (nel formato 'altezza', 'larghezza', 'mine'):" << std::endl; // TO DO: evitare errori di crash
+
+	while (true)
 	{
-		temp.push_back(input[i]);
-		if (std::isspace(input[i+1]) || i == input.size() - 1)
+		std::vector<std::string> input = leggi_input();
+		if (input_personalizzata_lecito(input))
 		{
-			res.push_back(temp);
-			temp.resize(0);
-			i++;
+			int altezza = std::stoi(input[0]);
+			int larghezza = std::stoi(input[1]);
+			int mine = std::stoi(input[2]);
+			gioco.resize(altezza, larghezza, mine);
+			return;
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
 		}
 	}
-	return res;
 }
 
-bool solo_numeri(std::string input)
+void menu_principale(Gioco& gioco, bool& uscita_programma)
 {
-	std::string::const_iterator it = input.cbegin();
-	while (it != input.cend())
+	while (true)
 	{
-		if (!std::isdigit(*it)) return false;
-		else it++;
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+			switch (comando_opzioni)
+			{
+			case 1:
+				gioco.resize(9, 9, 10);
+				return;
+			case 2:
+				gioco.resize(16, 16, 40);
+				return;
+			case 3:
+				gioco.resize(16, 30, 99);
+				return;
+			case 4:
+				std::cout << "We're no stranger to love..." << std::endl;
+				return;
+				/* TO DO: metterci la tabella */
+			case 5:
+				partita_personalizzata(gioco);
+				return;
+			case 6:
+				uscita_programma = true;
+				return;
+			case 42:
+				std::cout << u8"\"La Vita, l'Universo, e il Tutto. C'è una risposta. Ma ci devo pensare.\"" << std::endl;
+				gioco.resize(42, 42, 420);
+				return;
+			default:
+				std::cout << u8"Lo vedi che ci sono solo numeri dall'1 al 6, vero? Che diamine scrivi "
+					<< comando_opzioni
+					<< u8" quando chiaramente\nnon ti mostrerà nulla di importante?"
+					<< u8" Piuttosto che perdere tempo così, potresti chiederti\n"
+					<< u8"se c'è una risposta alla Vita, all'Universo, al Tutto." << std::endl;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+		
 	}
-	return true;
+}
+
+void menu_opzioni_breve(Gioco& gioco, bool& uscita_programma, bool& in_gioco)
+{
+	std::cout << "OPZIONI:\n"
+		<< u8"• Torna al menù principale.\t (1)\n"
+		<< u8"• Esci dal gioco.\t\t (2)" << std::endl;
+
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+
+			switch (comando_opzioni)
+			{
+			case 1:
+				gioco.reset();
+
+				in_gioco = false;
+				return;
+			case 2:
+				in_gioco = false;
+				uscita_programma = true;
+				return;
+			default:
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+				break;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+	}
+}
+
+void menu_opzioni(Gioco& gioco, bool& uscita_programma, bool& in_gioco)
+{
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+			switch (comando_opzioni)
+			{
+			case 1:
+				return;
+			case 2:
+				gioco.reset_giocatore();
+				gioco.reset_numero_bandiere();
+				return;
+			case 3:
+				gioco.rivela();
+				menu_opzioni_breve(gioco, uscita_programma, in_gioco);
+				return;
+			case 4:
+				gioco.reset();
+
+				in_gioco = false;
+				return;
+			case 5:
+				in_gioco = false;
+				uscita_programma = true;
+				return;
+			default:
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+				break;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+	}
+}
+
+void interpreta_mossa(Gioco& gioco, int& riga, int& colonna, char& comando)
+{
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		
+		switch (input.size())
+		{
+		case 1:
+			if (input[0].size() > 1 || std::toupper(input[0][0]) != 'O') break; // throw std::invalid_argument("comando non valido");
+
+			comando = 'O';
+
+			return;
+		case 2:
+			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;										//throw std::invalid_argument("comando non valido");
+			if (!gioco._campo_giocatore().nel_campo(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
+
+			riga = std::stoi(input[0]);
+			colonna = std::stoi(input[1]);
+			comando = 'S';
+
+			return;
+		case 3:
+			// TO DO: controllare qualche caso
+			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;
+			if (!gioco._campo_giocatore().nel_campo(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;		// throw std::invalid_argument("coordinate non valide");
+			if (input[2].size() > 1 || !comando_lecito(std::toupper(input[2][0]))) break;						// throw std::domain_error("comando non valido");
+
+			riga = std::stoi(input[0]);
+			colonna = std::stoi(input[1]);
+			comando = std::toupper(input[2][0]);
+
+			return;
+		default:
+			
+			break;
+		}
+
+		std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+	}
 }
 
 int main()
@@ -92,16 +263,10 @@ int main()
 
 	std::srand(std::time(nullptr));
 
-	// Variabili per inserire le dimensioni e il numero di mine del campo personalizzato 
-
-	int altezza = 9;
-	int larghezza = 9;
-	int mine = 10;
-
 	// Variabili per comandi di gioco: coordinate della cella + comando dell'azione
 
-	int x = 0;
-	int y = 0;
+	int riga = 1;
+	int colonna = 1;
 	char comando = 'S';
 
 	/* FLAG per controllare i loop di gioco */
@@ -110,21 +275,8 @@ int main()
 
 	bool uscita_programma = false;
 
-	// uscita_opzioni_menu/gioco : se è 'true', esce dal ciclo delle opzioni (del menù principale/di gioco)
-	/* TO DO: magari è meglio metterla e inizializzarla *solo* all'interno del loop delle opzioni */
-
-	bool uscita_opzioni_menu = false;
-	bool uscita_opzioni_gioco = false;
-
 	// uscita_opzioni : se è 'false', esce dal ciclo del gioco per tornare al menù principale oppure per uscire dal programma
 	bool in_gioco = false;
-
-	// mossa_lecita : finché l'input fornito dal giocatore per la mossa NON è in uno dei formati corretti, questa flag non viene posta come true
-	bool mossa_lecita = false;
-
-	// campo_rivelato : se è 'true', non permette al giocatore di visualizzare ancora la tabella o rigiocare la stessa tabella.
-
-	bool campo_rivelato = false;
 
 	// prima_mossa_effettuata : ad inizio partita è posta come 'false'; quando si fa la prima mossa entrando in un IF si randomizza
 	// il campo di mine in modo da generare uno spazio vuoto (o con numeri) 3x3 attorno alla casella scelta, poi viene settata come 'true'
@@ -174,61 +326,9 @@ int main()
 					<< u8"• PERSONALIZZATO\t\t\t\t\t(5)\n"
 					<< u8"• ESCI DAL GIOCO \t\t\t\t\t(6)" << std::endl;
 		
-		while (!uscita_opzioni_menu)
-		{
-			int comando_opzioni;
-
-			std::cout << "> ";
-			std::cin >> comando_opzioni;
-			pulisci_cin();
-
-			switch (comando_opzioni)
-			{
-			case 1:
-				gioco.aggiorna(9, 9, 10);
-				uscita_opzioni_menu = true;
-				break;
-			case 2:
-				gioco.aggiorna(16, 16, 40);
-				uscita_opzioni_menu = true;
-				break;
-			case 3:
-				gioco.aggiorna(16, 30, 99);
-				uscita_opzioni_menu = true;
-				break;
-			case 4:
-				std::cout << "We're no stranger to love..." << std::endl;
-				uscita_opzioni_menu = true;
-				break; /* TO DO: metterci la tabella */
-			case 5:
-				std::cout << "Inserire altezza, larghezza e numero di mine:" << std::endl; // TO DO: evitare errori di crash
-				std::cout << "> ";
-				std::cin >> altezza >> larghezza >> mine;
-				pulisci_cin();
-				gioco.aggiorna(altezza, larghezza, mine);
-				uscita_opzioni_menu = true;
-				break;
-			case 6:
-				uscita_opzioni_menu = true;
-				uscita_programma = true;
-				break;
-			case 42:
-				std::cout << u8"\"La Vita, l'Universo, e il Tutto. C'è una risposta. Ma ci devo pensare.\"" << std::endl;
-				gioco.aggiorna(42, 42, 420);
-				uscita_opzioni_menu = true;
-				break;
-			default:
-				std::cout	<< u8"Lo vedi che ci sono solo numeri dall'1 al 6, vero? Che diamine scrivi "
-							<< comando_opzioni
-							<< u8" quando chiaramente\nnon ti mostrerà nulla di importante?"
-							<< u8" Piuttosto che perdere tempo così, potresti chiederti\n"
-							<< u8"se c'è una risposta alla Vita, all'Universo, al Tutto." << std::endl;
-				break;
-			}
-		}
-			
-	uscita_opzioni_menu = false;
-	in_gioco = true;
+		menu_principale(gioco, uscita_programma);
+		
+		in_gioco = true;
 
 	/* TO DO: menù per chiedere risolutore */
 
@@ -239,81 +339,24 @@ int main()
 			while (gioco._status() == '-')
 			{
 				std::cout << gioco._campo_giocatore() << std::endl;
-				std::cout << u8"Inserisci una mossa nel formato 'x y comando' oppure anche solo 'x y' se intendi scavare quella cella.\nPer il menù delle opzioni, scrivi nel prompt 'O'." << std::endl;
+				std::cout << u8"Inserisci una mossa nel formato 'riga colonna comando' oppure anche solo 'riga colonna' se intendi scavare quella cella.\nPer il menù delle opzioni, scrivi nel prompt 'O'." << std::endl;
 				std::cout << "Hai messo " << gioco._numero_bandiere() << " bandiere su " << gioco._mine() << " mine presenti." << std::endl;
-				while (!mossa_lecita)
-				{
-					std::string input_gioco;
-					std::cout << "> "; 
-					std::getline(std::cin, input_gioco);
-					/* TO DO: check sulla lunghezza stringa */
-
-					/* INTERPRETAZIONE DELL'INPUT */
-					// Prende la stringa (ergo, le coordinate e l'azione) data in input e provvede a spezzarla in un vettore di n parole
-					std::vector<std::string> v = separa_spazi(input_gioco);
-
-					switch (v.size())
-					{
-					case 1:
-						if (v[0].size() > 1 || std::toupper(v[0][0]) != 'O') break; // throw std::domain_error("comando non valido");
-						
-						comando = 'O';
-
-						mossa_lecita = true;
-						break;
-					case 2:
-						if (!solo_numeri(v[0]) || !solo_numeri(v[1])) break;										//throw std::domain_error("comando non valido");
-						if (!gioco._campo_giocatore().nel_campo(std::stoi(v[0]) - 1, std::stoi(v[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
-						
-						x = std::stoi(v[0]);
-						y = std::stoi(v[1]);
-						comando = 'S';
-						
-						mossa_lecita = true;
-						break;
-					case 3:
-						// TO DO: controllare qualche caso
-						if (!gioco._campo_giocatore().nel_campo(std::stoi(v[0])-1, std::stoi(v[1]) - 1)) break;		// throw std::domain_error("coordinate non valide");
-						if (v[2].size() > 1 || !comando_lecito(std::toupper(v[2][0]))) break;						// throw std::domain_error("comando non valido");
-						
-						x = std::stoi(v[0]);
-						y = std::stoi(v[1]);
-						comando = std::toupper(v[2][0]);
-						
-						mossa_lecita = true;
-						break;
-					default:
-						break;
-					}
-
-					if (!mossa_lecita)
-					{
-						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
-					}
-					
-				}
 				
-				mossa_lecita = false;
-
+				interpreta_mossa(gioco, riga, colonna, comando);
+				
 				// Esce dalla partita per le opzioni
 				if (comando == 'O') break;
 
 				/* RANDOMIZZATORE: */
-				// Se la mossa è la prima della partita (eccetto il caso in cui si ricominci) il campo
-				// viene popolato dalle mine secondo le regole di 'randomizza_campo'
+				// Se la mossa è la prima (tranne quando si ricomincia la partita), il campo viene popolato dalle mine secondo le regole di 'randomizza_campo'
 				if (!prima_mossa_effettuata)
 				{
-					gioco.randomizza_campo(x - 1, y - 1);
+					gioco.randomizza_campo(riga - 1, colonna - 1);
 					prima_mossa_effettuata = true;
 				}
-				gioco.gioca(x - 1, y - 1, comando);
+				gioco.gioca(riga - 1, colonna - 1, comando);
 
 				/* TO DO: controllare che sia lecito come controllo */
-				// controllo della vittoria
-				if (gioco._campo_giocatore().conta_nulli() == gioco._mine())
-				{
-					gioco.vittoria();
-				}
 			}
 
 			// NON entra nelle opzioni se il gioco è stato vinto o perso.
@@ -331,78 +374,9 @@ int main()
 						<< u8"• Rivela il campo.\t\t(3)\n"
 						<< u8"• Torna al menù principale.\t(4)\n"
 						<< u8"• Esci dal gioco.\t\t(5)" << std::endl;
-			std::cout << "> ";
+			
+			menu_opzioni(gioco, uscita_programma, in_gioco);
 
-			while (!uscita_opzioni_gioco)
-			{
-				int comando_opzioni;
-
-				std::cin >> comando_opzioni;
-				pulisci_cin();
-
-				switch (comando_opzioni)
-				{
-				case 1:
-					if (!campo_rivelato)
-					{
-						uscita_opzioni_gioco = true;
-					}
-					else
-					{
-						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
-						std::cout << "> ";
-					}
-					break;
-				case 2:
-					if (!campo_rivelato)
-					{
-						gioco.reset_giocatore();
-						gioco.reset_numero_bandiere();
-						uscita_opzioni_gioco = true;
-					}
-					else
-					{
-						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
-						std::cout << "> ";
-					}
-					break;
-				case 3:
-					if (!campo_rivelato)
-					{
-						std::cout << gioco.rivela() << std::endl;
-
-						campo_rivelato = true;
-
-						std::cout << "OPZIONI:\n"
-									<< u8"• Torna al menù principale.\t (4)\n"
-									<< u8"• Esci dal gioco.\t\t (5)" << std::endl;
-						std::cout << "> ";
-					}
-					else
-					{
-						std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
-						std::cout << "> ";
-					}
-					break;
-				case 4:
-					gioco.reset();
-
-					uscita_opzioni_gioco = true;
-					in_gioco = false;
-					break;
-				case 5:
-					uscita_opzioni_gioco = true;
-					in_gioco = false;
-					uscita_programma = true;
-					break;
-				default:
-					std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
-					std::cout << "> ";
-					break;
-				}
-			}
-			uscita_opzioni_gioco = false;
-			if (gioco._status() == 'S') break;
 		}
 
 		if (gioco._status() == 'S' || gioco._status() == 'V')
@@ -417,36 +391,10 @@ int main()
 			{
 				std::cout << u8"HAI VINTO! ☺\nCosa vuoi fare ora?\n";
 			}
-			std::cout	<< u8"• Torna al menù principale.\t (1)\n"
-						<< u8"• Esci dal gioco.\t\t (2)" << std::endl;
-
-			while (!uscita_opzioni_gioco)
-			{
-				int comando_opzioni;
-				
-				std::cout << "> ";
-				std::cin >> comando_opzioni;
-				pulisci_cin();
-
-				switch (comando_opzioni)
-				{
-				case 1:
-					gioco.reset();
-
-					uscita_opzioni_gioco = true;
-					break;
-				case 2:
-					uscita_opzioni_gioco = true;
-					uscita_programma = true;
-					break;
-				default:
-					std::cout << "Comando non riconosciuto. Riprova!" << std::endl;
-					break;
-				}
+			
+			menu_opzioni_breve(gioco, uscita_programma, in_gioco);
+			
 			}
-		}
-		uscita_opzioni_gioco = false;
-		campo_rivelato = false;
 		prima_mossa_effettuata = false;
 		in_gioco = true;
 	}

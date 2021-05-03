@@ -26,5 +26,8 @@
     <ClInclude Include="gioco.h">
       <Filter>File di risorse</Filter>
     </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>File di risorse</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
