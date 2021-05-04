@@ -17,22 +17,23 @@
 
 /* MAPPE */
 
-// Definiamo una mappa che associa ad ogni carattere un numero, ci serve per la stampa del campo visto dal giocatore.
+// Definiamo una mappa che associa ad ogni numero un carattere colorato, ci serve per la stampa del campo visto dal giocatore.
 
-std::map<std::string, std::string > mappa_colori
+std::map<int, std::string > mappa_conversione
 {
-	{"1", "\x1B[38;2;1;0;254m"},		// blu chiaro
-	{"2", "\x1B[38;2;1;127;1m"},		// verde
-	{"3", "\x1B[38;2;254;0;0m"},		// rosso
-	{"4", "\x1B[38;2;1;0;128m"},		// blu scuro
-	{"5", "\x1B[38;2;129;1;2m"},		// amaranto
-	{"6", "\x1B[38;2;0;128;129m"},		// turchese
-	{"7", "\x1B[38;2;0;0;0m"},			// nero
-	{"8", "\x1B[38;2;128;128;128m"},	// grigio scurino
-	{u8"✱", "\x1B[38;2;0;0;0m"},		// nero	
-	{"-", "\x1B[38;2;0;0;0m"},			// nero	
-	{u8"⚑", "\x1B[38;2;159;0;1m"},		// rosso scurino	
-	{u8"⎕", "\x1B[38;2;0;0;0m"},		// nero	
+	{8, "\x1B[38;2;128;128;128m8"},		// 8: grigio scurino
+	{7, "\x1B[38;2;0;0;0m7"},			// 7: nero
+	{6, "\x1B[38;2;0;128;129m6"},		// 6: turchese
+	{5, "\x1B[38;2;129;1;2m5"},			// 5: amaranto
+	{4, "\x1B[38;2;1;0;128m4"},			// 4: blu scuro
+	{3, "\x1B[38;2;254;0;0m3"},			// 3: rosso
+	{2, "\x1B[38;2;1;127;1m2"},			// 2: verde
+	{1, "\x1B[38;2;1;0;254m1"},			// 1: blu chiaro
+	{0, "\x1B[38;2;0;0;0m-"},			// scavato non mina: nero
+	{-1, u8"\x1B[38;2;0;0;0m✱"},		// mina: nero	
+	{-2, u8"\x1B[38;2;159;0;1m⚑"},		// bandiera: rosso scuro	
+	{-3, u8"\x1B[38;2;0;0;0m⎕"},		// non scavato: nero
+	{-4, u8"\x1B[48;2;159;0;1m\x1B[38;2;255;255;255m✱\x1B[48;2;192;192;192m"} // mina esplosa: sfondo rosso scuro, mina bianca
 };
 
 template <typename T>
@@ -60,13 +61,19 @@ public:
 	std::vector<T>& operator[](int i)		{ return campo.at(i); };		// scrive la riga del campo
 
 	/* METODI PER MODIFICARE IL CAMPO (DIMENSIONI, RESET) */
+	void pushback(std::vector<T>);
 	void resize(int, int, T);
 	void reset(T = T());
 
 	/* METODI PER INFORMAZIONI SUL CAMPO */
 	bool nel_campo(int, int) const;
 	bool is_nullo(int, int) const;
-	int conta_nulli() const;
+	int conta_tutti_nulli() const;
+	int conta_vicini(int, int, T) const;
+	bool conta_se_vicini(int, int, T) const;
+
+	/* METODI PER CONFRONTO DI CAMPI */
+	template <typename T> friend bool operator==(const Campo<T>& sinistra, const Campo<T>& destra);
 };
 
 template <typename T>
@@ -104,18 +111,9 @@ std::ostream& operator<<(std::ostream& os, const Campo<T>& campo)
 	return os;
 }
 
-std::ostream& linea_orizzontale(std::ostream& os, const int& lunghezza)
+std::ostream& operator<<(std::ostream& os, const Campo<int>& campo)
 {
-	for (int j = 0; j < lunghezza; j++)
-	{
-		os << u8"─";
-	}
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
-{
-	auto start = std::chrono::steady_clock::now();
+	//auto start = std::chrono::steady_clock::now();
 	
 	if (campo._colonne() > 9)
 	{
@@ -131,36 +129,35 @@ std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
 				os << " ";
 			}
 		}
-		os << std::endl;
+		os << '\n';
 	}
 	os << std::setw(4) << std::setfill(' ');
 	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << (j + 1) % 10;
 	}
-	os << std::endl;
+	os << '\n';
 	os << std::right << std::setw(2) << std::setfill(' ') << " " << u8"┌";
 	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << u8"─";
 	}
-	os << u8"┐" << std::endl;
+	os << u8"┐\n";
 	for (int i = 0; i < campo._righe(); i++)
 	{
-		os << std::right << std::setw(2) << std::setfill(' ') << i + 1 << u8"│";
-		os << "\x1B[48;2;192;192;192m";
+		os << std::right << std::setw(2) << std::setfill(' ') << i + 1 << u8"│\x1B[48;2;192;192;192m";
 		for (int j = 0; j < campo._colonne(); j++)
 		{
-			os << mappa_colori[campo[i][j]] << campo[i][j];
+			os << mappa_conversione[campo[i][j]];
 		}
-		os << "\x1B[0m" << u8"│" << std::left << std::setw(2) << std::setfill(' ') << i + 1 << std::endl;
+		os << u8"\x1B[0m│" << std::left << std::setw(2) << std::setfill(' ') << i + 1 << '\n';
 	}
 	os << std::right << std::setw(2) << std::setfill(' ') << " " << u8"└";
 	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << u8"─";
 	}
-	os << u8"┘" << std::endl;
+	os << u8"┘\n";
 	if (campo._colonne() > 9)
 	{
 		os << std::setw(3) << std::setfill(' ');
@@ -175,20 +172,20 @@ std::ostream& operator<<(std::ostream& os, const Campo<std::string>& campo)
 				os << " ";
 			}
 		}
-		os << std::endl;
+		os << '\n';
 	}
 	os << std::setw(4) << std::setfill(' ');
 	for (int j = 0; j < campo._colonne(); j++)
 	{
 		os << (j + 1) % 10;
 	}
-	os << std::endl;
+	os << '\n';
 
-	auto end = std::chrono::steady_clock::now();
+	//auto end = std::chrono::steady_clock::now();
 
-	auto diff = end - start;
+	//auto diff = end - start;
 
-	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+	//std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
 
 	return os;
 }
@@ -202,6 +199,11 @@ void Campo<T>::reset(T elemento) {
 			campo[i][j] = elemento;
 		}
 	}
+}
+
+template <typename T>
+void Campo<T>::pushback(std::vector<T> riga) {
+	pushback(riga);
 }
 
 template <typename T>
@@ -227,14 +229,16 @@ bool Campo<T>::is_nullo(int i, int j) const
 	return campo[i][j] == T();
 }
 
+/* TO DO: forse fare il check solo per -2 e -3 */
 template <>
-bool Campo<std::string>::is_nullo(int i, int j) const
+bool Campo<int>::is_nullo(int i, int j) const
 {
-	return campo[i][j] == u8"⎕" || campo[i][j] == u8"⚑";
+	return campo[i][j] == -3 || campo[i][j] == -2;
 }
 
+/* TO DO: forse fare con gli if riduce le tempistiche ed è più corretto */
 template <typename T>
-int Campo<T>::conta_nulli() const
+int Campo<T>::conta_tutti_nulli() const
 {
 	int k = 0;
 
@@ -246,6 +250,56 @@ int Campo<T>::conta_nulli() const
 		}
 	}
 	return k;
+}
+
+template <typename T>
+int Campo<T>::conta_vicini(int i, int j, T elemento) const
+{
+	if (!nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
+	
+	int k = 0;
+
+	if (nel_campo(i - 1, j - 1) && campo[i - 1][j - 1] == elemento)	k++;
+	if (nel_campo(i - 1, j)		&& campo[i - 1][j] == elemento)		k++;
+	if (nel_campo(i - 1, j + 1) && campo[i - 1][j + 1] == elemento)	k++;
+	if (nel_campo(i, j - 1)		&& campo[i][j - 1] == elemento)		k++;
+	if (nel_campo(i, j + 1)		&& campo[i][j + 1] == elemento)		k++;
+	if (nel_campo(i + 1, j - 1) && campo[i + 1][j - 1] == elemento)	k++;
+	if (nel_campo(i + 1, j)		&& campo[i + 1][j] == elemento)		k++;
+	if (nel_campo(i + 1, j + 1) && campo[i + 1][j + 1] == elemento)	k++;
+
+	return k;
+}
+
+template <typename T>
+bool Campo<T>::conta_se_vicini(int i, int j, T elemento) const
+{
+	if (!nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
+
+	if (nel_campo(i - 1, j - 1) && campo[i - 1][j - 1] == elemento)	return true;
+	if (nel_campo(i - 1, j)		&& campo[i - 1][j] == elemento)		return true;
+	if (nel_campo(i - 1, j + 1) && campo[i - 1][j + 1] == elemento)	return true;
+	if (nel_campo(i, j - 1)		&& campo[i][j - 1] == elemento)		return true;
+	if (nel_campo(i, j + 1)		&& campo[i][j + 1] == elemento)		return true;
+	if (nel_campo(i + 1, j - 1) && campo[i + 1][j - 1] == elemento)	return true;
+	if (nel_campo(i + 1, j)		&& campo[i + 1][j] == elemento)		return true;
+	if (nel_campo(i + 1, j + 1) && campo[i + 1][j + 1] == elemento)	return true;
+	
+	return false;
+}
+
+template <typename T>
+bool operator==(const Campo<T>& sinistra, const Campo<T>& destra)
+{
+	if (sinistra._righe() != destra._righe() || sinistra._colonne() != destra._colonne()) return false;
+	for (int i = 0; i < sinistra._righe(); i++)
+	{
+		for (int j = 0; j < sinistra._colonne(); j++)
+		{
+			if (sinistra[i][j] != destra[i][j]) return false;
+		}
+	}
+	return true;
 }
 
 #endif // __CAMPO_H__

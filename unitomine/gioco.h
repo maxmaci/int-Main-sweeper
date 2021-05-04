@@ -17,10 +17,9 @@ private:
 	int numero_bandiere;				// 0 <= numero_bandiere < altezza * larghezza
 	char status;						// '-': nè persa, nè vinta; 'S': sconfitta; 'V': vittoria. 
 	Campo<bool> campo_gioco;
-	Campo<std::string> campo_giocatore;
+	Campo<int> campo_giocatore;
 
 	/* METODI DI GIOCO */
-	int conta_mine_vicine(int, int);						// metodo che 'scava' le celle
 	void scava_celle(int, int, Campo<bool>&);				// metodo che 'scava' le celle (utilizzando l'algoritmo di Fill usato ad es. in Microsoft Paint)
 	void aggiorna_cella(int, int);
 
@@ -33,20 +32,20 @@ public:
 	Gioco(int, int, int);
 
 	/* LEGGI CAMPI PRIVATE DI CLASS GIOCO */
-	int _altezza() { return altezza; };
-	int _larghezza() { return larghezza; };
-	int _mine() { return mine; };
-	int _numero_bandiere() { return numero_bandiere; };
-	char _status() { return status; };
-	Campo<bool> _campo_gioco() { return campo_gioco; };
-	Campo<std::string> _campo_giocatore() { return campo_giocatore; };
+	int _altezza() const { return altezza; };
+	int _larghezza() const { return larghezza; };
+	int _mine() const { return mine; };
+	int _numero_bandiere() const { return numero_bandiere; };
+	char _status() const { return status; };
+	Campo<bool> _campo_gioco() const { return campo_gioco; };
+	Campo<int> _campo_giocatore() const { return campo_giocatore; };
 
 	/* FUNZIONI DI GENERAZIONE DEL CAMPO */
 	void randomizza_campo(int, int);						// randomizza il campo con le mine 
 
 	/* FUNZIONI DI RESET */
 	void reset_gioco() { campo_gioco.reset(); };			// pulisce il campo da gioco dalle mine
-	void reset_giocatore() { campo_giocatore.reset(u8"⎕"); };	// pulisce il campo dell giocatore allo stato originale
+	void reset_giocatore() { campo_giocatore.reset(-3); };	// pulisce il campo dell giocatore allo stato originale
 	void reset_status() { status = '-'; };					// resetta lo status
 	void reset_numero_bandiere() { numero_bandiere = 0; };	// resetta il numero di bandiere segnate
 	void reset();											// pulisce il campo da gioco e del giocatore, resetta lo status a '-'
@@ -56,10 +55,15 @@ public:
 	void gioca(int, int, char);								// compie le azioni di gioco
 	void rivela();											// rivela il campo da gioco al giocatore nelle opzioni
 
+	/* FUNZIONI DI LETTURA */
+	int conta_mine_vicine(int, int) const;
+	int conta_non_scavati_vicini(int, int) const;
+	int conta_bandiere_vicine(int, int) const;
+	bool bordo_non_scavato(int, int) const;
 };
 
 Gioco::Gioco(int input_altezza, int input_larghezza, int input_mine)
-	: campo_gioco(input_altezza, input_larghezza), campo_giocatore(input_altezza, input_larghezza, u8"⎕")
+	: campo_gioco(input_altezza, input_larghezza), campo_giocatore(input_altezza, input_larghezza, -3)
 {
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	altezza = input_altezza;
@@ -69,8 +73,53 @@ Gioco::Gioco(int input_altezza, int input_larghezza, int input_mine)
 	status = '-';
 }
 
-int Gioco::conta_mine_vicine(int i, int j)
+int Gioco::conta_non_scavati_vicini(int i, int j) const
 {
+	return campo_giocatore.conta_vicini(i, j, -3);
+	
+	/*
+	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
+	if (campo_gioco[i][j] == 1) return -1;
+
+	int k = 0;
+
+	for (int n = i - 1; n <= i + 1; n++)
+	{
+		for (int m = j - 1; m <= j + 1; m++)
+		{
+			if (campo_gioco.nel_campo(n, m) && campo_giocatore[n][m] == -3) k++;
+		}
+	}
+	return k;
+	*/
+}
+
+int Gioco::conta_bandiere_vicine(int i, int j) const
+{
+	return campo_giocatore.conta_vicini(i, j, -2);
+	
+	/*
+	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
+	if (campo_gioco[i][j] == 1) return -1;
+
+	int k = 0;
+
+	for (int n = i - 1; n <= i + 1; n++)
+	{
+		for (int m = j - 1; m <= j + 1; m++)
+		{
+			if (campo_gioco.nel_campo(n, m) && campo_giocatore[n][m] == -2) k++;
+		}
+	}
+	return k;
+	*/
+}
+
+int Gioco::conta_mine_vicine(int i, int j) const
+{
+	return campo_gioco.conta_vicini(i, j, true);
+	
+	/*
 	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
 	if (campo_gioco[i][j] == 1) return -1;
 
@@ -84,13 +133,31 @@ int Gioco::conta_mine_vicine(int i, int j)
 		}
 	}
 	return k;
+	*/
+}
+
+bool Gioco::bordo_non_scavato(int i, int j) const
+{
+	return campo_giocatore[i][j] == -3 && (campo_giocatore.conta_se_vicini(i, j, 1) || campo_giocatore.conta_se_vicini(i, j, 2) || campo_giocatore.conta_se_vicini(i, j, 3) ||	campo_giocatore.conta_se_vicini(i, j, 4) ||	campo_giocatore.conta_se_vicini(i, j, 5) ||	campo_giocatore.conta_se_vicini(i, j, 6) ||	campo_giocatore.conta_se_vicini(i, j, 7) ||	campo_giocatore.conta_se_vicini(i, j, 8));
+	/*
+	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
+	if (campo_giocatore[i][j] != -3) return false;
+
+	for (int n = i - 1; n <= i + 1; n++)
+	{
+		for (int m = j - 1; m <= j + 1; m++)
+		{
+			if (campo_gioco.nel_campo(n, m) && campo_giocatore[n][m] > 0) return true;
+		}
+	}
+	return false; */
 }
 
 void Gioco::aggiorna_cella(int i, int j)
 {
-	if (conta_mine_vicine(i, j) == -1) campo_giocatore[i][j] = u8"✱";
-	else if (conta_mine_vicine(i, j) == 0) campo_giocatore[i][j] = "-";
-	else campo_giocatore[i][j] = std::to_string(conta_mine_vicine(i, j));
+	if (conta_mine_vicine(i, j) == -1) campo_giocatore[i][j] = -1;
+	else if (conta_mine_vicine(i, j) == 0) campo_giocatore[i][j] = 0;
+	else campo_giocatore[i][j] = conta_mine_vicine(i, j);
 }
 
 bool comando_lecito(char comando)
@@ -100,7 +167,7 @@ bool comando_lecito(char comando)
 
 void Gioco::scava_celle(int i, int j, Campo<bool>& celle_processate)
 {
-	auto start = std::chrono::steady_clock::now();
+	//auto start = std::chrono::steady_clock::now();
 	
 	std::queue<std::pair<int, int> > coda;
 	coda.push(std::pair<int, int>(i, j));
@@ -109,7 +176,7 @@ void Gioco::scava_celle(int i, int j, Campo<bool>& celle_processate)
 		std::pair<int, int> cella = coda.front();
 		coda.pop();
 
-		if (campo_giocatore.nel_campo(cella.first, cella.second) && campo_giocatore[cella.first][cella.second] != u8"⚑" && !campo_gioco[cella.first][cella.second] && !celle_processate[cella.first][cella.second])
+		if (campo_giocatore.nel_campo(cella.first, cella.second) && campo_giocatore[cella.first][cella.second] != -2 && !campo_gioco[cella.first][cella.second] && !celle_processate[cella.first][cella.second])
 		{
 			aggiorna_cella(cella.first, cella.second);
 
@@ -128,11 +195,11 @@ void Gioco::scava_celle(int i, int j, Campo<bool>& celle_processate)
 		}
 	}
 
-	auto end = std::chrono::steady_clock::now();
+	//auto end = std::chrono::steady_clock::now();
 
-	auto diff = end - start;
+	//auto diff = end - start;
 
-	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+	//std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
 
 	return;
 }
@@ -144,9 +211,9 @@ void Gioco::gioca(int i, int j, char comando)
 	
 	if (comando == 'B')
 	{
-		if (campo_giocatore[i][j] == u8"⎕")
+		if (campo_giocatore[i][j] == -3)
 		{
-			campo_giocatore[i][j] = u8"⚑";
+			campo_giocatore[i][j] = -2;
 			numero_bandiere++;
 			return;
 		}
@@ -154,9 +221,9 @@ void Gioco::gioca(int i, int j, char comando)
 	}
 	else if (comando == 'T')
 	{
-		if (campo_giocatore[i][j] == u8"⚑")
+		if (campo_giocatore[i][j] == -2)
 		{
-			campo_giocatore[i][j] = u8"⎕";
+			campo_giocatore[i][j] = -3;
 			numero_bandiere--;
 			return;
 		}
@@ -164,7 +231,7 @@ void Gioco::gioca(int i, int j, char comando)
 	}
 	else
 	{
-		if (campo_giocatore[i][j] == u8"⚑")
+		if (campo_giocatore[i][j] == -2)
 		{
 			return;
 		}
@@ -181,8 +248,8 @@ void Gioco::gioca(int i, int j, char comando)
 
 			scava_celle(i, j, celle_processate);
 
-			// controllo della vittoria
-			if (campo_giocatore.conta_nulli() == mine)
+			// controllo della vittoria TO DO: migliorare, se prendo tutte le mine con le bandiere dovrei poter comunque vincere
+			if (campo_giocatore.conta_tutti_nulli() == mine)
 			{
 				vittoria();
 			}
@@ -236,7 +303,7 @@ void Gioco::resize(int input_altezza, int input_larghezza, int input_mine)
 	larghezza = input_larghezza;
 	mine = input_mine;
 	campo_gioco.resize(altezza, larghezza, 0);
-	campo_giocatore.resize(altezza, larghezza, u8"⎕");
+	campo_giocatore.resize(altezza, larghezza, -3);
 }
 
 void Gioco::rivela()
@@ -253,13 +320,13 @@ void Gioco::rivela()
 
 void Gioco::sconfitta(int x, int y)
 {
-	campo_giocatore[x][y] = u8"\x1B[48;2;159;0;1m\x1B[38;2;255;255;255m✱\x1B[48;2;192;192;192m";
+	campo_giocatore[x][y] = -4;
 	status = 'S';
 	for (int i = 0; i < altezza; i++)
 	{
 		for (int j = 0; j < larghezza; j++)
 		{
-			if ((i != x || j != y) && conta_mine_vicine(i, j) == -1) campo_giocatore[i][j] = u8"✱";
+			if ((i != x || j != y) && conta_mine_vicine(i, j) == -1) campo_giocatore[i][j] = -1;
 		}
 	}
 }

@@ -3,13 +3,6 @@
 
 /* FUNZIONI PER LA LETTURA DI INPUT */
 
-// pulisce il buffer del cin e ignora tutto quello dopo il carattere in input
-void pulisci_cin()
-{
-	std::cin.clear();
-	std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
-}
-
 std::vector<std::string> separa_spazi(std::string input)
 {
 	std::vector<std::string> res;

@@ -2,20 +2,6 @@
 
 #include "gioco.h"
 
-/* Classe Risolutore */
-class Risolutore
-{
-private:
-	Gioco giocata_attuale;		// ...
-	Gioco giocata_precedente;	// ...
-public:
-	Risolutore(Gioco);
-	void metodo_meccanico();
-	// qualcosa di più efficace che il metodo prob.
-	void metodo_probabilistico();
-	void risolve();
-};
-
 /* FUNZIONI MENÙ */
 
 /* CONTROLLI sulla validità dell'input */
@@ -97,11 +83,45 @@ void menu_principale(Gioco& gioco, bool& uscita_programma)
 		{
 			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
 		}
-		
+
 	}
 }
 
-void menu_opzioni_breve(Gioco& gioco, bool& uscita_programma, bool& in_gioco)
+void menu_risolutore(bool& in_risolutore, bool& in_gioco)
+{
+	std::cout << u8"Vuoi che il Risolutore™ giochi al posto tuo?\n"
+		<< u8"• Sì, fai giocare il Risolutore™.\t (1)\n"
+		<< u8"• No, voglio giocare io.\t\t (2)" << std::endl;
+
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+
+			switch (comando_opzioni)
+			{
+			case 1:
+				in_risolutore = true;
+				return;
+			case 2:
+				in_gioco = true;
+				return;
+			default:
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+				break;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+	}
+}
+
+void menu_opzioni_breve(Gioco& gioco, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
 {
 	std::cout << "OPZIONI:\n"
 		<< u8"• Torna al menù principale.\t (1)\n"
@@ -121,9 +141,11 @@ void menu_opzioni_breve(Gioco& gioco, bool& uscita_programma, bool& in_gioco)
 				gioco.reset();
 
 				in_gioco = false;
+				in_risolutore = false;
 				return;
 			case 2:
 				in_gioco = false;
+				in_risolutore = false;
 				uscita_programma = true;
 				return;
 			default:
@@ -138,7 +160,7 @@ void menu_opzioni_breve(Gioco& gioco, bool& uscita_programma, bool& in_gioco)
 	}
 }
 
-void menu_opzioni(Gioco& gioco, bool& uscita_programma, bool& in_gioco)
+void menu_opzioni(Gioco& gioco, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
 {
 	while (true)
 	{
@@ -157,14 +179,16 @@ void menu_opzioni(Gioco& gioco, bool& uscita_programma, bool& in_gioco)
 				return;
 			case 3:
 				gioco.rivela();
-				menu_opzioni_breve(gioco, uscita_programma, in_gioco);
+				menu_opzioni_breve(gioco, uscita_programma, in_risolutore, in_gioco);
 				return;
 			case 4:
 				gioco.reset();
 
+				in_risolutore = false;
 				in_gioco = false;
 				return;
 			case 5:
+				in_risolutore = false;
 				in_gioco = false;
 				uscita_programma = true;
 				return;
@@ -186,7 +210,7 @@ void interpreta_mossa(Gioco& gioco, int& riga, int& colonna, char& comando)
 	{
 		std::vector<std::string> input = leggi_input();
 
-		
+
 		switch (input.size())
 		{
 		case 1:
@@ -207,7 +231,7 @@ void interpreta_mossa(Gioco& gioco, int& riga, int& colonna, char& comando)
 		case 3:
 			// TO DO: controllare qualche caso
 			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;
-			if (!gioco._campo_giocatore().nel_campo(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;		// throw std::invalid_argument("coordinate non valide");
+			if (!gioco._campo_giocatore().nel_campo(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	// throw std::invalid_argument("coordinate non valide");
 			if (input[2].size() > 1 || !comando_lecito(std::toupper(input[2][0]))) break;						// throw std::domain_error("comando non valido");
 
 			riga = std::stoi(input[0]);
@@ -216,11 +240,248 @@ void interpreta_mossa(Gioco& gioco, int& riga, int& colonna, char& comando)
 
 			return;
 		default:
-			
+
 			break;
 		}
 
 		std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+	}
+}
+
+void inizializza_risolutore(Gioco& gioco, int& riga, int& colonna)
+{
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+
+		switch (input.size())
+		{
+		case 2:
+			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;										//throw std::invalid_argument("comando non valido");
+			if (!gioco._campo_giocatore().nel_campo(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
+
+			riga = std::stoi(input[0]);
+			colonna = std::stoi(input[1]);
+
+			return;
+		default:
+
+			break;
+		}
+
+		std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+	}
+}
+
+/* Classe Risolutore */
+class Risolutore
+{
+private:
+	Gioco giocata_attuale;				// ...
+	Campo<int> campo_mossa_precedente;	// TO DO: forse è impegnativo memorizzare sempre il campo precedente.
+	int bandiere_precedenti;
+	int altezza;
+	int larghezza;
+
+	/* METODI RISOLUTIVI */
+	void metodo_meccanico();
+	void metodo_gaussiano();
+	// qualcosa di più efficace che il metodo prob.
+	void metodo_probabilistico();
+
+public:
+	/* COSTRUTTORE */
+	Risolutore(const Gioco&);
+	
+	int _altezza() const { return altezza; };
+	int _larghezza() const { return larghezza; };
+
+	void risolve();
+};
+
+Risolutore::Risolutore(const Gioco& gioco)
+	: giocata_attuale(9, 9, 10), campo_mossa_precedente(9, 9, -3)
+{
+	giocata_attuale = gioco;
+	campo_mossa_precedente = gioco._campo_giocatore();
+	altezza = gioco._altezza();
+	larghezza = gioco._larghezza();
+	bandiere_precedenti = 0;
+}
+
+void Risolutore::metodo_meccanico()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	for (int i = 0; i < altezza; i++)
+	{
+		for (int j = 0; j < larghezza; j++)
+		{
+			std::cout << "\"" << i << ", " << j << "\"\n";
+			/* PRIMA FASE: mette le bandierine se attorno al numero n trova n celle non scavata (con potenzialmente già delle bandierine */
+			if (giocata_attuale._campo_giocatore()[i][j] > 0 && giocata_attuale.conta_non_scavati_vicini(i, j) + giocata_attuale.conta_bandiere_vicine(i, j) == giocata_attuale._campo_giocatore()[i][j])
+			{
+				for (int n = i - 1; n <= i + 1; n++)
+				{
+					for (int m = j - 1; m <= j + 1; m++)
+					{
+						std::cout << "\"" << n << ", " << m << "\"\n";
+						if (giocata_attuale._campo_giocatore().nel_campo(n, m))
+						{
+							giocata_attuale.gioca(n, m, 'B');
+							std::cout << giocata_attuale._campo_giocatore() << std::endl;
+						}
+					}
+				}
+			}
+			if (giocata_attuale._numero_bandiere() == giocata_attuale._mine())
+			{
+				std::cout << u8"Il mio lavoro qua è finito\n";
+				auto end = std::chrono::steady_clock::now();
+
+				auto diff = end - start;
+
+				std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+				return;
+			}
+			/* SECONDA FASE: scava tutto ciò che non è bandierinato attorno ad una cella numerata con n se sono già presenti esattamente n bandierine attorno */
+			if (giocata_attuale._campo_giocatore()[i][j] > 0 && giocata_attuale.conta_bandiere_vicine(i, j) == giocata_attuale._campo_giocatore()[i][j])
+			{
+				for (int n = i - 1; n <= i + 1; n++)
+				{
+					for (int m = j - 1; m <= j + 1; m++)
+					{
+						if (giocata_attuale._campo_giocatore().nel_campo(n, m))
+						{
+							giocata_attuale.gioca(n, m, 'S');
+						}
+					}
+				}
+				
+			}
+		}
+	}
+	
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+}
+
+typedef std::pair<int, int> Coord;
+
+void Risolutore::metodo_gaussiano()
+{
+	
+	auto start = std::chrono::steady_clock::now();
+
+	std::map<Coord, int> numeri_bordo;
+	std::map<Coord, int> incognite_bordo;
+
+	Campo<int> matrice(0,0);
+
+	for (int i = 0; i < altezza; i++)
+	{
+		for (int j = 0; j < larghezza; j++)
+		{
+			if (giocata_attuale._campo_giocatore()[i][j] > 0 && giocata_attuale.conta_non_scavati_vicini(i, j) > 0)
+			{
+				/*
+				std::cout << "Ci sei Mario? ";
+				std::cout << "\"" << i + 1 << ", " << j + 1 << "\"\n";
+				numeri_bordo[Coord (i,j)]++;	//
+				
+				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j - 1)	&& giocata_attuale._campo_giocatore()[i - 1][j - 1] == -3)	incognite_bordo[Coord(i - 1, j - 1)]++;
+				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j)		&& giocata_attuale._campo_giocatore()[i - 1][j] == -3)		incognite_bordo[Coord(i - 1, j)]++;
+				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j + 1)	&& giocata_attuale._campo_giocatore()[i - 1][j + 1] == -3)	incognite_bordo[Coord(i - 1, j + 1)]++;
+				if (giocata_attuale._campo_giocatore().nel_campo(i, j - 1)		&& giocata_attuale._campo_giocatore()[i][j - 1] == -3)		incognite_bordo[Coord(i, j - 1)]++;
+				if (giocata_attuale._campo_giocatore().nel_campo(i, j + 1)		&& giocata_attuale._campo_giocatore()[i][j + 1] == -3)		incognite_bordo[Coord(i, j + 1)]++;
+				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j - 1)	&& giocata_attuale._campo_giocatore()[i + 1][j - 1] == -3)	incognite_bordo[Coord(i + 1, j - 1)]++;
+				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j)		&& giocata_attuale._campo_giocatore()[i + 1][j] == -3)		incognite_bordo[Coord(i + 1, j)]++;
+				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j + 1)	&& giocata_attuale._campo_giocatore()[i + 1][j + 1] == -3)	incognite_bordo[Coord(i + 1, j + 1)]++;
+				*/
+			}
+		}
+	}
+	
+	int n_colonne = 2;
+
+	int n_righe = 3;
+	
+	Campo<int> matrice(n_righe, n_colonne);
+
+	for (int n = 0; n < n_righe; n++)
+	{
+		for (int m = 0; m < n_colonne; m++)
+		{
+			
+			matrice[n][m] = 1;
+		}
+	}
+	
+	//for (std::vector<std::pair<int, int> >::const_iterator it = numeri_bordo.cbegin(); it != numeri_bordo.cend(); it++)
+	//{
+		//
+	//}
+	
+	for (int i = 0; i < n_righe; i++)
+	{
+		for (int j = 0; j < n_colonne; j++)
+		{
+			std::cout << matrice[i][j];
+
+		}
+		std::cout << "\n";
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+}
+
+void Risolutore::risolve()
+{
+	int riga;
+	int colonna;
+	std::cout << giocata_attuale._campo_giocatore() << std::endl;
+	std::cout << u8"Inserisci le coordinate (nella forma 'riga colonna') per inizializzare il costruttore." << std::endl;
+	inizializza_risolutore(giocata_attuale, riga, colonna);
+	giocata_attuale.randomizza_campo(riga - 1, colonna - 1);
+
+	giocata_attuale.gioca(riga - 1, colonna - 1, 'S');
+	std::cout << giocata_attuale._campo_giocatore() << std::endl;
+	system("PAUSE");
+	
+	while (true)
+	{
+		campo_mossa_precedente = giocata_attuale._campo_giocatore();
+
+		metodo_meccanico();
+		//metodo_gaussiano();
+		std::cout << giocata_attuale._campo_giocatore() << std::endl;
+		std::cout << "STATUS: " << giocata_attuale._status() << std::endl;
+		if (giocata_attuale._numero_bandiere() == bandiere_precedenti)
+		{
+			std::cout << " Non ho messo nuove bandiere, potrei essermi bloccato" << std::endl;
+		}
+		bandiere_precedenti = giocata_attuale._numero_bandiere();
+		int k;
+		std::cin >> k;
+		if (k == -1)
+		{
+			giocata_attuale.reset();
+			giocata_attuale.randomizza_campo(riga - 1, colonna - 1);
+			giocata_attuale.gioca(riga - 1, colonna - 1, 'S');
+			std::cin.clear();
+			std::cout << giocata_attuale._campo_giocatore() << std::endl;
+			system("PAUSE");
+		}
 	}
 }
 
@@ -275,8 +536,9 @@ int main()
 
 	bool uscita_programma = false;
 
-	// uscita_opzioni : se è 'false', esce dal ciclo del gioco per tornare al menù principale oppure per uscire dal programma
 	bool in_gioco = false;
+
+	bool in_risolutore = false;
 
 	// prima_mossa_effettuata : ad inizio partita è posta come 'false'; quando si fa la prima mossa entrando in un IF si randomizza
 	// il campo di mine in modo da generare uno spazio vuoto (o con numeri) 3x3 attorno alla casella scelta, poi viene settata come 'true'
@@ -287,11 +549,10 @@ int main()
 	/* LOOP DEL PROGRAMMA: finchè non gli viene dato l'input di uscita del menù tornerà qui */
 
 	// inizializza la tabella di gioco
-	Gioco gioco(9, 9, 10);
 
 	while (!uscita_programma)
 	{
-
+		Gioco gioco(9, 9, 10);
 		/* SCHERMATA PRINCIPALE */
 
 		// Piccola ASCII art con il titolo; il prefisso R"( ... )" indica che il contenuto delle parentesi
@@ -328,7 +589,7 @@ int main()
 		
 		menu_principale(gioco, uscita_programma);
 		
-		in_gioco = true;
+		menu_risolutore(in_risolutore, in_gioco);
 
 	/* TO DO: menù per chiedere risolutore */
 
@@ -354,9 +615,9 @@ int main()
 					gioco.randomizza_campo(riga - 1, colonna - 1);
 					prima_mossa_effettuata = true;
 				}
+				
 				gioco.gioca(riga - 1, colonna - 1, comando);
 
-				/* TO DO: controllare che sia lecito come controllo */
 			}
 
 			// NON entra nelle opzioni se il gioco è stato vinto o perso.
@@ -366,8 +627,6 @@ int main()
 				break;
 			}
 
-			/* TO DO: mettere questo lettore input come l'altro in gioco */
-
 			std::cout	<< "OPZIONI:\n"
 						<< u8"• Torna al gioco.\t\t(1)\n"
 						<< u8"• Ricomincia la partita.\t(2)\n"
@@ -375,8 +634,15 @@ int main()
 						<< u8"• Torna al menù principale.\t(4)\n"
 						<< u8"• Esci dal gioco.\t\t(5)" << std::endl;
 			
-			menu_opzioni(gioco, uscita_programma, in_gioco);
+			menu_opzioni(gioco, uscita_programma, in_risolutore, in_gioco);
 
+		}
+
+		Risolutore risolutore(gioco);
+
+		while (!uscita_programma && in_risolutore)
+		{
+			risolutore.risolve();
 		}
 
 		if (gioco._status() == 'S' || gioco._status() == 'V')
@@ -392,10 +658,11 @@ int main()
 				std::cout << u8"HAI VINTO! ☺\nCosa vuoi fare ora?\n";
 			}
 			
-			menu_opzioni_breve(gioco, uscita_programma, in_gioco);
+			menu_opzioni_breve(gioco, uscita_programma, in_risolutore, in_gioco);
 			
-			}
+		}
+
 		prima_mossa_effettuata = false;
-		in_gioco = true;
+
 	}
 }
