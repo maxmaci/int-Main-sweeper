@@ -144,8 +144,9 @@
     <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="menu.h" />
+    <ClInclude Include="matrice.h" />
     <ClInclude Include="campo.h" />
-    <ClInclude Include="gioco.h" />
     <ClInclude Include="input.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,0 +1,277 @@
+#ifndef __MENU_H__
+#define __MENU_H__
+
+#include "campo.h"
+
+/* FUNZIONI MENÙ */
+
+/* CONTROLLI sulla validità dell'input */
+bool input_menu_lecito(std::vector<std::string> input)
+{
+	return input.size() == 1 && solo_numeri(input[0]);
+}
+
+bool input_personalizzata_lecito(std::vector<std::string> input)
+{
+	return input.size() == 3 && solo_numeri(input[0]) && solo_numeri(input[1]) && solo_numeri(input[2]);
+}
+
+void partita_personalizzata(Campo& campo)
+{
+	std::cout << "Inserisci altezza, larghezza e numero di mine (nel formato 'altezza', 'larghezza', 'mine'):" << std::endl; // TO DO: evitare errori di crash
+
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+		if (input_personalizzata_lecito(input))
+		{
+			int altezza = std::stoi(input[0]);
+			int larghezza = std::stoi(input[1]);
+			int mine = std::stoi(input[2]);
+			campo.resize(altezza, larghezza, mine);
+			return;
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+	}
+}
+
+void menu_principale(Campo& gioco, bool& uscita_programma)
+{
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+			switch (comando_opzioni)
+			{
+			case 1:
+				gioco.resize(9, 9, 10);
+				return;
+			case 2:
+				gioco.resize(16, 16, 40);
+				return;
+			case 3:
+				gioco.resize(16, 30, 99);
+				return;
+			case 4:
+				std::cout << "We're no stranger to love..." << std::endl;
+				return;
+				/* TO DO: metterci la tabella */
+			case 5:
+				partita_personalizzata(gioco);
+				return;
+			case 6:
+				uscita_programma = true;
+				return;
+			case 42:
+				std::cout << u8"\"La Vita, l'Universo, e il Tutto. C'è una risposta. Ma ci devo pensare.\"" << std::endl;
+				gioco.resize(42, 42, 420);
+				return;
+			default:
+				std::cout << u8"Lo vedi che ci sono solo numeri dall'1 al 6, vero? Che diamine scrivi "
+					<< comando_opzioni
+					<< u8" quando chiaramente\nnon ti mostrerà nulla di importante?"
+					<< u8" Piuttosto che perdere tempo così, potresti chiederti\n"
+					<< u8"se c'è una risposta alla Vita, all'Universo, al Tutto." << std::endl;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+
+	}
+}
+
+void menu_risolutore(bool& in_risolutore, bool& in_gioco)
+{
+	std::cout << u8"Vuoi che il Risolutore™ giochi al posto tuo?\n"
+		<< u8"• Sì, fai giocare il Risolutore™.\t (1)\n"
+		<< u8"• No, voglio giocare io.\t\t (2)" << std::endl;
+
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+
+			switch (comando_opzioni)
+			{
+			case 1:
+				in_risolutore = true;
+				return;
+			case 2:
+				in_gioco = true;
+				return;
+			default:
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+				break;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+	}
+}
+
+void menu_opzioni_breve(Campo& gioco, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
+{
+	std::cout << "OPZIONI:\n"
+		<< u8"• Torna al menù principale.\t (1)\n"
+		<< u8"• Esci dal gioco.\t\t (2)" << std::endl;
+
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+
+			switch (comando_opzioni)
+			{
+			case 1:
+				gioco.reset();
+
+				in_gioco = false;
+				in_risolutore = false;
+				return;
+			case 2:
+				in_gioco = false;
+				in_risolutore = false;
+				uscita_programma = true;
+				return;
+			default:
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+				break;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+	}
+}
+
+void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
+{
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		if (input_menu_lecito(input))
+		{
+			int comando_opzioni = std::stoi(input[0]);
+			switch (comando_opzioni)
+			{
+			case 1:
+				return;
+			case 2:
+				partita.reset_giocatore();
+				partita.reset_numero_bandiere();
+				return;
+			case 3:
+				partita.rivela();
+				menu_opzioni_breve(partita, uscita_programma, in_risolutore, in_gioco);
+				return;
+			case 4:
+				partita.reset();
+
+				in_risolutore = false;
+				in_gioco = false;
+				return;
+			case 5:
+				in_risolutore = false;
+				in_gioco = false;
+				uscita_programma = true;
+				return;
+			default:
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+				break;
+			}
+		}
+		else
+		{
+			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+		}
+	}
+}
+
+void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando)
+{
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+
+		switch (input.size())
+		{
+		case 1:
+			if (input[0].size() > 1 || std::toupper(input[0][0]) != 'O') break; // throw std::invalid_argument("comando non valido");
+
+			comando = 'O';
+
+			return;
+		case 2:
+			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;										//throw std::invalid_argument("comando non valido");
+			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
+
+			riga = std::stoi(input[0]);
+			colonna = std::stoi(input[1]);
+			comando = 'S';
+
+			return;
+		case 3:
+			// TO DO: controllare qualche caso
+			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;
+			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	// throw std::invalid_argument("coordinate non valide");
+			if (input[2].size() > 1 || !comando_lecito(std::toupper(input[2][0]))) break;						// throw std::domain_error("comando non valido");
+
+			riga = std::stoi(input[0]);
+			colonna = std::stoi(input[1]);
+			comando = std::toupper(input[2][0]);
+
+			return;
+		default:
+
+			break;
+		}
+
+		std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+	}
+}
+
+void inizializza_risolutore(Campo& partita, int& riga, int& colonna)
+{
+	while (true)
+	{
+		std::vector<std::string> input = leggi_input();
+
+		switch (input.size())
+		{
+		case 2:
+			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;											//throw std::invalid_argument("comando non valido");
+			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
+
+			riga = std::stoi(input[0]);
+			colonna = std::stoi(input[1]);
+
+			return;
+		default:
+
+			break;
+		}
+
+		std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+	}
+}
+
+#endif // __MENU_H__

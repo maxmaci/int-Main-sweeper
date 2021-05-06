@@ -20,14 +20,17 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="campo.h">
-      <Filter>File di risorse</Filter>
+    <ClInclude Include="menu.h">
+      <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="gioco.h">
-      <Filter>File di risorse</Filter>
+    <ClInclude Include="matrice.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="campo.h">
+      <Filter>File di intestazione</Filter>
     </ClInclude>
     <ClInclude Include="input.h">
-      <Filter>File di risorse</Filter>
+      <Filter>File di intestazione</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

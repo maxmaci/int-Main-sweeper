@@ -1,21 +1,13 @@
 ﻿#ifndef __CAMPO_H__
 #define __CAMPO_H__
 
-#include <iostream>		// std::cout / std::cin
-#include <string>		// classe string
-#include <vector>		// classe vector
-#include <map>			// classe map
-#include <iomanip>		// std::setw() / std::setfill()
-#include <chrono>
+#include <utility>		// classe pair
+#include <queue>
 
-#ifdef _WIN32
-// Se compilato su un computer con Windows includiamo la libreria windows.h, necessaria per la compatibilità UTF-8.
-// È consigliato usare Dejavù Sans Mono dato che supporta molti caratteri unicode.
-// Per motivi di incompatibilità di macro della libreria, useremo la notazione con parentesi per (std::min) and (std::max).
-#include <windows.h>
-#endif
+#include "matrice.h"
+#include "input.h"
 
-/* MAPPE */
+// TO DO: sostituire campo "numero bandiere" con il conta elementi per le bandiere
 
 // Definiamo una mappa che associa ad ogni numero un carattere colorato, ci serve per la stampa del campo visto dal giocatore.
 
@@ -36,90 +28,90 @@ std::map<int, std::string > mappa_conversione
 	{-4, u8"\x1B[48;2;159;0;1m\x1B[38;2;255;255;255m✱\x1B[48;2;192;192;192m"} // mina esplosa: sfondo rosso scuro, mina bianca
 };
 
-template <typename T>
 class Campo
 {
 private:
-	/* CAMPI */
-	int	righe;								// 0 <= righe
-	int colonne;							// 0 <= colonne
-	std::vector<std::vector<T> > campo;
+	int altezza;						// 0 < altezza < 99
+	int larghezza;						// 0 < larghezza < 99
+	int mine;							// 0 < mine < altezza * larghezza
 
-	/* INIZIALIZZATORI DEI COSTRUTTORI */
-	void init(int, int, T);
+	int numero_bandiere;				// 0 <= numero_bandiere < altezza * larghezza
+
+	char status;						// '-': nè persa, nè vinta; 'S': sconfitta; 'V': vittoria. 
+
+	Matrice<bool> campo_nascosto;
+	Matrice<int> campo_visibile;
+
+	/* METODI DI GIOCO */
+	void scava_celle(int, int, Matrice<bool>&);				// metodo che 'scava' le celle (utilizzando l'algoritmo di Fill usato ad es. in Microsoft Paint)
+	void aggiorna_cella(int, int);
+
+	/* SCONFITTA / VITTORIA */
+	void sconfitta(int, int);								// visualizzando il campo con le mine, imposta lo status a S(confitta)
+	void vittoria();										// controlla se le mine sono state tutte segnate con la bandierina. Se è così, imposta lo status a V(ittoria)
+
 public:
-	/* COSTRUTTORI */
-	Campo(int, int);														// costruttore con valore di default delle celle pari a T()
-	Campo(int, int, T);														// costruttore con valore di default delle celle dato in input iniziale
+	/* COSTRUTTORE */
+	Campo(int = 9, int = 9, int = 10);
 
-	/* LETTORE NUMERO DI RIGHE/COLONNE */
-	int _righe() const						{ return righe; };				// legge la riga del campo
-	int _colonne() const					{ return colonne; };
+	/* LEGGI CAMPI PRIVATE */
+	int _altezza() const { return altezza; };
+	int _larghezza() const { return larghezza; };
+	int _mine() const { return mine; };
 
-	/* LETTURA/SCRITTURA DELLE RIGHE */
-	std::vector<T> operator[](int i) const	{ return campo.at(i); };		// legge la riga i-esima del campo
-	std::vector<T>& operator[](int i)		{ return campo.at(i); };		// scrive la riga del campo
+	int _numero_bandiere() const { return numero_bandiere; };
+	
+	char _status() const { return status; };
+	
+	Matrice<bool> _campo_nascosto() const { return campo_nascosto; };			// to do: non lo uso mai ed è prono ad essere abusato per gli scopi malvagi di risolutore: ci converrà metterlo in privato
+	Matrice<int> _campo_visibile() const { return campo_visibile; };
 
-	/* METODI PER MODIFICARE IL CAMPO (DIMENSIONI, RESET) */
-	void push_back(std::vector<T>);
-	void swap(int, int);
-	void resize(int, int, T);
-	void reset(T = T());
+	/* FUNZIONI DI GENERAZIONE DEL CAMPO */
+	void randomizza_campo(int, int);						// randomizza il campo con le mine 
 
-	/* METODI PER INFORMAZIONI SUL CAMPO */
-	bool nel_campo(int, int) const;
-	bool is_nullo(int, int) const;
-	int conta_tutti_nulli() const;
-	int conta_vicini(int, int, T) const;
-	bool conta_se_vicini(int, int, T) const;
+	/* FUNZIONI DI RESET */
+	void reset_gioco() { campo_nascosto.reset(); };			// pulisce il campo da gioco dalle mine
+	void reset_giocatore() { campo_visibile.reset(-3); };	// pulisce il campo dell giocatore allo stato originale
+	void reset_status() { status = '-'; };					// resetta lo status
+	void reset_numero_bandiere() { numero_bandiere = 0; };	// resetta il numero di bandiere segnate
+	void reset();											// pulisce il campo da gioco e del giocatore, resetta lo status a '-'
 
-	/* METODI PER CONFRONTO DI CAMPI */
-	template <typename T> friend bool operator==(const Campo<T>& sinistra, const Campo<T>& destra);
+	/* METODI DI GIOCO */
+	void resize(int, int, int);								// aggiorna il campo da gioco e del giocatore con nuovi valori di altezza, larghezza e mine
+	void gioca(int, int, char);								// compie le azioni di gioco
+	void rivela();											// rivela il campo da gioco al giocatore nelle opzioni
+
+	/* FUNZIONI DI LETTURA STATUS */
+	int conta_mine_vicine(int, int) const;
+	int conta_non_scavati_vicini(int, int) const;
+	int conta_bandiere_vicine(int, int) const;
+	bool bordo_non_scavato(int, int) const;
+
+	/* FUNZIONI DI STAMPA */
+	friend std::ostream& operator<<(std::ostream&, const Campo&);
 };
 
-template <typename T>
-void Campo<T>::init(int numero_righe, int numero_colonne, T elemento)
+Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 {
-	if (numero_righe < 0 || numero_colonne < 0 ) throw std::domain_error("dimensioni del campo invalide");
-	righe = numero_righe;
-	colonne = numero_colonne;
-	campo.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
-}
-
-template <typename T>
-Campo<T>::Campo(int numero_righe, int numero_colonne)
-{
-	init(numero_righe, numero_colonne, T());
-}
-
-template <typename T>
-Campo<T>::Campo(int numero_righe, int numero_colonne, T elemento)
-{
-	init(numero_righe, numero_colonne, elemento);
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Campo<T>& campo)
-{
-	for (int i = 0; i < campo._righe(); i++)
-	{
-		for (int j = 0; j < campo._colonne(); j++)
-		{
-			os << campo[i][j];
-		}
-		os << std::endl;
-	}
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const Campo<int>& campo)
-{
-	//auto start = std::chrono::steady_clock::now();
+	if (input_altezza < 1 || input_altezza > 99 ||  input_larghezza < 1 || input_larghezza > 99) throw std::domain_error("dimensioni del campo invalide");
+	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	
-	if (campo._colonne() > 9)
+	campo_nascosto = Matrice<bool>(input_altezza, input_larghezza);
+	campo_visibile = Matrice<int>(input_altezza, input_larghezza, -3);
+
+	altezza = input_altezza;
+	larghezza = input_larghezza;
+	mine = input_mine;
+	numero_bandiere = 0;
+	status = '-';
+}
+
+std::ostream& operator<<(std::ostream& os, const Campo& campo)
+{
+	if (campo._altezza() > 9)
 	{
 		os << std::setw(3) << std::setfill(' ');
-		for (int j = 0; j < campo._colonne() + 1; j++)
+		for (int j = 0; j < campo.altezza + 1; j++)
 		{
 			if (j > 9)
 			{
@@ -133,36 +125,36 @@ std::ostream& operator<<(std::ostream& os, const Campo<int>& campo)
 		os << '\n';
 	}
 	os << std::setw(4) << std::setfill(' ');
-	for (int j = 0; j < campo._colonne(); j++)
+	for (int j = 0; j < campo.larghezza; j++)
 	{
 		os << (j + 1) % 10;
 	}
 	os << '\n';
 	os << std::right << std::setw(2) << std::setfill(' ') << " " << u8"┌";
-	for (int j = 0; j < campo._colonne(); j++)
+	for (int j = 0; j < campo.larghezza; j++)
 	{
 		os << u8"─";
 	}
 	os << u8"┐\n";
-	for (int i = 0; i < campo._righe(); i++)
+	for (int i = 0; i < campo._altezza(); i++)
 	{
 		os << std::right << std::setw(2) << std::setfill(' ') << i + 1 << u8"│\x1B[48;2;192;192;192m";
-		for (int j = 0; j < campo._colonne(); j++)
+		for (int j = 0; j < campo._larghezza(); j++)
 		{
-			os << mappa_conversione[campo[i][j]];
+			os << mappa_conversione[campo.campo_visibile[i][j]];
 		}
 		os << u8"\x1B[0m│" << std::left << std::setw(2) << std::setfill(' ') << i + 1 << '\n';
 	}
 	os << std::right << std::setw(2) << std::setfill(' ') << " " << u8"└";
-	for (int j = 0; j < campo._colonne(); j++)
+	for (int j = 0; j < campo.larghezza; j++)
 	{
 		os << u8"─";
 	}
 	os << u8"┘\n";
-	if (campo._colonne() > 9)
+	if (campo.larghezza > 9)
 	{
 		os << std::setw(3) << std::setfill(' ');
-		for (int j = 0; j < campo._colonne() + 1; j++)
+		for (int j = 0; j < campo.larghezza + 1; j++)
 		{
 			if (j > 9)
 			{
@@ -176,140 +168,207 @@ std::ostream& operator<<(std::ostream& os, const Campo<int>& campo)
 		os << '\n';
 	}
 	os << std::setw(4) << std::setfill(' ');
-	for (int j = 0; j < campo._colonne(); j++)
+	for (int j = 0; j < campo.larghezza; j++)
 	{
 		os << (j + 1) % 10;
 	}
 	os << '\n';
 
-	//auto end = std::chrono::steady_clock::now();
-
-	//auto diff = end - start;
-
-	//std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
-
 	return os;
 }
 
-template <typename T>
-void Campo<T>::reset(T elemento) {
-	for (int i = 0; i < righe; i++)
+int Campo::conta_non_scavati_vicini(int i, int j) const
+{
+	return campo_visibile.conta_vicini(i, j, -3);
+}
+
+int Campo::conta_bandiere_vicine(int i, int j) const
+{
+	return campo_visibile.conta_vicini(i, j, -2);
+}
+
+int Campo::conta_mine_vicine(int i, int j) const
+{
+	return campo_nascosto.conta_vicini(i, j, true);
+}
+
+bool Campo::bordo_non_scavato(int i, int j) const
+{
+	return campo_visibile[i][j] == -3 && (campo_visibile.conta_se_vicini(i, j, 1) || campo_visibile.conta_se_vicini(i, j, 2) || campo_visibile.conta_se_vicini(i, j, 3) || campo_visibile.conta_se_vicini(i, j, 4) || campo_visibile.conta_se_vicini(i, j, 5) || campo_visibile.conta_se_vicini(i, j, 6) || campo_visibile.conta_se_vicini(i, j, 7) || campo_visibile.conta_se_vicini(i, j, 8));
+}
+
+void Campo::aggiorna_cella(int i, int j)
+{
+	if (campo_nascosto[i][j]) campo_visibile[i][j] = -1;
+	else if (conta_mine_vicine(i, j) == 0) campo_visibile[i][j] = 0;
+	else campo_visibile[i][j] = conta_mine_vicine(i, j);
+}
+
+bool comando_lecito(char comando)
+{
+	return comando == 'B' || comando == 'T' || comando == 'S';
+}
+
+void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
+{
+	std::queue<std::pair<int, int> > coda;
+	coda.push(std::pair<int, int>(i, j));
+	while (coda.size() != 0)
 	{
-		for (int j = 0; j < colonne; j++)
+		std::pair<int, int> cella = coda.front();
+		coda.pop();
+
+		if (campo_visibile.indici_leciti(cella.first, cella.second) && campo_visibile[cella.first][cella.second] != -2 && !campo_nascosto[cella.first][cella.second] && !celle_processate[cella.first][cella.second])
 		{
-			campo[i][j] = elemento;
+			aggiorna_cella(cella.first, cella.second);
+
+			celle_processate[cella.first][cella.second] = true;
+			if (conta_mine_vicine(cella.first, cella.second) == 0) // controlla che la casella non sia un fiore; in caso contrario non aggiungerà i nodi alla coda
+			{
+				coda.push(std::pair<int, int>(cella.first - 1, cella.second - 1));
+				coda.push(std::pair<int, int>(cella.first - 1, cella.second));
+				coda.push(std::pair<int, int>(cella.first - 1, cella.second + 1));
+				coda.push(std::pair<int, int>(cella.first, cella.second - 1));
+				coda.push(std::pair<int, int>(cella.first, cella.second + 1));
+				coda.push(std::pair<int, int>(cella.first + 1, cella.second - 1));
+				coda.push(std::pair<int, int>(cella.first + 1, cella.second));
+				coda.push(std::pair<int, int>(cella.first + 1, cella.second + 1));
+			}
 		}
+	}
+
+	return;
+}
+
+void Campo::gioca(int i, int j, char comando)
+{
+	comando = std::toupper(comando);
+	if (!comando_lecito(comando)) throw std::invalid_argument("comando illecito");
+	
+	if (comando == 'B' && campo_visibile[i][j] == -3)
+	{
+		campo_visibile[i][j] = -2;
+		numero_bandiere++;
+	}
+	else if (comando == 'T'&& campo_visibile[i][j] == -2)
+	{
+		campo_visibile[i][j] = -3;
+		numero_bandiere--;
+	}
+	else if (campo_visibile[i][j] != -2)
+	{
+		if (campo_nascosto[i][j])
+		{
+			sconfitta(i, j);
+			return;
+		}
+		else
+		{
+			aggiorna_cella(i, j);
+
+			Matrice<bool> celle_processate(altezza, larghezza);
+
+			scava_celle(i, j, celle_processate);
+		}	
+	}
+	vittoria(); // controllo della vittoria TO DO: migliorare, se prendo tutte le mine con le bandiere dovrei poter comunque vincere
+}
+
+void Campo::randomizza_campo(int i, int j)
+{
+	int k = 1;
+	while (true)
+	{
+		int random1 = std::rand() % altezza;
+		int random2 = std::rand() % larghezza;
+		if (mine >= altezza * larghezza - 8)
+		{
+			if ((random1 != i || random2 != j) && campo_nascosto[random1][random2] != 1)
+			{
+				campo_nascosto[random1][random2] = 1;
+				k++;
+			}
+		}
+		else
+		{
+			if (((random1 < i - 1 || random1 > i + 1) || (random2 < j - 1 || random2 > j + 1)) && campo_nascosto[random1][random2] != 1)
+			{
+				campo_nascosto[random1][random2] = 1;
+				k++;
+			}
+		}
+		if (k > mine) break;
 	}
 }
 
-template <typename T>
-void Campo<T>::push_back(std::vector<T> riga) {
-	if (riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
-	campo.push_back(riga);
-	righe = righe + 1;
+void Campo::reset()
+{
+	reset_gioco();
+	reset_giocatore();
+	reset_status();
+	reset_numero_bandiere();
 }
 
-template <typename T>
-void Campo<T>::swap(int i, int j) {
-	std::vector<T> temp (campo[j]);
-	campo[j] = campo[i];
-	campo[i] = temp;
+void Campo::resize(int input_altezza, int input_larghezza, int input_mine)
+{
+	if (input_altezza < 1 || input_altezza > 99 || input_larghezza < 1 || input_larghezza > 99) throw std::domain_error("dimensioni del campo invalide");
+	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
+	altezza = input_altezza;
+	larghezza = input_larghezza;
+	mine = input_mine;
+	campo_nascosto.resize(altezza, larghezza, 0);
+	campo_visibile.resize(altezza, larghezza, -3);
 }
 
-template <typename T>
-void Campo<T>::resize(int altezza, int larghezza, T elemento) {
-	righe = altezza;
-	colonne = larghezza;
-	campo.resize(altezza, std::vector<T>(larghezza, elemento));
+void Campo::rivela()
+{
 	for (int i = 0; i < altezza; i++)
 	{
-		campo[i].resize(larghezza, elemento);
-	}
-}
-
-template <typename T>
-bool Campo<T>::nel_campo(int i, int j) const
-{
-	return i >= 0 && i < righe&& j >= 0 && j < colonne;
-}
-
-template <typename T>
-bool Campo<T>::is_nullo(int i, int j) const
-{
-	return campo[i][j] == T();
-}
-
-/* TO DO: forse fare il check solo per -2 e -3 */
-template <>
-bool Campo<int>::is_nullo(int i, int j) const
-{
-	return campo[i][j] == -3 || campo[i][j] == -2;
-}
-
-/* TO DO: forse fare con gli if riduce le tempistiche ed è più corretto */
-template <typename T>
-int Campo<T>::conta_tutti_nulli() const
-{
-	int k = 0;
-
-	for (int i = 0; i < righe; i++)
-	{
-		for (int j = 0; j < colonne; j++)
+		for (int j = 0; j < larghezza; j++)
 		{
-			if (is_nullo(i, j)) k++;
+			aggiorna_cella(i, j);
 		}
 	}
-	return k;
+	std::cout << *this;
 }
 
-template <typename T>
-int Campo<T>::conta_vicini(int i, int j, T elemento) const
+void Campo::sconfitta(int x, int y)
 {
-	if (!nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-	
-	int k = 0;
-
-	if (nel_campo(i - 1, j - 1) && campo[i - 1][j - 1] == elemento)	k++;
-	if (nel_campo(i - 1, j)		&& campo[i - 1][j] == elemento)		k++;
-	if (nel_campo(i - 1, j + 1) && campo[i - 1][j + 1] == elemento)	k++;
-	if (nel_campo(i, j - 1)		&& campo[i][j - 1] == elemento)		k++;
-	if (nel_campo(i, j + 1)		&& campo[i][j + 1] == elemento)		k++;
-	if (nel_campo(i + 1, j - 1) && campo[i + 1][j - 1] == elemento)	k++;
-	if (nel_campo(i + 1, j)		&& campo[i + 1][j] == elemento)		k++;
-	if (nel_campo(i + 1, j + 1) && campo[i + 1][j + 1] == elemento)	k++;
-
-	return k;
-}
-
-template <typename T>
-bool Campo<T>::conta_se_vicini(int i, int j, T elemento) const
-{
-	if (!nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-
-	if (nel_campo(i - 1, j - 1) && campo[i - 1][j - 1] == elemento)	return true;
-	if (nel_campo(i - 1, j)		&& campo[i - 1][j] == elemento)		return true;
-	if (nel_campo(i - 1, j + 1) && campo[i - 1][j + 1] == elemento)	return true;
-	if (nel_campo(i, j - 1)		&& campo[i][j - 1] == elemento)		return true;
-	if (nel_campo(i, j + 1)		&& campo[i][j + 1] == elemento)		return true;
-	if (nel_campo(i + 1, j - 1) && campo[i + 1][j - 1] == elemento)	return true;
-	if (nel_campo(i + 1, j)		&& campo[i + 1][j] == elemento)		return true;
-	if (nel_campo(i + 1, j + 1) && campo[i + 1][j + 1] == elemento)	return true;
-	
-	return false;
-}
-
-template <typename T>
-bool operator==(const Campo<T>& sinistra, const Campo<T>& destra)
-{
-	if (sinistra._righe() != destra._righe() || sinistra._colonne() != destra._colonne()) return false;
-	for (int i = 0; i < sinistra._righe(); i++)
+	status = 'S';
+	for (int i = 0; i < altezza; i++)
 	{
-		for (int j = 0; j < sinistra._colonne(); j++)
+		for (int j = 0; j < larghezza; j++)
 		{
-			if (sinistra[i][j] != destra[i][j]) return false;
+			if (campo_nascosto[i][j]) campo_visibile[i][j] = -1;
 		}
 	}
-	return true;
+	campo_visibile[x][y] = -4;
+}
+
+void Campo::vittoria()
+{
+	if (campo_visibile.conta_tutti_elemento(-2) + campo_visibile.conta_tutti_elemento(-3) == mine)
+	{
+		int mine_identificate = 0;
+		for (int i = 0; i < altezza; i++)
+		{
+			for (int j = 0; j < larghezza; j++)
+			{
+				if ((campo_visibile.is_elemento(i, j, -2) || campo_visibile.is_elemento(i, j, -3)) && campo_nascosto[i][j]) mine_identificate++;
+			}
+		}
+		if (mine_identificate == mine)
+		{
+			status = 'V';
+			for (int i = 0; i < altezza; i++)
+			{
+				for (int j = 0; j < larghezza; j++)
+				{
+					if (campo_nascosto[i][j]) campo_visibile[i][j] = -2;
+				}
+			}
+		}
+	}
 }
 
 #endif // __CAMPO_H__
