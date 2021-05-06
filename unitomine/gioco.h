@@ -11,8 +11,8 @@
 class Gioco
 {
 private:
-	int altezza;						// altezza > 0
-	int larghezza;						// larghezza > 0
+	int altezza;						// 0 < altezza < 99
+	int larghezza;						// 0 < larghezza < 99
 	int mine;							// 0 < mine < altezza * larghezza
 	int numero_bandiere;				// 0 <= numero_bandiere < altezza * larghezza
 	char status;						// '-': nè persa, nè vinta; 'S': sconfitta; 'V': vittoria. 
@@ -65,6 +65,7 @@ public:
 Gioco::Gioco(int input_altezza, int input_larghezza, int input_mine)
 	: campo_gioco(input_altezza, input_larghezza), campo_giocatore(input_altezza, input_larghezza, -3)
 {
+	if (input_altezza < 1 || input_altezza > 99 ||  input_larghezza < 1 || input_larghezza > 99) throw std::domain_error("dimensioni del campo invalide");
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	altezza = input_altezza;
 	larghezza = input_larghezza;
@@ -76,81 +77,21 @@ Gioco::Gioco(int input_altezza, int input_larghezza, int input_mine)
 int Gioco::conta_non_scavati_vicini(int i, int j) const
 {
 	return campo_giocatore.conta_vicini(i, j, -3);
-	
-	/*
-	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-	if (campo_gioco[i][j] == 1) return -1;
-
-	int k = 0;
-
-	for (int n = i - 1; n <= i + 1; n++)
-	{
-		for (int m = j - 1; m <= j + 1; m++)
-		{
-			if (campo_gioco.nel_campo(n, m) && campo_giocatore[n][m] == -3) k++;
-		}
-	}
-	return k;
-	*/
 }
 
 int Gioco::conta_bandiere_vicine(int i, int j) const
 {
 	return campo_giocatore.conta_vicini(i, j, -2);
-	
-	/*
-	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-	if (campo_gioco[i][j] == 1) return -1;
-
-	int k = 0;
-
-	for (int n = i - 1; n <= i + 1; n++)
-	{
-		for (int m = j - 1; m <= j + 1; m++)
-		{
-			if (campo_gioco.nel_campo(n, m) && campo_giocatore[n][m] == -2) k++;
-		}
-	}
-	return k;
-	*/
 }
 
 int Gioco::conta_mine_vicine(int i, int j) const
 {
 	return campo_gioco.conta_vicini(i, j, true);
-	
-	/*
-	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-	if (campo_gioco[i][j] == 1) return -1;
-
-	int k = 0;
-
-	for (int n = i - 1; n <= i + 1; n++)
-	{
-		for (int m = j - 1; m <= j + 1; m++)
-		{
-			if (campo_gioco.nel_campo(n, m) && campo_gioco[n][m] == 1) k++;
-		}
-	}
-	return k;
-	*/
 }
 
 bool Gioco::bordo_non_scavato(int i, int j) const
 {
 	return campo_giocatore[i][j] == -3 && (campo_giocatore.conta_se_vicini(i, j, 1) || campo_giocatore.conta_se_vicini(i, j, 2) || campo_giocatore.conta_se_vicini(i, j, 3) ||	campo_giocatore.conta_se_vicini(i, j, 4) ||	campo_giocatore.conta_se_vicini(i, j, 5) ||	campo_giocatore.conta_se_vicini(i, j, 6) ||	campo_giocatore.conta_se_vicini(i, j, 7) ||	campo_giocatore.conta_se_vicini(i, j, 8));
-	/*
-	if (!campo_gioco.nel_campo(i, j)) throw std::domain_error("controllo su cella illegittima");
-	if (campo_giocatore[i][j] != -3) return false;
-
-	for (int n = i - 1; n <= i + 1; n++)
-	{
-		for (int m = j - 1; m <= j + 1; m++)
-		{
-			if (campo_gioco.nel_campo(n, m) && campo_giocatore[n][m] > 0) return true;
-		}
-	}
-	return false; */
 }
 
 void Gioco::aggiorna_cella(int i, int j)

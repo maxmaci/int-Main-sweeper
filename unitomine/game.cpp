@@ -1,4 +1,6 @@
 ﻿#include <ctime>
+#include <set>
+#include <algorithm>
 
 #include "gioco.h"
 
@@ -279,7 +281,7 @@ class Risolutore
 {
 private:
 	Gioco giocata_attuale;				// ...
-	Campo<int> campo_mossa_precedente;	// TO DO: forse è impegnativo memorizzare sempre il campo precedente.
+	Campo<bool> celle_escluse;
 	int bandiere_precedenti;
 	int altezza;
 	int larghezza;
@@ -301,12 +303,12 @@ public:
 };
 
 Risolutore::Risolutore(const Gioco& gioco)
-	: giocata_attuale(9, 9, 10), campo_mossa_precedente(9, 9, -3)
+	: giocata_attuale(9, 9, 10), celle_escluse(9, 9)
 {
 	giocata_attuale = gioco;
-	campo_mossa_precedente = gioco._campo_giocatore();
 	altezza = gioco._altezza();
 	larghezza = gioco._larghezza();
+	Campo<bool> celle_escluse(altezza, larghezza);
 	bandiere_precedenti = 0;
 }
 
@@ -318,19 +320,19 @@ void Risolutore::metodo_meccanico()
 	{
 		for (int j = 0; j < larghezza; j++)
 		{
-			std::cout << "\"" << i << ", " << j << "\"\n";
-			/* PRIMA FASE: mette le bandierine se attorno al numero n trova n celle non scavata (con potenzialmente già delle bandierine */
+			//std::cout << "\"" << i << ", " << j << "\"\n";
+			// PRIMA FASE: mette le bandierine se attorno al numero n trova n celle non scavata (con potenzialmente già delle bandierine
 			if (giocata_attuale._campo_giocatore()[i][j] > 0 && giocata_attuale.conta_non_scavati_vicini(i, j) + giocata_attuale.conta_bandiere_vicine(i, j) == giocata_attuale._campo_giocatore()[i][j])
 			{
 				for (int n = i - 1; n <= i + 1; n++)
 				{
 					for (int m = j - 1; m <= j + 1; m++)
 					{
-						std::cout << "\"" << n << ", " << m << "\"\n";
+						//std::cout << "\"" << n << ", " << m << "\"\n";
 						if (giocata_attuale._campo_giocatore().nel_campo(n, m))
 						{
 							giocata_attuale.gioca(n, m, 'B');
-							std::cout << giocata_attuale._campo_giocatore() << std::endl;
+							//std::cout << giocata_attuale._campo_giocatore() << std::endl;
 						}
 					}
 				}
@@ -345,7 +347,7 @@ void Risolutore::metodo_meccanico()
 				std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
 				return;
 			}
-			/* SECONDA FASE: scava tutto ciò che non è bandierinato attorno ad una cella numerata con n se sono già presenti esattamente n bandierine attorno */
+			// SECONDA FASE: scava tutto ciò che non è bandierinato attorno ad una cella numerata con n se sono già presenti esattamente n bandierine attorno
 			if (giocata_attuale._campo_giocatore()[i][j] > 0 && giocata_attuale.conta_bandiere_vicine(i, j) == giocata_attuale._campo_giocatore()[i][j])
 			{
 				for (int n = i - 1; n <= i + 1; n++)
@@ -373,15 +375,50 @@ void Risolutore::metodo_meccanico()
 
 typedef std::pair<int, int> Coord;
 
+template <typename T>
+bool trova_elemento(const std::vector<T>& vettore, T elemento)
+{
+	typename std::vector<T>::const_iterator it;
+	it = std::find(vettore.cbegin(), vettore.cend(), elemento);
+	return it != vettore.end();
+}
+
+template <typename T>
+int trova_indice_elemento(const std::vector<T>& vettore, T elemento, int indice_partenza = 0)
+{
+	if (indice_partenza > vettore.size()) throw std::range_error("indice di partenza non lecito");
+	typename std::vector<T>::const_iterator it;
+	int res = std::find(vettore.cbegin() + indice_partenza, vettore.cend(), elemento) - vettore.cbegin();
+	if (res == vettore.size()) throw std::domain_error("elemento non trovato");
+	else return res;
+}
+
+template <typename T>
+bool confronta_non_nulli_righe(const Campo<T>& matrice, int riga1, int riga2)
+{
+	if (riga1 < 1 || riga1 >= matrice._colonne() || riga2 < 1 || riga2 >= matrice._colonne()) throw std::range_error("indice non lecito");
+	if (riga1 == riga2) return true;
+	for (int a = 0; a < matrice._colonne(); a++)
+	{
+		if (matrice[riga1][a] != 0 && matrice[riga2][a] == 0) return false;
+	}
+	return true;
+}
+
+
 void Risolutore::metodo_gaussiano()
 {
-	
 	auto start = std::chrono::steady_clock::now();
 
-	std::map<Coord, int> numeri_bordo;
-	std::map<Coord, int> incognite_bordo;
+	// FASE 1: creazione della matrice di incognite
+	
+	std::vector<Coord> coordinate_numeri_bordo;
+	std::vector<int> numeri_bordo;
+	std::set<Coord> incognite_bordo;
+	std::vector<Coord> incognite_bordo_vettore;
 
-	Campo<int> matrice(0,0);
+	// recuperiamo tutte i numeri che hanno ancora delle celle non scavate (e non bandierate) attorno:
+	// immagazziniamo tutto in un vettore, mentre mettiamo in un insieme (per 
 
 	for (int i = 0; i < altezza; i++)
 	{
@@ -389,54 +426,252 @@ void Risolutore::metodo_gaussiano()
 		{
 			if (giocata_attuale._campo_giocatore()[i][j] > 0 && giocata_attuale.conta_non_scavati_vicini(i, j) > 0)
 			{
-				/*
-				std::cout << "Ci sei Mario? ";
-				std::cout << "\"" << i + 1 << ", " << j + 1 << "\"\n";
-				numeri_bordo[Coord (i,j)]++;	//
-				
-				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j - 1)	&& giocata_attuale._campo_giocatore()[i - 1][j - 1] == -3)	incognite_bordo[Coord(i - 1, j - 1)]++;
-				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j)		&& giocata_attuale._campo_giocatore()[i - 1][j] == -3)		incognite_bordo[Coord(i - 1, j)]++;
-				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j + 1)	&& giocata_attuale._campo_giocatore()[i - 1][j + 1] == -3)	incognite_bordo[Coord(i - 1, j + 1)]++;
-				if (giocata_attuale._campo_giocatore().nel_campo(i, j - 1)		&& giocata_attuale._campo_giocatore()[i][j - 1] == -3)		incognite_bordo[Coord(i, j - 1)]++;
-				if (giocata_attuale._campo_giocatore().nel_campo(i, j + 1)		&& giocata_attuale._campo_giocatore()[i][j + 1] == -3)		incognite_bordo[Coord(i, j + 1)]++;
-				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j - 1)	&& giocata_attuale._campo_giocatore()[i + 1][j - 1] == -3)	incognite_bordo[Coord(i + 1, j - 1)]++;
-				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j)		&& giocata_attuale._campo_giocatore()[i + 1][j] == -3)		incognite_bordo[Coord(i + 1, j)]++;
-				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j + 1)	&& giocata_attuale._campo_giocatore()[i + 1][j + 1] == -3)	incognite_bordo[Coord(i + 1, j + 1)]++;
-				*/
+				coordinate_numeri_bordo.push_back(Coord(i, j));
+
+				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j - 1)	&& giocata_attuale._campo_giocatore()[i - 1][j - 1] == -3)	incognite_bordo.insert(Coord(i - 1, j - 1));
+				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j)		&& giocata_attuale._campo_giocatore()[i - 1][j] == -3)		incognite_bordo.insert(Coord(i - 1, j));
+				if (giocata_attuale._campo_giocatore().nel_campo(i - 1, j + 1)	&& giocata_attuale._campo_giocatore()[i - 1][j + 1] == -3)	incognite_bordo.insert(Coord(i - 1, j + 1));
+				if (giocata_attuale._campo_giocatore().nel_campo(i, j - 1)		&& giocata_attuale._campo_giocatore()[i][j - 1] == -3)		incognite_bordo.insert(Coord(i, j - 1));
+				if (giocata_attuale._campo_giocatore().nel_campo(i, j + 1)		&& giocata_attuale._campo_giocatore()[i][j + 1] == -3)		incognite_bordo.insert(Coord(i, j + 1));
+				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j - 1)	&& giocata_attuale._campo_giocatore()[i + 1][j - 1] == -3)	incognite_bordo.insert(Coord(i + 1, j - 1));
+				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j)		&& giocata_attuale._campo_giocatore()[i + 1][j] == -3)		incognite_bordo.insert(Coord(i + 1, j));
+				if (giocata_attuale._campo_giocatore().nel_campo(i + 1, j + 1)	&& giocata_attuale._campo_giocatore()[i + 1][j + 1] == -3)	incognite_bordo.insert(Coord(i + 1, j + 1));
+			
 			}
 		}
 	}
 	
-	int n_colonne = 2;
+	// convertiamo l'insieme in un vettore per applicare più facilmente il passaggio successivo
 
-	int n_righe = 3;
-	
-	Campo<int> matrice(n_righe, n_colonne);
-
-	for (int n = 0; n < n_righe; n++)
+	for (std::set<Coord>::const_iterator it = incognite_bordo.cbegin(); it != incognite_bordo.cend(); it++)
 	{
-		for (int m = 0; m < n_colonne; m++)
-		{
-			
-			matrice[n][m] = 1;
-		}
+		incognite_bordo_vettore.push_back(*it);
 	}
 	
-	//for (std::vector<std::pair<int, int> >::const_iterator it = numeri_bordo.cbegin(); it != numeri_bordo.cend(); it++)
-	//{
-		//
-	//}
+	std::cout << "ORA CREO LA MATRICE " << coordinate_numeri_bordo.size() << "x" << incognite_bordo_vettore.size() << std::endl;
 	
-	for (int i = 0; i < n_righe; i++)
+	Campo<int> matrice(coordinate_numeri_bordo.size(), incognite_bordo_vettore.size());
+	
+	for (int n = 0; n < matrice._righe(); n++)
 	{
-		for (int j = 0; j < n_colonne; j++)
+		int i = coordinate_numeri_bordo[n].first;
+		int j = coordinate_numeri_bordo[n].second;
+
+		numeri_bordo.push_back(giocata_attuale._campo_giocatore()[i][j] - giocata_attuale.conta_bandiere_vicine(i,j));
+				
+		if (trova_elemento(incognite_bordo_vettore, Coord (i - 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i - 1, j - 1))]	= 1;
+		if (trova_elemento(incognite_bordo_vettore, Coord (i - 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i - 1, j))]		= 1;
+		if (trova_elemento(incognite_bordo_vettore, Coord (i - 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i - 1, j + 1))]	= 1;
+		if (trova_elemento(incognite_bordo_vettore, Coord (i, j - 1)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i, j - 1))] = 1;
+		if (trova_elemento(incognite_bordo_vettore, Coord(i, j + 1)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i, j + 1))] = 1;
+		if (trova_elemento(incognite_bordo_vettore, Coord(i + 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i + 1, j - 1))] = 1;
+		if (trova_elemento(incognite_bordo_vettore, Coord(i + 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i + 1, j))] = 1;
+		if (trova_elemento(incognite_bordo_vettore, Coord(i + 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i + 1, j + 1))] = 1;
+	}
+
+	for (int i = 0; i < matrice._righe(); i++)
+	{
+		std::cout << coordinate_numeri_bordo[i].first + 1 << ", " << coordinate_numeri_bordo[i].second + 1 << " : ";
+		for (int j = 0; j < matrice._colonne(); j++)
 		{
 			std::cout << matrice[i][j];
 
 		}
-		std::cout << "\n";
+		std::cout << " = " << numeri_bordo[i] << std::endl;
 	}
 
+	// FASE 2: riduzione gaussiana della matrice
+		
+	int h = 0;
+	int k = 0;
+
+	std::cout << std::endl;
+	
+	std::cout << std::endl;
+
+	while (h < matrice._righe() && k < matrice._colonne())
+	{
+		std::vector<int> colonna_completa;
+		std::vector<int> colonna;
+
+		for (int p = 0; p < matrice._righe(); p++)
+		{
+			colonna_completa.push_back(std::abs(matrice[p][k]));
+		}
+
+		for (int p = h; p < matrice._righe(); p++)
+		{
+			colonna.push_back(std::abs(matrice[p][k]));
+		}
+
+		int i_max = trova_indice_elemento(colonna_completa, *std::max_element(colonna.cbegin(), colonna.cend()), h);
+
+		if (matrice[i_max][k] == 0)
+		{
+			k += 1;
+		}
+		else
+		{
+			matrice.swap(h, i_max);
+			std::swap(numeri_bordo[h], numeri_bordo[i_max]);
+			std::swap(coordinate_numeri_bordo[h], coordinate_numeri_bordo[i_max]);
+			for (int i = h + 1; i < matrice._righe(); i++)
+			{
+				int mult = matrice[i][k] / matrice[h][k];
+				matrice[i][k] = 0;
+				for (int j = k + 1; j < matrice._colonne(); j++)
+				{
+					matrice[i][j] = matrice[i][j] - matrice[h][j] * mult;
+				}
+				numeri_bordo[i] = numeri_bordo[i] - numeri_bordo[h] * mult;
+			}
+			
+			h++;
+			k++;
+			
+		}
+		
+	}
+
+	for (int i = 0; i < matrice._righe(); i++)
+	{
+		std::cout << coordinate_numeri_bordo[i].first + 1 << ", " << coordinate_numeri_bordo[i].second + 1 << " : ";
+		for (int j = 0; j < matrice._colonne(); j++)
+		{
+			std::cout << matrice[i][j];
+
+		}
+		std::cout << " = " << numeri_bordo[i] << std::endl;
+	}
+
+	// FASE 3: sostituzione all'indietro.
+
+	//Consideriamo solamente le righe non vuote(il sistema originale non sempre ha soluzioni - anzi, quasi mai!)
+
+	std::cout << "ORA CREO LA MATRICE RIDOTTA " << std::endl;
+
+	Campo<int> matrice_ridotta(0, matrice._colonne());
+	std::vector<int> termine_noto;
+	std::vector<Coord> coordinate_numeri_bordo_ridotta;
+	for (int i = 0; i < matrice._righe(); i++)
+	{
+		for (int j = 0; j < matrice._colonne(); j++)
+		{
+			if (matrice[i][j] != 0)
+			{
+				matrice_ridotta.push_back(matrice[i]);
+				termine_noto.push_back(numeri_bordo[i]);
+				coordinate_numeri_bordo_ridotta.push_back(coordinate_numeri_bordo[i]);
+				break;
+			}
+		}
+	}
+
+	std::cout << matrice_ridotta._righe() << "x" << matrice_ridotta._colonne() << std::endl;
+
+	for (int i = 0; i < matrice_ridotta._righe(); i++)
+	{
+		//std::cout << coordinate_numeri_bordo[i].first + 1 << ", " << coordinate_numeri_bordo[i].second + 1 << " : ";
+		for (int j = 0; j < matrice_ridotta._colonne(); j++)
+		{
+			std::cout << matrice_ridotta[i][j];
+
+		}
+		std::cout << " = " << termine_noto[i] << std::endl;
+	}
+
+	std::cout << std::endl;
+
+	std::vector<int> soluzione;
+
+	for (int i = matrice_ridotta._righe() - 1; i >= 0; i--)
+	{
+		int upper_bound = 0;
+		int lower_bound = 0;
+
+		for (int j = 0; j < matrice_ridotta._colonne(); j++)
+		{
+			if (matrice_ridotta[i][j] > 0)	upper_bound += matrice_ridotta[i][j];
+			else lower_bound += matrice_ridotta[i][j];
+
+		}
+
+		std::cout << "RIGA " << i << "-esima:" << std::endl;
+		std::cout << "UPPER: " << upper_bound << std::endl;
+		std::cout << "LOWER: " << lower_bound << std::endl;
+
+		//std::cout << giocata_attuale._campo_giocatore() << std::endl;
+		//system("PAUSE");
+
+		if (upper_bound == termine_noto[i])
+		{
+			
+			for (int j = 0; j < matrice_ridotta._colonne(); j++)
+			{
+				if (matrice_ridotta[i][j] > 0)
+				{
+					std::cout << "FLAGGO \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1 << "\"\n";
+					giocata_attuale.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'B');
+				}
+				else if (matrice_ridotta[i][j] < 0)
+				{
+					std::cout << "ESPLODE \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1<< "\"\n";
+					giocata_attuale.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'S');
+				}
+			}
+		}
+		else if (lower_bound == termine_noto[i])
+		{
+			// tutti i termini con coefficiente -1 sono mine, tutti quelli con coefficiente 1 non lo sono
+
+			for (int j = 0; j < matrice_ridotta._colonne(); j++)
+			{
+				if (matrice_ridotta[i][j] < 0)
+				{
+					std::cout << "FLAGGO \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1 << "\"\n";
+					giocata_attuale.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'B');
+				}
+				else if (matrice_ridotta[i][j] > 0)
+				{
+					std::cout << "ESPLODE \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1 << "\"\n";
+					giocata_attuale.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'S');
+				}
+			}
+		}
+		if (i != 0)
+		{
+			for (int b = i - 1; b > 0; b--)
+			{
+				//if (confronta_non_nulli_righe(matrice_ridotta, i, b))
+				//{
+					for (int a = 0; a < matrice_ridotta._colonne(); a++)
+					{
+						// TO DO: rendere l'operatore - parte di una specifica classe vettore che funge da base ad una classe matrix adattata - > campo deve diventare solo nel caso della classe Gioco (che potremmo rinominare Campo).
+						matrice_ridotta[b][a] -= matrice_ridotta[i][a];
+					}
+					termine_noto[b] -= termine_noto[i];
+				//}
+			}
+		}
+		/*
+		for (int i = 0; i < matrice_ridotta._righe(); i++)
+		{
+			//std::cout << coordinate_numeri_bordo[i].first + 1 << ", " << coordinate_numeri_bordo[i].second + 1 << " : ";
+			for (int j = 0; j < matrice_ridotta._colonne(); j++)
+			{
+				std::cout << matrice_ridotta[i][j];
+
+			}
+			std::cout << " = " << termine_noto[i] << std::endl;
+		}
+
+		std::cout << std::endl;
+		*/
+	}
+
+	std::cout << giocata_attuale._campo_giocatore();
+	// FASE 4: mettere le bandiere dove siamo sicuri post sostituzione
+	
 	auto end = std::chrono::steady_clock::now();
 
 	auto diff = end - start;
@@ -460,28 +695,33 @@ void Risolutore::risolve()
 	
 	while (true)
 	{
-		campo_mossa_precedente = giocata_attuale._campo_giocatore();
-
 		metodo_meccanico();
 		//metodo_gaussiano();
 		std::cout << giocata_attuale._campo_giocatore() << std::endl;
 		std::cout << "STATUS: " << giocata_attuale._status() << std::endl;
 		if (giocata_attuale._numero_bandiere() == bandiere_precedenti)
 		{
-			std::cout << " Non ho messo nuove bandiere, potrei essermi bloccato" << std::endl;
+			std::cout << " Non ho messo nuove bandiere, potrei essermi bloccato. Passiamo al gaussiano?" << std::endl;
+			
+			int k;
+			std::cin >> k;
+			std::cin.clear();
+			if (k == -2)
+			{
+				metodo_gaussiano();
+				system("PAUSE");
+			}
+			else if (k == -1)
+			{
+				giocata_attuale.reset();
+				giocata_attuale.randomizza_campo(riga - 1, colonna - 1);
+				giocata_attuale.gioca(riga - 1, colonna - 1, 'S');
+				std::cin.clear();
+				std::cout << giocata_attuale._campo_giocatore() << std::endl;
+				system("PAUSE");
+			}
 		}
 		bandiere_precedenti = giocata_attuale._numero_bandiere();
-		int k;
-		std::cin >> k;
-		if (k == -1)
-		{
-			giocata_attuale.reset();
-			giocata_attuale.randomizza_campo(riga - 1, colonna - 1);
-			giocata_attuale.gioca(riga - 1, colonna - 1, 'S');
-			std::cin.clear();
-			std::cout << giocata_attuale._campo_giocatore() << std::endl;
-			system("PAUSE");
-		}
 	}
 }
 

@@ -41,8 +41,8 @@ class Campo
 {
 private:
 	/* CAMPI */
-	int	righe;								// 0 < righe < 100
-	int colonne;							// 0 < colonne < 100
+	int	righe;								// 0 <= righe
+	int colonne;							// 0 <= colonne
 	std::vector<std::vector<T> > campo;
 
 	/* INIZIALIZZATORI DEI COSTRUTTORI */
@@ -61,7 +61,8 @@ public:
 	std::vector<T>& operator[](int i)		{ return campo.at(i); };		// scrive la riga del campo
 
 	/* METODI PER MODIFICARE IL CAMPO (DIMENSIONI, RESET) */
-	void pushback(std::vector<T>);
+	void push_back(std::vector<T>);
+	void swap(int, int);
 	void resize(int, int, T);
 	void reset(T = T());
 
@@ -79,7 +80,7 @@ public:
 template <typename T>
 void Campo<T>::init(int numero_righe, int numero_colonne, T elemento)
 {
-	if (numero_righe < 1  || numero_righe > 99 || numero_colonne < 1 || numero_colonne > 99) throw std::domain_error("dimensioni del campo invalide");
+	if (numero_righe < 0 || numero_colonne < 0 ) throw std::domain_error("dimensioni del campo invalide");
 	righe = numero_righe;
 	colonne = numero_colonne;
 	campo.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
@@ -202,8 +203,17 @@ void Campo<T>::reset(T elemento) {
 }
 
 template <typename T>
-void Campo<T>::pushback(std::vector<T> riga) {
-	pushback(riga);
+void Campo<T>::push_back(std::vector<T> riga) {
+	if (riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
+	campo.push_back(riga);
+	righe = righe + 1;
+}
+
+template <typename T>
+void Campo<T>::swap(int i, int j) {
+	std::vector<T> temp (campo[j]);
+	campo[j] = campo[i];
+	campo[i] = temp;
 }
 
 template <typename T>
