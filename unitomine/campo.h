@@ -28,6 +28,8 @@ std::map<int, std::string > mappa_conversione
 	{-4, u8"\x1B[48;2;159;0;1m\x1B[38;2;255;255;255m✱\x1B[48;2;192;192;192m"} // mina esplosa: sfondo rosso scuro, mina bianca
 };
 
+typedef std::pair<int, int> Coord;
+
 class Campo
 {
 private:
@@ -46,6 +48,10 @@ private:
 	void scava_celle(int, int, Matrice<bool>&);				// metodo che 'scava' le celle (utilizzando l'algoritmo di Fill usato ad es. in Microsoft Paint)
 	void aggiorna_cella(int, int);
 
+	/* METODI DI LETTURA DI GIOCO */
+	Matrice<bool> _campo_nascosto() const { return campo_nascosto; };			// to do: non lo uso mai ed è prono ad essere abusato per gli scopi malvagi di risolutore: ci converrà metterlo in privato
+	int conta_mine_vicine(int, int) const;
+
 	/* SCONFITTA / VITTORIA */
 	void sconfitta(int, int);								// visualizzando il campo con le mine, imposta lo status a S(confitta)
 	void vittoria();										// controlla se le mine sono state tutte segnate con la bandierina. Se è così, imposta lo status a V(ittoria)
@@ -63,7 +69,6 @@ public:
 	
 	char _status() const { return status; };
 	
-	Matrice<bool> _campo_nascosto() const { return campo_nascosto; };			// to do: non lo uso mai ed è prono ad essere abusato per gli scopi malvagi di risolutore: ci converrà metterlo in privato
 	Matrice<int> _campo_visibile() const { return campo_visibile; };
 
 	/* FUNZIONI DI GENERAZIONE DEL CAMPO */
@@ -82,9 +87,10 @@ public:
 	void rivela();											// rivela il campo da gioco al giocatore nelle opzioni
 
 	/* FUNZIONI DI LETTURA STATUS */
-	int conta_mine_vicine(int, int) const;
 	int conta_non_scavati_vicini(int, int) const;
 	int conta_bandiere_vicine(int, int) const;
+	bool conta_se_numeri_vicini(int, int) const;
+	int conta_numeri_vicini(int i, int j) const;
 	bool bordo_non_scavato(int, int) const;
 
 	/* FUNZIONI DI STAMPA */
@@ -108,10 +114,10 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 
 std::ostream& operator<<(std::ostream& os, const Campo& campo)
 {
-	if (campo._altezza() > 9)
+	if (campo.altezza > 9)
 	{
 		os << std::setw(3) << std::setfill(' ');
-		for (int j = 0; j < campo.altezza + 1; j++)
+		for (int j = 0; j < campo.larghezza + 1; j++)
 		{
 			if (j > 9)
 			{
@@ -192,9 +198,19 @@ int Campo::conta_mine_vicine(int i, int j) const
 	return campo_nascosto.conta_vicini(i, j, true);
 }
 
+int Campo::conta_numeri_vicini(int i, int j) const
+{
+	return campo_visibile.conta_vicini(i, j, 1) + campo_visibile.conta_vicini(i, j, 2) + campo_visibile.conta_vicini(i, j, 3) + campo_visibile.conta_vicini(i, j, 4) + campo_visibile.conta_vicini(i, j, 5) + campo_visibile.conta_vicini(i, j, 6) + campo_visibile.conta_vicini(i, j, 7) + campo_visibile.conta_vicini(i, j, 8);
+}
+
+bool Campo::conta_se_numeri_vicini(int i, int j) const
+{
+	return campo_visibile.conta_se_vicini(i, j, 1) || campo_visibile.conta_se_vicini(i, j, 2) || campo_visibile.conta_se_vicini(i, j, 3) || campo_visibile.conta_se_vicini(i, j, 4) || campo_visibile.conta_se_vicini(i, j, 5) || campo_visibile.conta_se_vicini(i, j, 6) || campo_visibile.conta_se_vicini(i, j, 7) || campo_visibile.conta_se_vicini(i, j, 8);
+}
+
 bool Campo::bordo_non_scavato(int i, int j) const
 {
-	return campo_visibile[i][j] == -3 && (campo_visibile.conta_se_vicini(i, j, 1) || campo_visibile.conta_se_vicini(i, j, 2) || campo_visibile.conta_se_vicini(i, j, 3) || campo_visibile.conta_se_vicini(i, j, 4) || campo_visibile.conta_se_vicini(i, j, 5) || campo_visibile.conta_se_vicini(i, j, 6) || campo_visibile.conta_se_vicini(i, j, 7) || campo_visibile.conta_se_vicini(i, j, 8));
+	return campo_visibile[i][j] == -3 && conta_se_numeri_vicini(i, j);
 }
 
 void Campo::aggiorna_cella(int i, int j)
@@ -211,11 +227,11 @@ bool comando_lecito(char comando)
 
 void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
 {
-	std::queue<std::pair<int, int> > coda;
-	coda.push(std::pair<int, int>(i, j));
+	std::queue<Coord > coda;
+	coda.push(Coord(i, j));
 	while (coda.size() != 0)
 	{
-		std::pair<int, int> cella = coda.front();
+		Coord cella = coda.front();
 		coda.pop();
 
 		if (campo_visibile.indici_leciti(cella.first, cella.second) && campo_visibile[cella.first][cella.second] != -2 && !campo_nascosto[cella.first][cella.second] && !celle_processate[cella.first][cella.second])
@@ -225,14 +241,14 @@ void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
 			celle_processate[cella.first][cella.second] = true;
 			if (conta_mine_vicine(cella.first, cella.second) == 0) // controlla che la casella non sia un fiore; in caso contrario non aggiungerà i nodi alla coda
 			{
-				coda.push(std::pair<int, int>(cella.first - 1, cella.second - 1));
-				coda.push(std::pair<int, int>(cella.first - 1, cella.second));
-				coda.push(std::pair<int, int>(cella.first - 1, cella.second + 1));
-				coda.push(std::pair<int, int>(cella.first, cella.second - 1));
-				coda.push(std::pair<int, int>(cella.first, cella.second + 1));
-				coda.push(std::pair<int, int>(cella.first + 1, cella.second - 1));
-				coda.push(std::pair<int, int>(cella.first + 1, cella.second));
-				coda.push(std::pair<int, int>(cella.first + 1, cella.second + 1));
+				coda.push(Coord(cella.first - 1, cella.second - 1));
+				coda.push(Coord(cella.first - 1, cella.second));
+				coda.push(Coord(cella.first - 1, cella.second + 1));
+				coda.push(Coord(cella.first, cella.second - 1));
+				coda.push(Coord(cella.first, cella.second + 1));
+				coda.push(Coord(cella.first + 1, cella.second - 1));
+				coda.push(Coord(cella.first + 1, cella.second));
+				coda.push(Coord(cella.first + 1, cella.second + 1));
 			}
 		}
 	}

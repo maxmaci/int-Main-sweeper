@@ -52,7 +52,8 @@ public:
 	bool indici_leciti(int, int) const;
 	bool is_elemento(int, int, T) const;
 	int conta_tutti_elemento(T) const;
-	int conta_vicini(int, int, T) const;
+	int conta_caselle_vicine(int, int) const;			// conta i vicini della cella (i, j) in totale (= 3 se è una cella nell'angolo, = 5 se sul bordo e = 8 se in mezzo alla matrice)
+	int conta_vicini(int, int, T) const;		// conta i vicini della cella (i, j) che sono pari all'elemento dato in input
 	bool conta_se_vicini(int, int, T) const;
 
 	/* METODI PER CONFRONTO DI MATRICI */
@@ -162,6 +163,14 @@ int Matrice<T>::conta_tutti_elemento(T elemento) const
 }
 
 template <typename T>
+int Matrice<T>::conta_caselle_vicine(int i, int j) const
+{
+	if ((i == 0 && j == 0) || (i == righe - 1 && j == colonne - 1)) return 3;
+	else if (i == 0 || j == 0 || i == righe - 1 || j == colonne - 1) return 5;
+	else return 8;
+}
+
+template <typename T>
 int Matrice<T>::conta_vicini(int i, int j, T elemento) const
 {
 	if (!indici_leciti(i, j)) throw std::domain_error("controllo su cella illegittima");
@@ -223,6 +232,14 @@ int trova_indice_elemento(const std::vector<T>& vettore, T elemento, int indice_
 }
 
 template <typename T>
+bool trova_elemento(const std::vector<T>& vettore, T elemento)
+{
+	typename std::vector<T>::const_iterator it;
+	it = std::find(vettore.cbegin(), vettore.cend(), elemento);
+	return it != vettore.end();
+}
+
+template <typename T>
 void Matrice<T>::riduzione_gaussiana(std::vector<T>& termine_noto)
 {
 
@@ -257,7 +274,6 @@ void Matrice<T>::riduzione_gaussiana(std::vector<T>& termine_noto)
 		{
 			scambia_righe(h, i_max);
 			std::swap(termine_noto[h], termine_noto[i_max]);
-			// std::swap(coordinate_numeri_bordo[h], coordinate_numeri_bordo[i_max]);
 			for (int i = h + 1; i < righe; i++)
 			{
 				int mult = data[i][k] / data[h][k];

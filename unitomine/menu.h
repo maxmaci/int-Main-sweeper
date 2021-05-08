@@ -249,7 +249,7 @@ void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando)
 	}
 }
 
-void inizializza_risolutore(Campo& partita, int& riga, int& colonna)
+void inizializza_risolutore(Campo& partita)
 {
 	while (true)
 	{
@@ -261,12 +261,11 @@ void inizializza_risolutore(Campo& partita, int& riga, int& colonna)
 			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;											//throw std::invalid_argument("comando non valido");
 			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
 
-			riga = std::stoi(input[0]);
-			colonna = std::stoi(input[1]);
+			partita.randomizza_campo(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1);
+			partita.gioca(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1, 'S');
 
 			return;
 		default:
-
 			break;
 		}
 

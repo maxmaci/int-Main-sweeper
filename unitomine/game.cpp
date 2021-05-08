@@ -1,9 +1,12 @@
 ﻿#include <ctime>
 #include <set>
+#include <stack>
 #include <algorithm>
 
 #include "campo.h"
 #include "menu.h"
+
+
 
 /* Classe Risolutore */
 class Risolutore
@@ -12,20 +15,25 @@ private:
 	Campo partita;				// ...
 	int bandiere_precedenti;	// 0 <= bandiere_precedenti < partita._altezza() * partita._larghezza()		// TO DO: controllare per l'uguale
 	int celle_non_scavate_precedenti; // 0 <= bandiere_precedenti <= partita._altezza() * partita._larghezza()
-
-	/* TYPDEF */
-	typedef std::pair<int, int> Coord;
+	
+	/* METODI PER RICAVARE INFORMAZIONI SUL CAMPO */
+	std::pair<std::vector<Coord>, std::vector<Coord> > estrai_numeri_bordo_celle_incognite();
+	std::vector<Coord> estrai_numeri_bordo();
+	std::vector<Coord> estrai_celle_incognite();
+	std::vector< std::vector<Coord> > separa_bordo();
+	std::vector< std::vector<Coord> > separa_numeri();
+	bool disposizione_lecita(std::vector<bool>, std::vector<Coord>);
 
 	/* METODI RISOLUTIVI */
 	void metodo_meccanico();
 	void metodo_gaussiano();
-	void metodo_per_assurdo();
 	void metodo_probabilistico();
+	//void metodo_probabilistico_ricorsivo(Campo&, std::map<int, std::vector<std::vector<bool> > >&, std::vector<Coord>, int);
 
 public:
 	/* COSTRUTTORE */
 	Risolutore(const Campo&);
-
+	void aggiorna(const Campo&);
 	void risolve();
 };
 
@@ -36,20 +44,23 @@ Risolutore::Risolutore(const Campo& campo)
 	celle_non_scavate_precedenti = 0;
 }
 
+void Risolutore::aggiorna(const Campo& campo)
+{
+	partita = campo;
+	bandiere_precedenti = campo._numero_bandiere();
+	celle_non_scavate_precedenti = campo._campo_visibile().conta_tutti_elemento(-3);
+}
+
 void Risolutore::metodo_meccanico()
 {
 	auto start = std::chrono::steady_clock::now();
-	std::cout << "TAVOLA" << std::endl;
 
-	std::cout << partita << std::endl;
-
-	std::cout << "PRIMA FASE" << std::endl;
 	for (int i = 0; i < partita._altezza(); i++)
 	{
 		for (int j = 0; j < partita._larghezza(); j++)
 		{
 			// PRIMA FASE: mette le bandierine se attorno al numero n trova n celle non scavata (con potenzialmente già delle bandierine
-			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) + partita.conta_bandiere_vicine(i, j) == partita._campo_visibile()[i][j])
+			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) != 0 && partita.conta_non_scavati_vicini(i, j) + partita.conta_bandiere_vicine(i, j) == partita._campo_visibile()[i][j])
 			{
 				for (int n = i - 1; n <= i + 1; n++)
 				{
@@ -58,7 +69,6 @@ void Risolutore::metodo_meccanico()
 						if (partita._campo_visibile().indici_leciti(n, m))
 						{
 							partita.gioca(n, m, 'B');
-							std::cout << partita << std::endl;
 						}
 					}
 				}
@@ -74,7 +84,7 @@ void Risolutore::metodo_meccanico()
 				return;
 			}
 			// SECONDA FASE: scava tutto ciò che non è bandierinato attorno ad una cella numerata con n se sono già presenti esattamente n bandierine attorno
-			else if (partita._campo_visibile()[i][j] > 0 && partita.conta_bandiere_vicine(i, j) == partita._campo_visibile()[i][j])
+			else if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) != 0 && partita.conta_bandiere_vicine(i, j) == partita._campo_visibile()[i][j])
 			{
 				for (int n = i - 1; n <= i + 1; n++)
 				{
@@ -99,12 +109,95 @@ void Risolutore::metodo_meccanico()
 
 }
 
-template <typename T>
-bool trova_elemento(const std::vector<T>& vettore, T elemento)
+std::pair<std::vector<Coord>, std::vector<Coord> > Risolutore::estrai_numeri_bordo_celle_incognite()
 {
-	typename std::vector<T>::const_iterator it;
-	it = std::find(vettore.cbegin(), vettore.cend(), elemento);
-	return it != vettore.end();
+	std::vector<Coord> numeri;
+
+	std::set<Coord> incognite;
+	
+	// recuperiamo tutte i numeri che hanno ancora delle celle non scavate (e non bandierate) attorno: immagazziniamo tutto in un vettore
+
+	for (int i = 0; i < partita._altezza(); i++)
+	{
+		for (int j = 0; j < partita._larghezza(); j++)
+		{
+			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) > 0)
+			{
+				numeri.push_back(Coord(i, j));
+
+				if (partita._campo_visibile().indici_leciti(i - 1, j - 1)	&& partita._campo_visibile()[i - 1][j - 1] == -3)	incognite.insert(Coord(i - 1, j - 1));
+				if (partita._campo_visibile().indici_leciti(i - 1, j)		&& partita._campo_visibile()[i - 1][j] == -3)		incognite.insert(Coord(i - 1, j));
+				if (partita._campo_visibile().indici_leciti(i - 1, j + 1)	&& partita._campo_visibile()[i - 1][j + 1] == -3)	incognite.insert(Coord(i - 1, j + 1));
+				if (partita._campo_visibile().indici_leciti(i, j - 1)		&& partita._campo_visibile()[i][j - 1] == -3)		incognite.insert(Coord(i, j - 1));
+				if (partita._campo_visibile().indici_leciti(i, j + 1)		&& partita._campo_visibile()[i][j + 1] == -3)		incognite.insert(Coord(i, j + 1));
+				if (partita._campo_visibile().indici_leciti(i + 1, j - 1)	&& partita._campo_visibile()[i + 1][j - 1] == -3)	incognite.insert(Coord(i + 1, j - 1));
+				if (partita._campo_visibile().indici_leciti(i + 1, j)		&& partita._campo_visibile()[i + 1][j] == -3)		incognite.insert(Coord(i + 1, j));
+				if (partita._campo_visibile().indici_leciti(i + 1, j + 1)	&& partita._campo_visibile()[i + 1][j + 1] == -3)	incognite.insert(Coord(i + 1, j + 1));
+
+			}
+		}
+	}
+	
+	// convertiamo l'insieme in un vettore per applicare più facilmente il passaggio successivo
+
+	std::vector<Coord> incognite_vettore(incognite.begin(), incognite.end());
+
+	return std::pair<std::vector<Coord>, std::vector<Coord> >(numeri, incognite_vettore);
+}
+
+std::vector<Coord> Risolutore::estrai_celle_incognite()
+{
+	std::set<Coord> incognite;
+
+	// recuperiamo tutte i numeri che hanno ancora delle celle non scavate (e non bandierate) attorno: immagazziniamo tutto in un vettore
+
+	for (int i = 0; i < partita._altezza(); i++)
+	{
+		for (int j = 0; j < partita._larghezza(); j++)
+		{
+			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) > 0)
+			{
+				if (partita._campo_visibile().indici_leciti(i - 1, j - 1) && partita._campo_visibile()[i - 1][j - 1] == -3)	incognite.insert(Coord(i - 1, j - 1));
+				if (partita._campo_visibile().indici_leciti(i - 1, j) && partita._campo_visibile()[i - 1][j] == -3)		incognite.insert(Coord(i - 1, j));
+				if (partita._campo_visibile().indici_leciti(i - 1, j + 1) && partita._campo_visibile()[i - 1][j + 1] == -3)	incognite.insert(Coord(i - 1, j + 1));
+				if (partita._campo_visibile().indici_leciti(i, j - 1) && partita._campo_visibile()[i][j - 1] == -3)		incognite.insert(Coord(i, j - 1));
+				if (partita._campo_visibile().indici_leciti(i, j + 1) && partita._campo_visibile()[i][j + 1] == -3)		incognite.insert(Coord(i, j + 1));
+				if (partita._campo_visibile().indici_leciti(i + 1, j - 1) && partita._campo_visibile()[i + 1][j - 1] == -3)	incognite.insert(Coord(i + 1, j - 1));
+				if (partita._campo_visibile().indici_leciti(i + 1, j) && partita._campo_visibile()[i + 1][j] == -3)		incognite.insert(Coord(i + 1, j));
+				if (partita._campo_visibile().indici_leciti(i + 1, j + 1) && partita._campo_visibile()[i + 1][j + 1] == -3)	incognite.insert(Coord(i + 1, j + 1));
+
+			}
+		}
+	}
+
+	// convertiamo l'insieme in un vettore per applicare più facilmente il passaggio successivo
+
+	std::vector<Coord> incognite_vettore(incognite.begin(), incognite.end());
+
+	return incognite_vettore;
+}
+
+std::vector<Coord> Risolutore::estrai_numeri_bordo()
+{
+	std::vector<Coord> numeri;
+
+	// recuperiamo tutte i numeri che hanno ancora delle celle non scavate (e non bandierate) attorno: immagazziniamo tutto in un vettore
+
+	for (int i = 0; i < partita._altezza(); i++)
+	{
+		for (int j = 0; j < partita._larghezza(); j++)
+		{
+			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) > 0)
+			{
+				numeri.push_back(Coord(i, j));
+			}
+		}
+	}
+
+	// convertiamo l'insieme in un vettore per applicare più facilmente il passaggio successivo
+
+
+	return numeri;
 }
 
 void Risolutore::metodo_gaussiano()
@@ -113,45 +206,14 @@ void Risolutore::metodo_gaussiano()
 
 	// FASE 1: creazione della matrice di incognite
 	
-	std::vector<Coord> coordinate_numeri_bordo;
+	std::pair<std::vector<Coord>, std::vector<Coord>> numeri_e_incognite = estrai_numeri_bordo_celle_incognite();
+
+	std::vector<Coord> coordinate_numeri_bordo = estrai_numeri_bordo();
+	std::vector<Coord> incognite_bordo = estrai_celle_incognite();
+
 	std::vector<int> numeri_bordo;
-	std::set<Coord> incognite_bordo;
-	std::vector<Coord> incognite_bordo_vettore;
-
-	// recuperiamo tutte i numeri che hanno ancora delle celle non scavate (e non bandierate) attorno:
-	// immagazziniamo tutto in un vettore, mentre mettiamo in un insieme (per 
-
-	for (int i = 0; i < partita._altezza(); i++)
-	{
-		for (int j = 0; j < partita._larghezza(); j++)
-		{
-			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) > 0)
-			{
-				coordinate_numeri_bordo.push_back(Coord(i, j));
-
-				if (partita._campo_visibile().indici_leciti(i - 1, j - 1)	&& partita._campo_visibile()[i - 1][j - 1] == -3)	incognite_bordo.insert(Coord(i - 1, j - 1));
-				if (partita._campo_visibile().indici_leciti(i - 1, j)		&& partita._campo_visibile()[i - 1][j] == -3)		incognite_bordo.insert(Coord(i - 1, j));
-				if (partita._campo_visibile().indici_leciti(i - 1, j + 1)	&& partita._campo_visibile()[i - 1][j + 1] == -3)	incognite_bordo.insert(Coord(i - 1, j + 1));
-				if (partita._campo_visibile().indici_leciti(i, j - 1)		&& partita._campo_visibile()[i][j - 1] == -3)		incognite_bordo.insert(Coord(i, j - 1));
-				if (partita._campo_visibile().indici_leciti(i, j + 1)		&& partita._campo_visibile()[i][j + 1] == -3)		incognite_bordo.insert(Coord(i, j + 1));
-				if (partita._campo_visibile().indici_leciti(i + 1, j - 1)	&& partita._campo_visibile()[i + 1][j - 1] == -3)	incognite_bordo.insert(Coord(i + 1, j - 1));
-				if (partita._campo_visibile().indici_leciti(i + 1, j)		&& partita._campo_visibile()[i + 1][j] == -3)		incognite_bordo.insert(Coord(i + 1, j));
-				if (partita._campo_visibile().indici_leciti(i + 1, j + 1)	&& partita._campo_visibile()[i + 1][j + 1] == -3)	incognite_bordo.insert(Coord(i + 1, j + 1));
-			
-			}
-		}
-	}
 	
-	// convertiamo l'insieme in un vettore per applicare più facilmente il passaggio successivo
-
-	for (std::set<Coord>::const_iterator it = incognite_bordo.cbegin(); it != incognite_bordo.cend(); it++)
-	{
-		incognite_bordo_vettore.push_back(*it);
-	}
-	
-	std::cout << "ORA CREO LA MATRICE " << coordinate_numeri_bordo.size() << "x" << incognite_bordo_vettore.size() << std::endl;
-	
-	Matrice<int> matrice(static_cast<int>( coordinate_numeri_bordo.size() ), static_cast<int>( incognite_bordo_vettore.size() ));
+	Matrice<int> matrice(static_cast<int>( coordinate_numeri_bordo.size() ), static_cast<int>( incognite_bordo.size() ));
 	
 	for (int n = 0; n < matrice._righe(); n++)
 	{
@@ -160,29 +222,23 @@ void Risolutore::metodo_gaussiano()
 
 		numeri_bordo.push_back(partita._campo_visibile()[i][j] - partita.conta_bandiere_vicine(i,j));
 				
-		if (trova_elemento(incognite_bordo_vettore, Coord (i - 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i - 1, j - 1))]	= 1;
-		if (trova_elemento(incognite_bordo_vettore, Coord (i - 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i - 1, j))]		= 1;
-		if (trova_elemento(incognite_bordo_vettore, Coord (i - 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i - 1, j + 1))]	= 1;
-		if (trova_elemento(incognite_bordo_vettore, Coord (i, j - 1)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord (i, j - 1))] = 1;
-		if (trova_elemento(incognite_bordo_vettore, Coord(i, j + 1)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i, j + 1))] = 1;
-		if (trova_elemento(incognite_bordo_vettore, Coord(i + 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i + 1, j - 1))] = 1;
-		if (trova_elemento(incognite_bordo_vettore, Coord(i + 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i + 1, j))] = 1;
-		if (trova_elemento(incognite_bordo_vettore, Coord(i + 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo_vettore, Coord(i + 1, j + 1))] = 1;
+		if (trova_elemento(incognite_bordo, Coord (i - 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord (i - 1, j - 1))]	= 1;
+		if (trova_elemento(incognite_bordo, Coord (i - 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord (i - 1, j))]		= 1;
+		if (trova_elemento(incognite_bordo, Coord (i - 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord (i - 1, j + 1))]	= 1;
+		if (trova_elemento(incognite_bordo, Coord (i, j - 1)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord (i, j - 1))]		= 1;
+		if (trova_elemento(incognite_bordo, Coord(i, j + 1)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord(i, j + 1))]			= 1;
+		if (trova_elemento(incognite_bordo, Coord(i + 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord(i + 1, j - 1))]		= 1;
+		if (trova_elemento(incognite_bordo, Coord(i + 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord(i + 1, j))]			= 1;
+		if (trova_elemento(incognite_bordo, Coord(i + 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord(i + 1, j + 1))]		= 1;
 	}
 
-	std::cout << matrice << std::endl;
-
-	// FASE 2: riduzione gaussiana della matrice
+	// FASE 2: riduzione gaussiana della matrice.
 
 	matrice.riduzione_gaussiana(numeri_bordo);
 
-	std::cout << matrice;
-
-	// FASE 3: sostituzione all'indietro.
+	// FASE 3: sostituzione all'indietro e controllo delle soluzioni.
 
 	//Consideriamo solamente le righe non vuote (il sistema originale non sempre ha soluzioni - anzi, quasi mai!)
-
-	std::cout << "ORA CREO LA MATRICE RIDOTTA " << std::endl;
 
 	Matrice<int> matrice_ridotta(0, matrice._colonne());
 	std::vector<int> termine_noto;
@@ -201,21 +257,6 @@ void Risolutore::metodo_gaussiano()
 		}
 	}
 
-	std::cout << matrice_ridotta._righe() << "x" << matrice_ridotta._colonne() << std::endl;
-
-	for (int i = 0; i < matrice_ridotta._righe(); i++)
-	{
-		//std::cout << coordinate_numeri_bordo[i].first + 1 << ", " << coordinate_numeri_bordo[i].second + 1 << " : ";
-		for (int j = 0; j < matrice_ridotta._colonne(); j++)
-		{
-			std::cout << matrice_ridotta[i][j];
-
-		}
-		std::cout << " = " << termine_noto[i] << std::endl;
-	}
-
-	std::cout << std::endl;
-
 	for (int i = matrice_ridotta._righe() - 1; i >= 0; i--)
 	{
 		int upper_bound = 0;
@@ -228,10 +269,6 @@ void Risolutore::metodo_gaussiano()
 
 		}
 
-		std::cout << "RIGA " << i << "-esima:" << std::endl;
-		std::cout << "UPPER: " << upper_bound << std::endl;
-		std::cout << "LOWER: " << lower_bound << std::endl;
-
 		if (upper_bound == termine_noto[i])
 		{
 			
@@ -239,13 +276,11 @@ void Risolutore::metodo_gaussiano()
 			{
 				if (matrice_ridotta[i][j] > 0)
 				{
-					std::cout << "FLAGGO \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1 << "\"\n";
-					partita.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'B');
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'B');
 				}
 				else if (matrice_ridotta[i][j] < 0)
 				{
-					std::cout << "ESPLODE \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1<< "\"\n";
-					partita.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'S');
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'S');
 				}
 			}
 		}
@@ -257,13 +292,11 @@ void Risolutore::metodo_gaussiano()
 			{
 				if (matrice_ridotta[i][j] < 0)
 				{
-					std::cout << "FLAGGO \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1 << "\"\n";
-					partita.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'B');
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'B');
 				}
 				else if (matrice_ridotta[i][j] > 0)
 				{
-					std::cout << "ESPLODE \"" << incognite_bordo_vettore[j].first + 1 << ", " << incognite_bordo_vettore[j].second + 1 << "\"\n";
-					partita.gioca(incognite_bordo_vettore[j].first, incognite_bordo_vettore[j].second, 'S');
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'S');
 				}
 			}
 		}
@@ -290,17 +323,264 @@ void Risolutore::metodo_gaussiano()
 
 }
 
-void Risolutore::metodo_per_assurdo()
+
+bool compara(std::pair<Coord, std::pair<double, double>> p, std::pair<Coord, std::pair<double, double>> q)
+{
+	return p.second.first < q.second.first;
+}
+
+std::vector<std::vector<Coord> > Risolutore::separa_bordo()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	std::vector<Coord> incognite = estrai_celle_incognite();
+
+	std::vector<std::vector<Coord> > incognite_separate;
+
+	std::queue<Coord> coda;
+	coda.push(incognite[0]);
+
+	while (incognite.size() != 0)
+	{
+		for (int a = 1; a < 9; a++)
+		{
+			std::vector<Coord> incognite_separate_regione;
+			
+			if (incognite.size() != 0 && coda.size() == 0)
+			{
+				coda.push(incognite[0]);
+			}
+
+			while (incognite.size() != 0 && coda.size() != 0)
+			{
+				Coord cella = coda.front();
+				coda.pop();
+
+				if (partita._campo_visibile().indici_leciti(cella.first, cella.second) && !trova_elemento(incognite_separate_regione, cella) && trova_elemento(incognite, cella) && partita.conta_numeri_vicini(cella.first, cella.second) == a) //  
+				{	
+					std::cout << "(" << cella.first + 1 << ", " << cella.second + 1 << ") ";
+
+					incognite_separate_regione.push_back(cella);
+					incognite.erase(incognite.begin() + trova_indice_elemento(incognite, cella));
+
+					//coda.push(Coord(cella.first - 1, cella.second - 1));
+					coda.push(Coord(cella.first - 1, cella.second));
+					//coda.push(Coord(cella.first - 1, cella.second + 1));
+					coda.push(Coord(cella.first, cella.second - 1));
+					coda.push(Coord(cella.first, cella.second + 1));
+					//coda.push(Coord(cella.first + 1, cella.second - 1));
+					coda.push(Coord(cella.first + 1, cella.second));
+					//coda.push(Coord(cella.first + 1, cella.second + 1));
+
+				}
+			}
+
+			if (incognite_separate_regione.size() != 0)
+			{
+				incognite_separate.push_back(incognite_separate_regione);
+			}
+			
+		}
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+	return incognite_separate;
+}
+
+/*
+std::vector<std::vector<Coord> > Risolutore::separa_bordo2()
 {
 	auto start = std::chrono::steady_clock::now();
 	
-	Risolutore gioco_per_assurdo (partita);
-	while (gioco_per_assurdo.partita._status() == 'S')
+	std::vector<Coord> incognite = estrai_celle_incognite();
+
+	std::vector<std::vector<Coord> > incognite_separate;
+
+	std::queue<Coord> coda;
+	coda.push(incognite[0]);
+
+	while (incognite.size() != 0)
 	{
-		gioco_per_assurdo.metodo_meccanico();
-		if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-2) && partita._campo_visibile().conta_tutti_elemento(-3))
-		gioco_per_assurdo.metodo_gaussiano();
+		std::vector<Coord> incognite_separate_regione;
 		
+		if (coda.size() == 0)
+		{
+			coda.push(incognite[0]);
+		}
+
+		while (coda.size() != 0)
+		{
+			Coord cella = coda.front();
+			coda.pop();
+
+			if (partita._campo_visibile().indici_leciti(cella.first, cella.second) && !trova_elemento(incognite_separate_regione, cella) && trova_elemento(incognite, cella) && partita.conta_se_numeri_vicini(cella.first, cella.second))
+			{
+				incognite_separate_regione.push_back(cella);
+				incognite.erase(incognite.begin() + trova_indice_elemento(incognite, cella));
+
+				coda.push(Coord(cella.first - 1, cella.second - 1));
+				coda.push(Coord(cella.first - 1, cella.second));
+				coda.push(Coord(cella.first - 1, cella.second + 1));
+				coda.push(Coord(cella.first, cella.second - 1));
+				coda.push(Coord(cella.first, cella.second + 1));
+				coda.push(Coord(cella.first + 1, cella.second - 1));
+				coda.push(Coord(cella.first + 1, cella.second));
+				coda.push(Coord(cella.first + 1, cella.second + 1));
+
+			}
+		}
+
+		incognite_separate.push_back(incognite_separate_regione);
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+	return incognite_separate;
+}
+*/
+
+std::vector<std::vector<Coord> > Risolutore::separa_numeri()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	std::vector<Coord> numeri = estrai_numeri_bordo();
+
+	std::vector<std::vector<Coord> > numeri_separati;
+
+	std::vector<std::vector<Coord> > incognite_separate = separa_bordo();
+
+	for (int i = 0; i < incognite_separate.size(); i++)
+	{
+		std::vector<Coord> numeri_sezione;
+
+		for (int j = 0; j < incognite_separate[i].size(); j++)
+		{
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first - 1, incognite_separate[i][j].second - 1)))	numeri_sezione.push_back(Coord(incognite_separate[i][j].first - 1, incognite_separate[i][j].second - 1));
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first - 1, incognite_separate[i][j].second)))		numeri_sezione.push_back(Coord(incognite_separate[i][j].first - 1, incognite_separate[i][j].second));
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first - 1, incognite_separate[i][j].second + 1)))	numeri_sezione.push_back(Coord(incognite_separate[i][j].first - 1, incognite_separate[i][j].second + 1));
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first, incognite_separate[i][j].second - 1)))		numeri_sezione.push_back(Coord(incognite_separate[i][j].first, incognite_separate[i][j].second - 1));
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first, incognite_separate[i][j].second + 1)))		numeri_sezione.push_back(Coord(incognite_separate[i][j].first, incognite_separate[i][j].second + 1));
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first + 1, incognite_separate[i][j].second - 1)))	numeri_sezione.push_back(Coord(incognite_separate[i][j].first + 1, incognite_separate[i][j].second - 1));
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first + 1, incognite_separate[i][j].second)))		numeri_sezione.push_back(Coord(incognite_separate[i][j].first + 1, incognite_separate[i][j].second));
+			if (trova_elemento(numeri, Coord(incognite_separate[i][j].first + 1, incognite_separate[i][j].second + 1)))	numeri_sezione.push_back(Coord(incognite_separate[i][j].first + 1, incognite_separate[i][j].second + 1));
+		}
+
+		numeri_separati.push_back(numeri_sezione);
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+	return numeri_separati;
+}
+
+bool Risolutore::disposizione_lecita(std::vector<bool> disposizione_booleana, std::vector<Coord> incognite)
+{
+	for (int i = 0; i < disposizione_booleana.size(); i++)
+	{
+		if (disposizione_booleana[i])
+		{
+			incognite[i].first;
+		}
+	}
+	return true;
+}
+
+void Risolutore::metodo_probabilistico()
+{	
+	auto start = std::chrono::steady_clock::now();
+
+	std::vector<std::vector<Coord> > numeri_separati = separa_numeri();
+
+	std::vector<int> mine_max_separate;
+
+	for (int i = 0; i < numeri_separati.size(); i++)
+	{
+		int mine_max = 0;
+		for (int j = 0; j < numeri_separati[i].size(); j++)
+		{
+			mine_max += partita._campo_visibile()[numeri_separati[i][j].first][numeri_separati[i][j].second] - partita.conta_bandiere_vicine(numeri_separati[i][j].first, numeri_separati[i][j].second);
+		}
+		mine_max_separate.push_back(mine_max);
+	}
+
+	std::vector<std::vector<Coord> > incognite_separate = separa_bordo();
+
+	for (int i = 0; i < incognite_separate.size(); i++)
+	{
+		for (int j = 0; j < incognite_separate[i].size(); j++)
+		{
+			std::cout << "(" << incognite_separate[i][j].first + 1 << ", " << incognite_separate[i][j].second + 1<< ") ";
+		}
+		std::cout << std::endl;
+	}
+
+	system("PAUSE");
+
+	
+	// FASE 1: generare tutte le possibili disposizioni delle mine sezione per sezione
+
+	std::vector<std::vector<std::vector<bool> > > possibili_disposizioni_separate;
+
+	for (int k = 0; k < incognite_separate.size(); k++)
+	{
+		std::vector<bool> singola_disposizione (incognite_separate[k].size());
+		std::set<std::vector<bool> > possibili_disposizioni;
+
+		int estremo = (std::min)(mine_max_separate[k], static_cast<int>(singola_disposizione.size()));
+
+		std::cout << "estremo: " << estremo << std::endl;
+		std::cout << "mine_max_separate: " << mine_max_separate[k] << std::endl;
+		std::cout << "singola_disposizione.size(): " << singola_disposizione.size() << std::endl;
+		
+		for (int i = 0; i < estremo; i++)
+		{
+			singola_disposizione[i] = true;
+
+			std::sort(singola_disposizione.begin(), singola_disposizione.end());
+
+			do
+			{
+				possibili_disposizioni.insert(singola_disposizione); // if (disposizione_lecita(singola_disposizione, incognite_separate[k])) 
+				
+				for (int j = 0; j < singola_disposizione.size(); j++)
+				{
+					std::cout << singola_disposizione[j];
+				}
+				std::cout << std::endl;
+
+			} while (std::next_permutation(singola_disposizione.begin(), singola_disposizione.end()));
+		}
+
+		possibili_disposizioni_separate.push_back(std::vector< std::vector<bool> > (possibili_disposizioni.cbegin(), possibili_disposizioni.cend() ));
+
+	}
+
+	std::cout << "STAMPO ROBA ORA: " << std::endl;
+
+	for (int i = 0; i < possibili_disposizioni_separate.size(); i++)
+	{
+		for (int j = 0; j < possibili_disposizioni_separate[i].size(); j++)
+		{
+			for (int k = 0; k < possibili_disposizioni_separate[i][j].size(); k++)
+			{
+				std::cout << possibili_disposizioni_separate[i][j][k];
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl << std::endl;
 	}
 
 	auto end = std::chrono::steady_clock::now();
@@ -313,17 +593,10 @@ void Risolutore::metodo_per_assurdo()
 
 void Risolutore::risolve()
 {
-	int riga;
-	int colonna;
-	std::cout << partita << std::endl;
-	std::cout << u8"Inserisci le coordinate (nella forma 'riga colonna') per inizializzare il costruttore." << std::endl;
-	inizializza_risolutore(partita, riga, colonna);
-	partita.randomizza_campo(riga - 1, colonna - 1);
+	celle_non_scavate_precedenti = partita._campo_visibile().conta_tutti_elemento(-3);
 
-	partita.gioca(riga - 1, colonna - 1, 'S');
-	std::cout << partita << std::endl;
 	system("PAUSE");
-	
+
 	while (partita._status() == '-')
 	{
 		std::cout << "Applico il metodo meccanico." << std::endl;
@@ -331,37 +604,39 @@ void Risolutore::risolve()
 		metodo_meccanico();
 		std::cout << partita << std::endl;
 		std::cout << "STATUS: " << partita._status() << std::endl;
+		std::cout << "NUMERO BANDIERE: " << partita._numero_bandiere() << "/" << partita._mine() << ", bandiere precedenti: " << bandiere_precedenti << "/" << partita._mine() << std::endl;
+		std::cout << "CELLE NON SCAVATE: " << partita._campo_visibile().conta_tutti_elemento(-3) << ", non scavate precedenti: " << celle_non_scavate_precedenti << std::endl;
+
 		system("PAUSE");
 		if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-3) == celle_non_scavate_precedenti)
 		{
 			std::cout << "Non ho messo nuove bandiere nè scavato celle, passo al metodo Gaussiano." << std::endl;
+
 			metodo_gaussiano();
 			std::cout << partita << std::endl;
+			std::cout << "STATUS: " << partita._status() << std::endl;
+			std::cout << "NUMERO BANDIERE: " << partita._numero_bandiere() << "/" << partita._mine() << ", bandiere precedenti: " << bandiere_precedenti << "/" << partita._mine() << std::endl;
+			std::cout << "CELLE NON SCAVATE: " << partita._campo_visibile().conta_tutti_elemento(-3) << ", non scavate precedenti: " << celle_non_scavate_precedenti << std::endl;
+
 			system("PAUSE");
 
 			if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-3) == celle_non_scavate_precedenti)
 			{
-				std::cout << "Non ho messo nuove bandiere nè scavato celle, passo al metodo Assurdista." << std::endl;
-				// metodo_per_assurdo();
+				std::cout << "Non ho messo nuove bandiere nè scavato celle, passo al metodo probabilistico." << std::endl;
+
+				metodo_probabilistico();
 				std::cout << partita << std::endl;
+				std::cout << "STATUS: " << partita._status() << std::endl;
+				std::cout << "NUMERO BANDIERE: " << partita._numero_bandiere() << "/" << partita._mine() << ", bandiere precedenti: " << bandiere_precedenti << "/" << partita._mine() << std::endl;
+				std::cout << "CELLE NON SCAVATE: " << partita._campo_visibile().conta_tutti_elemento(-3) << ", non scavate precedenti: " << celle_non_scavate_precedenti << std::endl;
+
 				system("PAUSE");
 			}
 		}
 
 		bandiere_precedenti = partita._numero_bandiere();
 		celle_non_scavate_precedenti = partita._campo_visibile().conta_tutti_elemento(-3);
-		
-		/*
-		if (k == -1)
-		{
-			partita.reset();
-			partita.randomizza_campo(riga - 1, colonna - 1);
-			partita.gioca(riga - 1, colonna - 1, 'S');
-			std::cin.clear();
-			std::cout << partita._campo_giocatore() << std::endl;
-			system("PAUSE");
-		}
-		*/
+
 	}
 }
 
@@ -518,9 +793,17 @@ int main()
 
 		}
 
+		Risolutore risolutore(partita);
+
 		while (!uscita_programma && in_risolutore)
 		{
-			Risolutore risolutore(partita);
+			std::cout << partita << std::endl;
+			std::cout << u8"Inserisci le coordinate (nella forma 'riga colonna') per inizializzare il costruttore." << std::endl;
+			inizializza_risolutore(partita);
+
+			std::cout << partita << std::endl;
+			
+			risolutore.aggiorna(partita);
 			risolutore.risolve();
 			break;
 		}
@@ -546,3 +829,289 @@ int main()
 
 	}
 }
+
+
+/*std::map<Coord, int> bordo_conteggio;
+
+for (int i = 0; i < partita._altezza(); i++)
+{
+	for (int j = 0; j < partita._larghezza(); j++)
+	{
+		if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) > 0)
+		{
+			if (partita._campo_visibile().indici_leciti(i - 1, j - 1) && partita._campo_visibile()[i - 1][j - 1] == -3)	bordo_conteggio[Coord(i - 1, j - 1)]++;
+			if (partita._campo_visibile().indici_leciti(i - 1, j) && partita._campo_visibile()[i - 1][j] == -3)		bordo_conteggio[Coord(i - 1, j)]++;
+			if (partita._campo_visibile().indici_leciti(i - 1, j + 1) && partita._campo_visibile()[i - 1][j + 1] == -3)	bordo_conteggio[Coord(i - 1, j + 1)]++;
+			if (partita._campo_visibile().indici_leciti(i, j - 1) && partita._campo_visibile()[i][j - 1] == -3)		bordo_conteggio[Coord(i, j - 1)]++;
+			if (partita._campo_visibile().indici_leciti(i, j + 1) && partita._campo_visibile()[i][j + 1] == -3)		bordo_conteggio[Coord(i, j + 1)]++;
+			if (partita._campo_visibile().indici_leciti(i + 1, j - 1) && partita._campo_visibile()[i + 1][j - 1] == -3)	bordo_conteggio[Coord(i + 1, j - 1)]++;
+			if (partita._campo_visibile().indici_leciti(i + 1, j) && partita._campo_visibile()[i + 1][j] == -3)		bordo_conteggio[Coord(i + 1, j)]++;
+			if (partita._campo_visibile().indici_leciti(i + 1, j + 1) && partita._campo_visibile()[i + 1][j + 1] == -3)	bordo_conteggio[Coord(i + 1, j + 1)]++;
+		}
+	}
+}
+
+std::vector<std::pair<Coord, int> > bordo_conteggio_vettore(bordo_conteggio.begin(), bordo_conteggio.end());
+
+std::sort(bordo_conteggio_vettore.begin(), bordo_conteggio_vettore.end(), compara);
+
+for (int i = 0; i < bordo_conteggio_vettore.size(); i++)
+{
+	std::cout << "\"" << bordo_conteggio_vettore[i].first.first << ", " << bordo_conteggio_vettore[i].first.second << "\": " << bordo_conteggio_vettore[i].second << std::endl;
+}
+*/
+
+// TO DO: recuperare QUESTA SOTTO per qualche versione
+
+/*	std::pair<std::vector<Coord>, std::vector<Coord>> numeri_e_incognite = estrai_celle_incognite();
+
+if (numeri_e_incognite.first.size() != 0)
+{
+	std::vector<Coord> coordinate_numeri_bordo = numeri_e_incognite.first;
+	std::vector<Coord> incognite_bordo = numeri_e_incognite.second;
+
+	std::map<Coord, std::pair<double, double>> incognite_probabilita_minmax;
+
+	for (int n = 0; n < incognite_bordo.size(); n++)
+	{
+		int i = incognite_bordo[n].first;
+		int j = incognite_bordo[n].second;
+
+		partita._campo_visibile()[i][j] - partita.conta_bandiere_vicine(i, j);
+
+		std::vector<double> probabilita(0);
+
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i - 1, j - 1)))	probabilita.push_back(double(partita._campo_visibile()[i - 1][j - 1] - partita.conta_bandiere_vicine(i - 1, j - 1)) / double(partita.conta_non_scavati_vicini(i - 1, j - 1)) );
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i - 1, j)))		probabilita.push_back(double(partita._campo_visibile()[i - 1][j] - partita.conta_bandiere_vicine(i - 1, j)) / double(partita.conta_non_scavati_vicini(i - 1, j)));
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i - 1, j + 1)))	probabilita.push_back(double(partita._campo_visibile()[i - 1][j + 1] - partita.conta_bandiere_vicine(i - 1, j + 1)) / double(partita.conta_non_scavati_vicini(i - 1, j + 1)));
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i, j - 1)))		probabilita.push_back(double(partita._campo_visibile()[i][j - 1] - partita.conta_bandiere_vicine(i, j - 1)) / double(partita.conta_non_scavati_vicini(i, j - 1)));
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i, j + 1)))		probabilita.push_back(double(partita._campo_visibile()[i][j + 1] - partita.conta_bandiere_vicine(i, j + 1)) / double(partita.conta_non_scavati_vicini(i, j + 1)));
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i + 1, j - 1)))	probabilita.push_back(double(partita._campo_visibile()[i + 1][j - 1] - partita.conta_bandiere_vicine(i + 1, j - 1)) / double(partita.conta_non_scavati_vicini(i + 1, j - 1)));
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i + 1, j)))		probabilita.push_back(double(partita._campo_visibile()[i + 1][j] - partita.conta_bandiere_vicine(i + 1, j)) / double(partita.conta_non_scavati_vicini(i + 1, j)));
+		if (trova_elemento(coordinate_numeri_bordo, Coord(i + 1, j + 1)))	probabilita.push_back(double(partita._campo_visibile()[i + 1][j + 1] - partita.conta_bandiere_vicine(i + 1, j + 1)) / double(partita.conta_non_scavati_vicini(i + 1, j + 1)));
+
+		double probabilita_min = *std::min_element(probabilita.cbegin(), probabilita.cend());
+		double probabilita_max = *std::max_element(probabilita.cbegin(), probabilita.cend());
+
+		for (int k = 0; k < probabilita.size(); k++) std::cout << probabilita[k] << " ";
+		std::cout << std::endl;
+
+		incognite_probabilita_minmax[incognite_bordo[n]] = std::pair <double, double>(probabilita_min, probabilita_max);
+
+	}
+
+	for (std::map<Coord, std::pair<double, double> >::const_iterator it = incognite_probabilita_minmax.cbegin(); it != incognite_probabilita_minmax.cend(); it++)
+	{
+		std::cout << "(" << it->first.first << ", " << it->first.second << "): prob.min = " << it->second.first << ", prob.max = " << it->second.second << std::endl;
+	}
+
+	std::pair<Coord, std::pair<double, double> > incognite_probabilita_minmax_sort = *std::min_element(incognite_probabilita_minmax.cbegin(), incognite_probabilita_minmax.cend(), compara);
+	incognite_probabilita_minmax_sort.first;
+}
+else
+{
+
+}
+*/
+
+/*
+	Campo copia_campo = partita;
+
+	std::map<int, std::vector<std::vector<bool> > > raccolta_disposizioni;
+
+	std::vector<std::vector<Coord> > incognite_separate = separa_bordo();
+
+	for (int i = 0; i < incognite_separate.size(); i++)
+	{
+		metodo_probabilistico_ricorsivo(copia_campo, raccolta_disposizioni, incognite_separate[i], 0);
+	}
+
+	for (std::map<int, std::vector<std::vector<bool> > >::iterator it = raccolta_disposizioni.begin(); it != raccolta_disposizioni.end(); it++)
+	{
+		for (int j = 0; j < (*it).second.size(); j++)
+		{
+			for (int k = 0; k < (*it).second[j].size(); k++)
+			{
+				std::cout << (*it).second[j][k];
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl << std::endl;
+	}
+	*/
+
+	// TO DO: eliminare
+	// using recursion find all the mine configurations
+	// that one section can possibly have
+/*
+void Risolutore::metodo_probabilistico_ricorsivo(Campo& copia_campo, std::map<int, std::vector<std::vector<bool> > >& raccolta_disposizioni,
+	std::vector<Coord> bordo, int ramo)
+{
+	int totalMineNum = partita._mine();
+	int flagCount = partita._numero_bandiere();
+	int _col = partita._larghezza(), _row = partita._altezza();
+
+	// total flagcount cannot exceed the total mineNum
+	if (flagCount > totalMineNum) return;
+
+	// if the flagcount is bigger than the neighborcount already?
+	// then, return before it goes through more recursion.
+	// for more optimization, the open tiles for the section can be
+	// put into a container to be looped
+
+	if (ramo != bordo.size()) {
+		for (int i = 0; i < bordo.size(); i++)//auto& anyTile : section
+		{
+			int tileCol = bordo[i].second, tileRow = bordo[i].second;
+			for (int yoff = -1; yoff <= 1; ++yoff)
+			{
+				for (int xoff = -1; xoff <= 1; ++xoff)
+				{
+					int c = tileCol + xoff;
+					int r = tileRow + yoff;
+					// within in the range
+					if (c > -1 && c < _col &&
+						r > -1 && r < _row)
+					{
+						// should be revealed
+						if (!copia_campo._campo_visibile().is_elemento(r, c, -3))
+						{
+							// if the flagcount is bigger than the neighborcount already?
+							// then, return before it goes through more recursion.
+							if (copia_campo.conta_bandiere_vicine(c, r) > copia_campo._campo_visibile().conta_caselle_vicine(c, r))
+								return;
+						}
+					}
+				}
+			}
+		}
+		int qCol = bordo[ramo].second;
+		int qRow = bordo[ramo].first;
+		copia_campo.gioca(qCol, qRow, 'B');		// guess set
+		metodo_probabilistico_ricorsivo(copia_campo, raccolta_disposizioni, bordo, ramo + 1);
+		copia_campo.gioca(qCol, qRow, 'B');		// guess unset
+		metodo_probabilistico_ricorsivo(copia_campo, raccolta_disposizioni, bordo, ramo + 1);
+	}
+	// DFS Search
+	// go to depth k and check it is correct
+	else if (ramo == bordo.size())
+	{
+		for (int i = 0; i < bordo.size(); i++)//auto& anyTile : section
+		{
+			int tCol = bordo[i].second, tRow = bordo[i].second;
+			for (int yoff = -1; yoff <= 1; ++yoff)
+			{
+				for (int xoff = -1; xoff <= 1; ++xoff)
+				{
+					int c = tCol + xoff, r = tRow + yoff;
+					// within in the range
+					if (c > -1 && c < _col &&
+						r > -1 && r < _row)
+					{
+						// should be revealed
+						if (!copia_campo._campo_visibile().is_elemento(r, c, -3))
+						{
+							// if the counting is not the same?
+							// then it is not the possible answer.
+							if (copia_campo.conta_bandiere_vicine(c, r) != copia_campo._campo_visibile().conta_caselle_vicine(c, r))
+								return;
+						}
+					}
+				}
+			}
+		}
+		// when it is the end of the game and there isn't the same number of the flags
+		// that totals to be the totalMineNum, then it is not a solution.
+		if (copia_campo._numero_bandiere() != totalMineNum) // borderOptimization&&
+			return;
+		std::vector<bool> oneSectionSolution;	// store a one configuration
+		int mineCountForSection = 0;
+		for (int i = 0; i < bordo.size(); i++)
+		{
+			int tCol = bordo[i].second, tRow = bordo[i].first;
+			bool flagged = copia_campo._campo_visibile().is_elemento(tRow, tCol, -3);
+			oneSectionSolution.push_back(flagged);
+			if (flagged) ++mineCountForSection;
+		}
+		std::map<int, std::vector<std::vector<bool> > >::iterator mineCountFound = raccolta_disposizioni.find(mineCountForSection);
+		// if there isnt a vector for the mine count
+		if (mineCountFound == raccolta_disposizioni.end())
+		{
+			std::vector<std::vector<bool> > vectorSectionSolution;
+			vectorSectionSolution.push_back(oneSectionSolution);
+			raccolta_disposizioni.insert(make_pair(mineCountForSection, vectorSectionSolution));
+		}
+		// if there is
+		else
+		{
+			mineCountFound->second.push_back(oneSectionSolution);
+		}
+		return;
+	}
+}
+*/
+
+
+/*
+void Risolutore::metodo_probabilistico_ricorsivo(std::vector<Matrice<bool> > disposizioni, const std::vector<Coord>& bordo, int k)
+{
+		// Return if at this point, it's already inconsistent
+	for (int i = 0; i < partita._altezza(); i++)
+	{
+		for (int j = 0; j < partita._larghezza(); j++)
+		{
+
+			std::cout << "Ciao: " << i + 1 << ", " << j + 1 << std::endl;
+			// Count flags for endgame cases
+			int currentBlockValue = partita._campo_visibile()[i][j];
+			if (currentBlockValue < 0) continue;
+
+			// Scenario 1: too many mines
+			if (partita.conta_bandiere_vicine(i, j) > currentBlockValue) return;
+
+			// Total bordering blocks	// TO DO: sostituire con una funzione di quelle mie
+			int countBorderingBlocks;
+			if ((i == 0 && j == 0) || (i == partita._larghezza() - 1 && i == partita._altezza() - 1)) countBorderingBlocks = 3;
+			else if (i == 0 || j == 0 || j == partita._larghezza() - 1 || j == partita._altezza() - 1) countBorderingBlocks = 5;
+			else countBorderingBlocks = 8;
+
+			// Scenario 2: too many empty
+			if (countBorderingBlocks - partita.conta_bandiere_vicine(i, j) < currentBlockValue) return;
+		}
+	}
+
+		std::cout << "Sono qua:" << std::endl;
+
+
+		// We have too many flags
+		if (partita._numero_bandiere() > partita._mine()) return;
+
+		// Solution found!
+		if (k == bordo.size()) {
+
+			// We don't have the exact mine count, so no
+			if (partita._numero_bandiere() < partita._mine()) return;
+
+			std::vector<bool> solution (bordo.size());
+			Matrice<bool> disposizione(partita._altezza(), partita._larghezza());
+			for (int i = 0; i < bordo.size(); i++) {
+				Coord block = bordo[i];
+				partita.gioca(block.first, block.second, 'B');
+				//disposizione[block.first][block.second] = true;
+			}
+			disposizioni.push_back(disposizione);
+			return;
+		}
+
+		Coord block = bordo[k];
+
+		// Recurse two positions: mine and no mine
+		partita.gioca(block.first, block.second, 'B');
+		metodo_probabilistico_ricorsivo(disposizioni, bordo, k + 1);
+		partita.gioca(block.first, block.second, 'S');
+
+		partita.gioca(block.first, block.second, 'S');
+		metodo_probabilistico_ricorsivo(disposizioni, bordo, k + 1);
+		partita.gioca(block.first, block.second, 'B');
+}
+*/
