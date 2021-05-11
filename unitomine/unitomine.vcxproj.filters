@@ -33,4 +33,9 @@
       <Filter>File di intestazione</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="codice spazzatura.txt">
+      <Filter>File di risorse</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

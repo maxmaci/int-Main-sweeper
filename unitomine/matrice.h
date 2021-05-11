@@ -49,6 +49,7 @@ public:
 	void reset(T = T());
 
 	/* METODI PER OTTENERE INFORMAZIONI SUGLI ELEMENTI DELLA MATRICE */
+	std::vector<T> colonna(int j) const;
 	bool indici_leciti(int, int) const;
 	bool is_elemento(int, int, T) const;
 	int conta_tutti_elemento(T) const;
@@ -59,9 +60,10 @@ public:
 	/* METODI PER CONFRONTO DI MATRICI */
 	template <typename T> friend bool operator==(const Matrice<T>& sinistra, const Matrice<T>& destra);
 
-	/* ELIMINAZIONE GAUSSIANA */
-	void riduzione_gaussiana(std::vector<T>&);
-
+	/* OPERAZIONI CON MATRICI */
+	Matrice<T> mul(const Matrice<T>& m) const;
+	Matrice<T> riduzione_gaussiana();
+	std::pair<Matrice<T>, std::vector<T>> riduzione_gaussiana_con_termine_noto(std::vector<T>&);
 };
 
 template <typename T>
@@ -109,6 +111,15 @@ void Matrice<T>::reset(T elemento) {
 		}
 	}
 }
+
+template <typename T>
+std::vector<T> Matrice<T>::colonna(int j) const {
+	std::vector<T> col;
+	for (int i = 0; i < righe; i++)
+		col.push_back(data[i][j]);
+	return col;
+}
+
 
 template <typename T>
 void Matrice<T>::push_back(std::vector<T> riga) {
@@ -240,8 +251,41 @@ bool trova_elemento(const std::vector<T>& vettore, T elemento)
 }
 
 template <typename T>
-void Matrice<T>::riduzione_gaussiana(std::vector<T>& termine_noto)
+int somma_elementi(const std::vector<T>& vettore)
 {
+	int res = 0;
+	for (int i = 0; i < vettore.size(); i++) res += vettore[i];
+	return res;
+}
+
+template <typename T>
+T mul(std::vector<T> v, std::vector<T> w)
+{
+	if (v.size() != w.size()) throw std::domain_error("dimensioni dei vettori incompatibili per il prodotto");
+	T res = T();
+	for (int i = 0; i < v.size(); i++)	res += v[i] * w[i];
+	return res;
+}
+
+template <typename T>
+Matrice<T> Matrice<T>::mul(const Matrice<T>& m) const
+{
+	Matrice<T> res (righe, m.colonne);
+	for (int i = 0; i < righe; i++)
+	{
+		for (int j = 0; j < m.colonne; j++)
+		{
+			res[i][j] = mul(data[i], m.column(j));
+		}
+	}
+	return res;
+}
+
+template <typename T>
+Matrice<T> Matrice<T>::riduzione_gaussiana()
+{
+
+	Matrice<T> matrice_ridotta = this;
 
 	int h = 0;
 	int k = 0;
@@ -256,33 +300,31 @@ void Matrice<T>::riduzione_gaussiana(std::vector<T>& termine_noto)
 
 		for (int p = 0; p < righe; p++)
 		{
-			colonna_completa.push_back(std::abs(data[p][k]));
+			colonna_completa.push_back(std::abs(matrice_ridotta[p][k]));
 		}
 
 		for (int p = h; p < righe; p++)
 		{
-			colonna.push_back(std::abs(data[p][k]));
+			colonna.push_back(std::abs(matrice_ridotta[p][k]));
 		}
 
 		int i_max = trova_indice_elemento(colonna_completa, *std::max_element(colonna.cbegin(), colonna.cend()), h);
 
-		if (data[i_max][k] == 0)
+		if (matrice_ridotta[i_max][k] == 0)
 		{
 			k += 1;
 		}
 		else
 		{
-			scambia_righe(h, i_max);
-			std::swap(termine_noto[h], termine_noto[i_max]);
+			matrice_ridotta.scambia_righe(h, i_max);
 			for (int i = h + 1; i < righe; i++)
 			{
-				int mult = data[i][k] / data[h][k];
-				data[i][k] = 0;
+				int mult = matrice_ridotta[i][k] / matrice_ridotta[h][k];
+				matrice_ridotta[i][k] = 0;
 				for (int j = k + 1; j < colonne; j++)
 				{
-					data[i][j] = data[i][j] - data[h][j] * mult;
+					matrice_ridotta[i][j] = matrice_ridotta[i][j] - matrice_ridotta[h][j] * mult;
 				}
-				termine_noto[i] = termine_noto[i] - termine_noto[h] * mult;
 			}
 
 			h++;
@@ -291,6 +333,65 @@ void Matrice<T>::riduzione_gaussiana(std::vector<T>& termine_noto)
 		}
 
 	}
+
+	return matrice_ridotta;
+}
+
+template <typename T>
+std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termine_noto(std::vector<T>& termine_noto)
+{
+	Matrice<T> matrice_ridotta = (*this);
+	std::vector<T> termine_noto_ridotto = termine_noto;
+	int h = 0;
+	int k = 0;
+
+	while (h < righe && k < colonne)
+	{
+
+		// TO DO: inserire lettore colonna
+
+		std::vector<int> colonna_completa;
+		std::vector<int> colonna;
+
+		for (int p = 0; p < righe; p++)
+		{
+			colonna_completa.push_back(std::abs(matrice_ridotta[p][k]));
+		}
+
+		for (int p = h; p < righe; p++)
+		{
+			colonna.push_back(std::abs(matrice_ridotta[p][k]));
+		}
+
+		int i_max = trova_indice_elemento(colonna_completa, *std::max_element(colonna.cbegin(), colonna.cend()), h);
+
+		if (matrice_ridotta[i_max][k] == 0)
+		{
+			k += 1;
+		}
+		else
+		{
+			matrice_ridotta.scambia_righe(h, i_max);
+			std::swap(termine_noto_ridotto[h], termine_noto_ridotto[i_max]);
+			for (int i = h + 1; i < righe; i++)
+			{
+				int mult = matrice_ridotta[i][k] / matrice_ridotta[h][k];
+				matrice_ridotta[i][k] = 0;
+				for (int j = k + 1; j < colonne; j++)
+				{
+					matrice_ridotta[i][j] = matrice_ridotta[i][j] - matrice_ridotta[h][j] * mult;
+				}
+				termine_noto_ridotto[i] = termine_noto_ridotto[i] - termine_noto_ridotto[h] * mult;
+			}
+
+			h++;
+			k++;
+
+		}
+
+	}
+
+	return std::make_pair(matrice_ridotta, termine_noto_ridotto);
 }
 
 #endif // __MATRICE_H__
