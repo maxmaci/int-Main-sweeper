@@ -33,8 +33,8 @@ typedef std::pair<int, int> Coord;
 class Campo
 {
 private:
-	int altezza;						// 0 < altezza < 99
-	int larghezza;						// 0 < larghezza < 99
+	int altezza;						// 0 < altezza < 50
+	int larghezza;						// 0 < larghezza < 50
 	int mine;							// 0 < mine < altezza * larghezza
 
 	int numero_bandiere;				// 0 <= numero_bandiere < altezza * larghezza
@@ -99,7 +99,7 @@ public:
 
 Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 {
-	if (input_altezza < 1 || input_altezza > 99 ||  input_larghezza < 1 || input_larghezza > 99) throw std::domain_error("dimensioni del campo invalide");
+	if (input_altezza < 1 || input_altezza > 50 ||  input_larghezza < 1 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	
 	campo_nascosto = Matrice<bool>(input_altezza, input_larghezza);
@@ -327,7 +327,7 @@ void Campo::reset()
 
 void Campo::resize(int input_altezza, int input_larghezza, int input_mine)
 {
-	if (input_altezza < 1 || input_altezza > 99 || input_larghezza < 1 || input_larghezza > 99) throw std::domain_error("dimensioni del campo invalide");
+	if (input_altezza < 1 || input_altezza > 50 || input_larghezza < 1 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	altezza = input_altezza;
 	larghezza = input_larghezza;

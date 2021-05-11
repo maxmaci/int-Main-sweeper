@@ -1322,3 +1322,613 @@ std::pair<std::vector<Coord>, std::vector<Coord> > Risolutore::estrai_numeri_bor
 				//void metodo_probabilistico_ricorsivo(Campo&, std::map<int, std::vector<std::vector<bool> > >&, std::vector<Coord>, int);
 
 					std::map<Coord, std::vector<Coord>> incognite_per_numero();
+
+
+					/*
+void Risolutore::metodo_gaussiano()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	// FASE 1: creazione della matrice di incognite
+	
+	//std::pair<std::vector<Coord>, std::vector<Coord>> numeri_e_incognite = estrai_numeri_bordo_celle_incognite();
+
+	std::vector<Coord> coordinate_numeri_bordo = estrai_numeri_bordo();
+	std::vector<Coord> incognite_bordo = estrai_celle_incognite();
+
+	std::vector<int> numeri_bordo;
+	
+	Matrice<int> matrice(static_cast<int>( coordinate_numeri_bordo.size() ), static_cast<int>( incognite_bordo.size() ));
+	
+	for (int n = 0; n < matrice._righe(); n++)
+	{
+		int i = coordinate_numeri_bordo[n].first;
+		int j = coordinate_numeri_bordo[n].second;
+
+		numeri_bordo.push_back(partita._campo_visibile()[i][j] - partita.conta_bandiere_vicine(i,j));
+				
+		if (trova_elemento(incognite_bordo, Coord (i - 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord (i - 1, j - 1))]	= 1;
+		if (trova_elemento(incognite_bordo, Coord (i - 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord (i - 1, j))]		= 1;
+		if (trova_elemento(incognite_bordo, Coord (i - 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord (i - 1, j + 1))]	= 1;
+		if (trova_elemento(incognite_bordo, Coord (i, j - 1)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord (i, j - 1))]		= 1;
+		if (trova_elemento(incognite_bordo, Coord (i, j + 1)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord (i, j + 1))]			= 1;
+		if (trova_elemento(incognite_bordo, Coord (i + 1, j - 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord (i + 1, j - 1))]		= 1;
+		if (trova_elemento(incognite_bordo, Coord (i + 1, j)))		matrice[n][trova_indice_elemento(incognite_bordo, Coord (i + 1, j))]			= 1;
+		if (trova_elemento(incognite_bordo, Coord (i + 1, j + 1)))	matrice[n][trova_indice_elemento(incognite_bordo, Coord (i + 1, j + 1))]		= 1;
+	}
+
+	// FASE 2: riduzione gaussiana della matrice.
+
+	matrice.riduzione_gaussiana(numeri_bordo);
+
+	// FASE 3: sostituzione all'indietro e controllo delle soluzioni.
+
+	//Consideriamo solamente le righe non vuote (il sistema originale non sempre ha soluzioni - anzi, quasi mai!)
+
+	Matrice<int> matrice_ridotta(0, matrice._colonne());
+	std::vector<int> termine_noto;
+	std::vector<Coord> coordinate_numeri_bordo_ridotta;
+	for (int i = 0; i < matrice._righe(); i++)
+	{
+		for (int j = 0; j < matrice._colonne(); j++)
+		{
+			if (matrice[i][j] != 0)
+			{
+				matrice_ridotta.push_back(matrice[i]);
+				termine_noto.push_back(numeri_bordo[i]);
+				coordinate_numeri_bordo_ridotta.push_back(coordinate_numeri_bordo[i]);
+				break;
+			}
+		}
+	}
+	
+	std::cout << matrice_ridotta << std::endl;
+
+	for (int i = 0; i < termine_noto.size(); i++)
+	{
+		std::cout << termine_noto[i];
+	}
+	std::cout << std::endl;
+	system("PAUSE");
+
+	for (int i = matrice_ridotta._righe() - 1; i >= 0; i--)
+	{
+		int upper_bound = 0;
+		int lower_bound = 0;
+
+		for (int j = 0; j < matrice_ridotta._colonne(); j++)
+		{
+			if (matrice_ridotta[i][j] > 0)	upper_bound += matrice_ridotta[i][j];
+			else lower_bound += matrice_ridotta[i][j];
+
+		}
+
+		if (upper_bound == termine_noto[i])
+		{
+			
+			for (int j = 0; j < matrice_ridotta._colonne(); j++)
+			{
+				if (matrice_ridotta[i][j] > 0)
+				{
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'B');
+				}
+				else if (matrice_ridotta[i][j] < 0)
+				{
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'S');
+				}
+			}
+		}
+		else if (lower_bound == termine_noto[i])
+		{
+			// tutti i termini con coefficiente -1 sono mine, tutti quelli con coefficiente 1 non lo sono
+
+			for (int j = 0; j < matrice_ridotta._colonne(); j++)
+			{
+				if (matrice_ridotta[i][j] < 0)
+				{
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'B');
+				}
+				else if (matrice_ridotta[i][j] > 0)
+				{
+					partita.gioca(incognite_bordo[j].first, incognite_bordo[j].second, 'S');
+				}
+			}
+		}
+		if (i != 0)
+		{
+			for (int b = i - 1; b > 0; b--)
+			{
+				for (int a = 0; a < matrice_ridotta._colonne(); a++)
+				{
+					// TO DO: rendere l'operatore - parte di una specifica classe vettore che funge da base ad una classe matrix adattata - > campo deve diventare solo nel caso della classe Gioco (che potremmo rinominare Campo).
+					matrice_ridotta[b][a] -= matrice_ridotta[i][a];
+				}
+				termine_noto[b] -= termine_noto[i];
+			}
+		}
+
+	}
+	
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+}
+*/
+
+/*
+std::vector<std::vector<Coord> > Risolutore::separa_bordo2()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	std::vector<Coord> incognite = estrai_celle_incognite();
+
+	std::vector<std::vector<Coord> > incognite_separate;
+
+	std::queue<Coord> coda;
+	coda.push(incognite[0]);
+
+	while (incognite.size() != 0)
+	{
+		std::vector<Coord> incognite_separate_regione;
+		if (incognite.size() != 0 && coda.size() == 0)
+		{
+			coda.push(incognite[0]);
+		}
+		while (incognite.size() != 0 && coda.size() != 0)
+		{
+			Coord cella = coda.front();
+			coda.pop();
+
+			if (partita._campo_visibile().indici_leciti(cella.first, cella.second) && !trova_elemento(incognite_separate_regione, cella) && trova_elemento(incognite, cella)) //   && partita.conta_numeri_vicini(cella.first, cella.second) == a
+			{
+				incognite_separate_regione.push_back(cella);
+				incognite.erase(incognite.begin() + trova_indice_elemento(incognite, cella));
+
+				coda.push(Coord(cella.first - 1, cella.second));
+				coda.push(Coord(cella.first, cella.second - 1));
+				coda.push(Coord(cella.first, cella.second + 1));
+				coda.push(Coord(cella.first + 1, cella.second));
+
+			}
+		}
+		if (incognite_separate_regione.size() != 0)
+		{
+			//for (int i = 0; i < incognite_separate_regione.size(); i++)
+			//{
+			//	std::cout << "(" << incognite_separate_regione[i].first + 1 << ", " << incognite_separate_regione[i].second + 1 << ") ";
+			//}
+
+			incognite_separate.push_back(incognite_separate_regione);
+
+			std::cout << std::endl;
+		}	
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+	return incognite_separate;
+}
+*/
+/*
+std::map<std::vector<Coord>, std::vector<Coord>> Risolutore::separa_bordo()
+{
+	std::vector<Coord> incognite = estrai_celle_incognite();
+
+	std::vector<Coord> numeri = estrai_numeri_bordo();
+
+	std::map<std::vector<Coord>, std::vector<Coord>> bordo; // INCOGNITE SEPARATE, NUMERI ACCANTO
+
+	for (int i = 0; i < incognite.size(); i++)
+	{
+		std::vector<Coord> numeri_accanto;
+
+		if (trova_elemento(numeri, Coord(incognite[i].first - 1, incognite[i].second - 1)))	numeri_accanto.push_back(Coord(incognite[i].first - 1, incognite[i].second - 1));
+		if (trova_elemento(numeri, Coord(incognite[i].first - 1, incognite[i].second)))		numeri_accanto.push_back(Coord(incognite[i].first - 1, incognite[i].second));
+		if (trova_elemento(numeri, Coord(incognite[i].first - 1, incognite[i].second + 1)))	numeri_accanto.push_back(Coord(incognite[i].first - 1, incognite[i].second + 1));
+		if (trova_elemento(numeri, Coord(incognite[i].first, incognite[i].second - 1)))		numeri_accanto.push_back(Coord(incognite[i].first, incognite[i].second - 1));
+		if (trova_elemento(numeri, Coord(incognite[i].first, incognite[i].second + 1)))		numeri_accanto.push_back(Coord(incognite[i].first, incognite[i].second + 1));
+		if (trova_elemento(numeri, Coord(incognite[i].first + 1, incognite[i].second - 1)))	numeri_accanto.push_back(Coord(incognite[i].first + 1, incognite[i].second - 1));
+		if (trova_elemento(numeri, Coord(incognite[i].first + 1, incognite[i].second)))		numeri_accanto.push_back(Coord(incognite[i].first + 1, incognite[i].second));
+		if (trova_elemento(numeri, Coord(incognite[i].first + 1, incognite[i].second + 1)))	numeri_accanto.push_back(Coord(incognite[i].first + 1, incognite[i].second + 1));
+	
+		if (numeri_accanto.size() == 0) continue;	// magari non è necessario
+
+		bordo[numeri_accanto].push_back(incognite[i]);
+	}
+	return bordo;
+}
+*/
+
+
+/*
+std::map<Coord, std::vector<Coord>> Risolutore::incognite_per_numero()
+{
+	std::vector<Coord> numeri = estrai_numeri_bordo();
+	
+	std::map<std::vector<Coord>, std::vector<Coord>> bordo_separato = separa_bordo();
+
+	std::map<Coord, std::vector<Coord>> incognite_per_numero;
+
+	for (int i = 0; i < numeri.size(); i++)
+	{
+		std::set<Coord> sezione;
+
+		for (std::map<std::vector<Coord>, std::vector<Coord> >::iterator it = bordo_separato.begin(); it != bordo_separato.end(); it++)
+		{
+			if (trova_elemento((*it).first, numeri[i]))
+			{
+				for (int j = 0; j < (*it).second.size(); j++)
+				{
+					sezione.insert((*it).second[j]);
+				}
+				 // inserisce le coordinate nel vettore sezione in fondo
+			}
+		}
+
+		std::vector<Coord> sezione_vettore(sezione.begin(), sezione.end());
+
+		incognite_per_numero[numeri[i]] = sezione_vettore;
+	}
+
+	return incognite_per_numero;
+}
+*/
+/*
+std::vector<std::map<Coord, std::vector<Coord>>> Risolutore::incognite_per_numero_per_bordo()
+{
+	std::map<Coord, std::vector<Coord>> incognite_per_numeri = incognite_per_numero();
+	
+	std::vector<std::vector<Coord> > bordo_separato = separa_bordo2();
+
+	std::vector<std::map<Coord, std::vector<Coord>>> incognite_per_numero_per_bordo (bordo_separato.size());
+
+	for (std::map<Coord, std::vector<Coord>>::iterator it = incognite_per_numeri.begin(); it != incognite_per_numeri.end(); it++)
+	{
+		for (int i = 0; i < bordo_separato.size(); i++)
+		{
+			for (int j = 0; j < (*it).second.size(); j++)
+			{
+				if (trova_elemento(bordo_separato[i], (*it).second[j])) (incognite_per_numero_per_bordo[i])[(*it).first] = (*it).second;
+			}
+		}
+		
+	}
+
+	return incognite_per_numero_per_bordo;
+}
+*/
+/*
+std::vector<std::vector<std::map<Coord, bool>>> Risolutore::trova_soluzioni(const std::vector<std::vector<std::map<Coord, bool>>>& possibilita_per_numero)
+{
+	std::vector<std::vector<std::map<Coord, bool>>> res = { {} };
+	for (const auto& u : possibilita_per_numero)
+	{
+		std::vector<std::vector<std::map<Coord, bool>>> temp;
+		for (const auto& x : res)
+		{
+			for (const auto y : u)
+			{
+				temp.push_back(x);
+				temp.back().push_back(y);
+			}
+		}
+		res = std::move(temp);
+	}
+	return res;
+}
+*/
+/*
+bool compara(std::pair<Coord, std::pair<double, double>> p, std::pair<Coord, std::pair<double, double>> q)
+{
+	return p.second.first < q.second.first;
+}
+*/
+
+
+/*
+void Risolutore::metodo_probabilistico()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	// FASE 1 : Preparazione. Prendiamo il bordo di celle incognite (quelle accanto a dei numeri e il cui numero di bandiere non è sufficiente) e segmentiamo il  le celle in modo che siano
+
+	std::vector<std::vector<Coord> > bordo_separato = separa_bordo2();
+
+	std::vector<std::vector<Coord> > numeri_separati = separa_numeri();
+
+	std::vector<int> mine_max_separate;
+
+	for (int i = 0; i < numeri_separati.size(); i++)
+	{
+		int mine_max = 0;
+		for (int j = 0; j < numeri_separati[i].size(); j++)
+		{
+			//std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ") ";
+			mine_max += partita._campo_visibile()[numeri_separati[i][j].first][numeri_separati[i][j].second] - partita.conta_bandiere_vicine(numeri_separati[i][j].first, numeri_separati[i][j].second);
+		}
+		std::cout << std::endl;
+		mine_max_separate.push_back(mine_max);
+	}
+
+	std::vector<std::map<int, std::vector<std::vector<Boolcoord>>>> possibilita_per_sezione;
+
+	for (int a = 0; a < bordo_separato.size(); a++)
+	{
+		std::map<int, std::vector<std::vector<Boolcoord>>> disposizioni_per_sezione;
+
+		std::vector<bool> disposizione(bordo_separato[a].size());
+
+		std::vector<int> estremi;
+		estremi.push_back(mine_max_separate[a]);
+		estremi.push_back(static_cast<int>(bordo_separato[a].size()));
+		estremi.push_back(partita._mine() - partita._numero_bandiere());
+
+		int estremo = *std::min_element(estremi.begin(), estremi.end());
+
+		std::cout << "estremo: " << estremo << std::endl;
+		std::cout << "mine_max_separate: " << estremi[0] << std::endl;
+		std::cout << "singola_disposizione.size(): " << estremi[1] << std::endl;
+		std::cout << "mine_rimanenti: " << estremi[2] << std::endl;
+
+		for (int i = 0; i < estremo; i++)
+		{
+			disposizione[i] = true;
+			std::sort(disposizione.begin(), disposizione.end());
+			do
+			{
+				if (disposizione_lecita(bordo_separato[a], numeri_separati[a], disposizione))
+				{
+					std::vector<Boolcoord> disposizione_con_coordinate;
+					for (int j = 0; j < disposizione.size(); j++)
+					{
+						disposizione_con_coordinate.push_back(std::make_pair(bordo_separato[a][j], disposizione[j]));
+					}
+					disposizioni_per_sezione[somma_elementi(disposizione)].push_back(disposizione_con_coordinate);
+				}
+			} while (std::next_permutation(disposizione.begin(), disposizione.end()));
+		}
+		//std::vector<std::vector<Boolcoord>> disposizioni_per_sezione_vettore(disposizioni_per_sezione.begin(), disposizioni_per_sezione.end());
+
+		possibilita_per_sezione.push_back(disposizioni_per_sezione);
+	}
+
+	std::cout << u8"N° SEZIONI: " << possibilita_per_sezione.size() << std::endl;		// std::vector<std::map<int, std::vector<std::vector<Boolcoord>>>>
+
+	for (int i = 0; i < possibilita_per_sezione.size(); i++)
+	{
+		std::cout << u8"SEZIONE N°: " << i + 1 << std::endl;
+
+		for (std::map<int, std::vector<std::vector<Boolcoord>>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
+		{
+			std::cout << u8"N° MINE: " << (*it).first << std::endl;
+			for (int j = 0; j < (*it).second.size(); j++)
+			{
+				for (int k = 0; k < (*it).second[j].size(); k++)
+				{
+					//std::cout << possibilita_per_sezione[i][j][k].second;
+					std::cout << "(" << (*it).second[j][k].first.first + 1 << "," << (*it).second[j][k].first.second + 1 << ")";
+				}
+				std::cout << std::endl;
+				for (int k = 0; k < (*it).second[j].size(); k++)
+				{
+					//std::cout << possibilita_per_sezione[i][j][k].second;
+					std::cout << (*it).second[j][k].second;
+				}
+				std::cout << std::endl;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+}
+
+void Risolutore::metodo_probabilistico()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	// FASE 1 : Preparazione. Prendiamo il bordo di celle incognite (quelle accanto a dei numeri e il cui numero di bandiere non è sufficiente) e segmentiamo il  le celle in modo che siano 
+
+	std::vector<std::vector<Coord> > bordo_separato = separa_bordo2();
+
+	std::vector<std::vector<Coord> > numeri_separati = separa_numeri();
+
+	std::vector<int> mine_max_separate;
+
+	for (int i = 0; i < numeri_separati.size(); i++)
+	{
+		int mine_max = 0;
+		for (int j = 0; j < numeri_separati[i].size(); j++)
+		{
+			//std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ") ";
+			mine_max += partita._campo_visibile()[numeri_separati[i][j].first][numeri_separati[i][j].second] - partita.conta_bandiere_vicine(numeri_separati[i][j].first, numeri_separati[i][j].second);
+		}
+		std::cout << std::endl;
+		mine_max_separate.push_back(mine_max);
+	}
+
+	std::vector<std::map<int, std::vector<std::vector<Boolcoord>>>> possibilita_per_sezione;
+
+	for (int a = 0; a < bordo_separato.size(); a++)
+	{
+		std::map<int, std::vector<std::vector<Boolcoord>>> disposizioni_per_sezione;
+
+		std::vector<bool> disposizione(bordo_separato[a].size());
+
+		std::vector<int> estremi;
+		estremi.push_back(mine_max_separate[a]);
+		estremi.push_back(static_cast<int>(bordo_separato[a].size()));
+		estremi.push_back(partita._mine() - partita._numero_bandiere());
+
+		int estremo = *std::min_element(estremi.begin(), estremi.end());
+
+		std::cout << "estremo: " << estremo << std::endl;
+		std::cout << "mine_max_separate: " << estremi[0] << std::endl;
+		std::cout << "singola_disposizione.size(): " << estremi[1] << std::endl;
+		std::cout << "mine_rimanenti: " << estremi[2] << std::endl;
+
+		for (int i = 0; i < estremo; i++)
+		{
+			disposizione[i] = true;
+			std::sort(disposizione.begin(), disposizione.end());
+			do
+			{
+				if (disposizione_lecita(bordo_separato[a], numeri_separati[a], disposizione))
+				{
+					std::vector<Boolcoord> disposizione_con_coordinate;
+					for (int j = 0; j < disposizione.size(); j++)
+					{
+						disposizione_con_coordinate.push_back(std::make_pair(bordo_separato[a][j], disposizione[j]));
+					}
+					disposizioni_per_sezione[somma_elementi(disposizione)].push_back(disposizione_con_coordinate);
+				}
+			} while (std::next_permutation(disposizione.begin(), disposizione.end()));
+		}
+		//std::vector<std::vector<Boolcoord>> disposizioni_per_sezione_vettore(disposizioni_per_sezione.begin(), disposizioni_per_sezione.end());
+
+		possibilita_per_sezione.push_back(disposizioni_per_sezione);
+	}
+
+	std::cout << u8"N° SEZIONI: " << possibilita_per_sezione.size() << std::endl;		// std::vector<std::map<int, std::vector<std::vector<Boolcoord>>>>
+
+	for (int i = 0; i < possibilita_per_sezione.size(); i++)
+	{		
+		std::cout << u8"SEZIONE N°: " << i + 1 << std::endl;
+
+		for (std::map<int, std::vector<std::vector<Boolcoord>>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
+		{
+			std::cout << u8"N° MINE: " << (*it).first << std::endl;
+			for (int j = 0; j < (*it).second.size(); j++)
+			{
+				for (int k = 0; k < (*it).second[j].size(); k++)
+				{
+					//std::cout << possibilita_per_sezione[i][j][k].second;
+					std::cout << "(" << (*it).second[j][k].first.first + 1 << "," << (*it).second[j][k].first.second + 1 << ")";
+				}
+				std::cout << std::endl;
+				for (int k = 0; k < (*it).second[j].size(); k++)
+				{
+					//std::cout << possibilita_per_sezione[i][j][k].second;
+					std::cout << (*it).second[j][k].second;
+				}
+				std::cout << std::endl;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+}
+void Risolutore::metodo_probabilistico()
+{
+	auto start = std::chrono::steady_clock::now();
+
+	// FASE 1 : Preparazione. Prendiamo il bordo di celle incognite (quelle accanto a dei numeri e il cui numero di bandiere non è sufficiente) e segmentiamo il  le celle in modo che siano 
+
+	std::vector<std::vector<Coord> > bordo_separato = separa_bordo2();
+
+	std::vector<std::vector<Coord> > numeri_separati = separa_numeri();
+	
+	std::vector<int> mine_max_separate;
+
+	for (int i = 0; i < numeri_separati.size(); i++)
+	{
+		int mine_max = 0;
+		for (int j = 0; j < numeri_separati[i].size(); j++)
+		{
+			std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ") ";
+			mine_max += partita._campo_visibile()[numeri_separati[i][j].first][numeri_separati[i][j].second] - partita.conta_bandiere_vicine(numeri_separati[i][j].first, numeri_separati[i][j].second);
+		}
+		std::cout << std::endl;
+		mine_max_separate.push_back(mine_max);
+	}
+
+	std::vector<std::vector<std::map<Coord, bool>>> possibilita_per_sezione;
+
+	for (int a = 0; a < bordo_separato.size(); a++)
+	{
+		std::set<std::map<Coord, bool>> disposizioni_per_sezione;
+
+		std::vector<bool> disposizione(bordo_separato[a].size());
+
+		std::vector<int> estremi;
+		estremi.push_back(mine_max_separate[a]);
+		estremi.push_back(static_cast<int>(bordo_separato[a].size()));
+		estremi.push_back(partita._mine() - partita._numero_bandiere());
+
+		int estremo = *std::min_element(estremi.begin(), estremi.end());
+
+		std::cout << "estremo: " << estremo << std::endl;
+		std::cout << "mine_max_separate: " << estremi[0] << std::endl;
+		std::cout << "singola_disposizione.size(): " << estremi[1] << std::endl;
+		std::cout << "mine_rimanenti: " << estremi[2] << std::endl;
+
+		for (int i = 0; i < estremo; i++)
+		{
+			disposizione[i] = true;
+			std::sort(disposizione.begin(), disposizione.end());
+			do
+			{
+				if (disposizione_lecita(bordo_separato[a], numeri_separati[a], disposizione))
+				{
+					std::map<Coord, bool> disposizione_singolo_numero;
+					for (int j = 0; j < disposizione.size(); j++)
+					{
+						//std::cout << disposizione[j];
+						disposizione_singolo_numero[bordo_separato[a][j]] = disposizione[j];
+					}
+					disposizioni_per_sezione.insert(disposizione_singolo_numero);
+					//std::cout << std::endl;
+				}
+			} while (std::next_permutation(disposizione.begin(), disposizione.end()));
+		}
+		std::vector<std::map<Coord, bool>> disposizioni_per_sezione_vettore(disposizioni_per_sezione.begin(), disposizioni_per_sezione.end());
+
+		possibilita_per_sezione.push_back(disposizioni_per_sezione_vettore);
+	}
+		
+	std::cout << "N° SEZIONI: " << possibilita_per_sezione.size() << std::endl;
+
+	for (int i = 0; i < possibilita_per_sezione.size(); i++)
+	{
+		std::cout << "N° DISPOSIZONI: " << possibilita_per_sezione[i].size() << std::endl;
+
+		for (int j = 0; j < possibilita_per_sezione[i].size(); j++)
+		{
+			for (std::map<Coord, bool>::iterator it = possibilita_per_sezione[i][j].begin(); it != possibilita_per_sezione[i][j].end(); it++)
+			{
+				std::cout << (*it).second;
+				//std::cout << "(" << (*it).first.first + 1 << ", " << (*it).first.second + 1 << "): " << (*it).second << std::endl;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
+	auto end = std::chrono::steady_clock::now();
+
+	auto diff = end - start;
+
+	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
+}
+*/
