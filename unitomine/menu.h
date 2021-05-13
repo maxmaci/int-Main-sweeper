@@ -38,7 +38,7 @@ void partita_personalizzata(Campo& campo)
 	}
 }
 
-void menu_principale(Campo& gioco, bool& uscita_programma)
+void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco)
 {
 	while (true)
 	{
@@ -51,19 +51,24 @@ void menu_principale(Campo& gioco, bool& uscita_programma)
 			{
 			case 1:
 				gioco.resize(9, 9, 10);
+				in_gioco = true;
 				return;
 			case 2:
 				gioco.resize(16, 16, 40);
+				in_gioco = true;
 				return;
 			case 3:
 				gioco.resize(16, 30, 99);
+				in_gioco = true;
 				return;
 			case 4:
 				std::cout << "We're no stranger to love..." << std::endl;
+				in_gioco = true;
 				return;
 				/* TO DO: metterci la tabella */
 			case 5:
 				partita_personalizzata(gioco);
+				in_gioco = true;
 				return;
 			case 6:
 				uscita_programma = true;
@@ -71,6 +76,7 @@ void menu_principale(Campo& gioco, bool& uscita_programma)
 			case 42:
 				std::cout << u8"\"La Vita, l'Universo, e il Tutto. C'è una risposta. Ma ci devo pensare.\"" << std::endl;
 				gioco.resize(42, 42, 420);
+				in_gioco = true;
 				return;
 			default:
 				std::cout << u8"Lo vedi che ci sono solo numeri dall'1 al 6, vero? Che diamine scrivi "
@@ -88,7 +94,7 @@ void menu_principale(Campo& gioco, bool& uscita_programma)
 	}
 }
 
-void menu_risolutore(bool& in_risolutore, bool& in_gioco)
+void menu_risolutore(bool& in_risolutore)
 {
 	std::cout << u8"Vuoi che il Risolutore™ giochi al posto tuo?\n"
 		<< u8"• Sì, fai giocare il Risolutore™.\t (1)\n"
@@ -108,7 +114,6 @@ void menu_risolutore(bool& in_risolutore, bool& in_gioco)
 				in_risolutore = true;
 				return;
 			case 2:
-				in_gioco = true;
 				return;
 			default:
 				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
@@ -161,7 +166,7 @@ void menu_opzioni_breve(Campo& gioco, bool& uscita_programma, bool& in_risolutor
 	}
 }
 
-void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
+void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, bool& in_gioco, bool& campo_generato)
 {
 	while (true)
 	{
@@ -177,6 +182,8 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 			case 2:
 				partita.reset_giocatore();
 				partita.reset_numero_bandiere();
+
+				campo_generato = false;
 				return;
 			case 3:
 				partita.rivela();
@@ -185,12 +192,12 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 			case 4:
 				partita.reset();
 
-				in_risolutore = false;
 				in_gioco = false;
+				in_risolutore = false;
 				return;
 			case 5:
-				in_risolutore = false;
 				in_gioco = false;
+				in_risolutore = false;
 				uscita_programma = true;
 				return;
 			default:
@@ -205,12 +212,11 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 	}
 }
 
-void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando)
+void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando, bool& in_risolutore, bool& campo_generato)
 {
 	while (true)
 	{
 		std::vector<std::string> input = leggi_input();
-
 
 		switch (input.size())
 		{
@@ -221,7 +227,7 @@ void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando)
 
 			return;
 		case 2:
-			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;										//throw std::invalid_argument("comando non valido");
+			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;											//throw std::invalid_argument("comando non valido");
 			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	//throw std::domain_error("coordinate non valide");
 
 			riga = std::stoi(input[0]);
@@ -232,14 +238,23 @@ void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando)
 		case 3:
 			// TO DO: controllare qualche caso
 			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;
-			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;	// throw std::invalid_argument("coordinate non valide");
-			if (input[2].size() > 1 || !comando_lecito(std::toupper(input[2][0]))) break;						// throw std::domain_error("comando non valido");
+			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;				// throw std::invalid_argument("coordinate non valide");
+			if (input[2].size() > 1 || (!comando_lecito(std::toupper(input[2][0])) && std::toupper(input[2][0]) != 'R')) break;	// throw std::domain_error("comando non valido");
 
 			riga = std::stoi(input[0]);
 			colonna = std::stoi(input[1]);
-			comando = std::toupper(input[2][0]);
 
-			return;
+			if (!campo_generato && std::toupper(input[2][0]) == 'R')
+			{
+				comando = 'S';
+				in_risolutore = true;
+				return;
+			}
+			else if (std::toupper(input[2][0]) != 'R')
+			{
+				comando = std::toupper(input[2][0]);
+				return;
+			}
 		default:
 
 			break;

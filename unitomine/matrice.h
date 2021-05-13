@@ -1,20 +1,10 @@
 ﻿#ifndef __MATRICE_H__
 #define __MATRICE_H__
 
-#include <iostream>		// std::cout / std::cin
-#include <string>		// classe string
-#include <vector>		// classe vector
-#include <map>			// classe map
 #include <iomanip>		// std::setw() / std::setfill()
-#include <iterator>		// classe iterator
 #include <chrono>
 
-#ifdef _WIN32
-// Se compilato su un computer con Windows includiamo la libreria windows.h, necessaria per la compatibilità UTF-8.
-// È consigliato usare Dejavù Sans Mono dato che supporta molti caratteri unicode.
-// Per motivi di incompatibilità di macro della libreria, useremo la notazione con parentesi per (std::min) and (std::max).
-#include <windows.h>
-#endif
+#include "vettore.h"
 
 // TO DO: usare una classe Vettore personalizzata (vedi Padovani) in modo che non si possa per errore ridimensionare una riga al di fuori delle dimensioni prestabilite
 
@@ -47,6 +37,7 @@ public:
 	void scambia_righe(int, int);
 	void resize(int, int, T);
 	void reset(T = T());
+	std::vector<T> converti() const;
 
 	/* METODI PER OTTENERE INFORMAZIONI SUGLI ELEMENTI DELLA MATRICE */
 	std::vector<T> colonna(int j) const;
@@ -62,8 +53,11 @@ public:
 
 	/* OPERAZIONI CON MATRICI */
 	Matrice<T> mul(const Matrice<T>& m) const;
+
+	/* RIDUSSIONE GAUSSIANA E RANGO */
 	Matrice<T> riduzione_gaussiana();
 	std::pair<Matrice<T>, std::vector<T>> riduzione_gaussiana_con_termine_noto(std::vector<T>&);
+	int rango();
 };
 
 template <typename T>
@@ -116,10 +110,11 @@ template <typename T>
 std::vector<T> Matrice<T>::colonna(int j) const {
 	std::vector<T> col;
 	for (int i = 0; i < righe; i++)
+	{
 		col.push_back(data[i][j]);
+	}
 	return col;
 }
-
 
 template <typename T>
 void Matrice<T>::push_back(std::vector<T> riga) {
@@ -259,13 +254,52 @@ int somma_elementi(const std::vector<T>& vettore)
 }
 
 template <typename T>
-T mul(std::vector<T> v, std::vector<T> w)
+T mult(std::vector<T> v, std::vector<T> w)
 {
 	if (v.size() != w.size()) throw std::domain_error("dimensioni dei vettori incompatibili per il prodotto");
 	T res = T();
 	for (int i = 0; i < v.size(); i++)	res += v[i] * w[i];
 	return res;
 }
+
+template <typename T>
+std::vector<T> Matrice<T>::converti() const
+{
+	if (righe > 1 && colonne > 1) throw std::domain_error("la matrice non può essere convertita in un vettore");
+	else if (righe == 1) return data[0];
+	else return colonna(0);
+	
+}
+
+template <typename T>
+Matrice<T> converti_in_vettore_riga(const std::vector<T>& v)
+{
+	Matrice<T> v_matriciale(1, v.size());
+	v_matriciale[0] = v;
+	return v_matriciale;
+}
+
+template <typename T>
+Matrice<T> converti_in_vettore_colonna(const std::vector<T>& v)
+{
+	Matrice<T> v_matriciale(v.size(), 1);
+	for (int i = 0; i < v.size(); i++)
+	{
+		v_matriciale[i][0] = v[i];
+	}
+	return v_matriciale;
+}
+
+std::vector<int> converti_to_int(const std::vector<bool>& v)
+{
+	std::vector<int> v_convertito;
+	for (int i = 0; i < v.size(); i++)
+	{
+		v_convertito.push_back(v[i]);
+	}
+	return v_convertito;
+}
+
 
 template <typename T>
 Matrice<T> Matrice<T>::mul(const Matrice<T>& m) const
@@ -275,7 +309,7 @@ Matrice<T> Matrice<T>::mul(const Matrice<T>& m) const
 	{
 		for (int j = 0; j < m.colonne; j++)
 		{
-			res[i][j] = mul(data[i], m.column(j));
+			res[i][j] = mult(data[i], m.colonna(j)); //
 		}
 	}
 	return res;
@@ -284,8 +318,7 @@ Matrice<T> Matrice<T>::mul(const Matrice<T>& m) const
 template <typename T>
 Matrice<T> Matrice<T>::riduzione_gaussiana()
 {
-
-	Matrice<T> matrice_ridotta = this;
+	Matrice<T> matrice_ridotta = (*this);
 
 	int h = 0;
 	int k = 0;
@@ -392,6 +425,21 @@ std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termin
 	}
 
 	return std::make_pair(matrice_ridotta, termine_noto_ridotto);
+}
+
+template <typename T>
+int Matrice<T>::rango()
+{
+	Matrice<T> matrice_ridotta = riduzione_gaussiana();
+	
+	std::vector<T> riga_vuota(matrice_ridotta.colonne, 0);
+
+	int righe_non_nulle = 0;
+	for (int i = 0; i < matrice_ridotta.righe; i++)
+	{
+		if (matrice_ridotta[i] != riga_vuota) righe_non_nulle++;
+	}
+	return righe_non_nulle;
 }
 
 #endif // __MATRICE_H__

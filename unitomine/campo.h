@@ -2,7 +2,9 @@
 #define __CAMPO_H__
 
 #include <utility>		// classe pair
-#include <queue>
+#include <string>		// classe string
+#include <map>			// classe map
+#include <queue>		// classe queue
 
 #include "matrice.h"
 #include "input.h"
@@ -266,7 +268,7 @@ void Campo::gioca(int i, int j, char comando)
 		campo_visibile[i][j] = -2;
 		numero_bandiere++;
 	}
-	else if (comando == 'T'&& campo_visibile[i][j] == -2)
+	else if (comando == 'T' && campo_visibile[i][j] == -2)
 	{
 		campo_visibile[i][j] = -3;
 		numero_bandiere--;

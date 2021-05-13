@@ -32,6 +32,9 @@
     <ClInclude Include="input.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="vettore.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="codice spazzatura.txt">
