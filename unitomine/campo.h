@@ -212,7 +212,7 @@ bool Campo::conta_se_numeri_vicini(int i, int j) const
 
 bool Campo::bordo_non_scavato(int i, int j) const
 {
-	return campo_visibile[i][j] == -3 && conta_se_numeri_vicini(i, j);
+	return campo_visibile.is_elemento(i, j, -3) && conta_se_numeri_vicini(i, j);
 }
 
 void Campo::aggiorna_cella(int i, int j)
@@ -326,7 +326,7 @@ void Campo::reset()
 	reset_status();
 	reset_numero_bandiere();
 }
-
+/*
 void Campo::resize(int input_altezza, int input_larghezza, int input_mine)
 {
 	if (input_altezza < 1 || input_altezza > 50 || input_larghezza < 1 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
@@ -334,10 +334,10 @@ void Campo::resize(int input_altezza, int input_larghezza, int input_mine)
 	altezza = input_altezza;
 	larghezza = input_larghezza;
 	mine = input_mine;
-	campo_nascosto.resize(altezza, larghezza, 0);
-	campo_visibile.resize(altezza, larghezza, -3);
+	campo_nascosto = Matrice<bool> (altezza, larghezza);
+	campo_visibile = Matrice<int> (altezza, larghezza, -3);
 }
-
+*/
 void Campo::rivela()
 {
 	for (int i = 0; i < altezza; i++)

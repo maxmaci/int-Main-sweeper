@@ -21,30 +21,30 @@ private:
 	void init(int, int, T);
 public:
 	/* COSTRUTTORI */
-	Matrice(int = 0, int = 0);
+	Matrice(int = 0, int = 0);											// costruttore con valore di default pari a T() dato in input iniziale
 	Matrice(int, int, T);												// costruttore con valore di default delle celle dato in input iniziale
 
 	/* LETTORE NUMERO DI RIGHE/COLONNE */
-	int _righe() const						{ return righe; };				// legge la riga della matrice
-	int _colonne() const					{ return colonne; };
+	int _righe() const						{ return righe; };			// legge il numero di righe della matrice
+	int _colonne() const					{ return colonne; };		// legge il numero di colonne della matrice
 
 	/* LETTURA/SCRITTURA DELLE RIGHE */
 	std::vector<T> operator[](int i) const	{ return data.at(i); };		// legge la riga i-esima della matrice
 	std::vector<T>& operator[](int i)		{ return data.at(i); };		// scrive la riga i-esima della matrice
+	std::vector<T> colonna(int) const;									// legge la colonna j-esima della matrice
 
-	/* METODI PER MODIFICARE LA MATRICE (DIMENSIONI, RESET) */
-	void push_back(std::vector<T>);
-	void scambia_righe(int, int);
-	void resize(int, int, T);
-	void reset(T = T());
-	std::vector<T> converti() const;
+	/* METODI PER MODIFICARE LA MATRICE */
+	void push_back(std::vector<T>);				// aggiunge una riga alla matrice
+	void scambia_righe(int, int);				// scambia due righe della matrice
+	//void resize(int, int, T);	// TO DO: cancellare
+	void reset(T = T());						// pulisce la matrice ad uno stato iniziale (ha senso?)
+	//std::vector<T> converti() const;
 
 	/* METODI PER OTTENERE INFORMAZIONI SUGLI ELEMENTI DELLA MATRICE */
-	std::vector<T> colonna(int j) const;
-	bool indici_leciti(int, int) const;
-	bool is_elemento(int, int, T) const;
+	bool indici_leciti(int, int) const;			// restituisce se le coordinate date sta nella matrice o meno
+	bool is_elemento(int, int, T) const;		// restituisce se l'elemento 
 	int conta_tutti_elemento(T) const;
-	int conta_caselle_vicine(int, int) const;			// conta i vicini della cella (i, j) in totale (= 3 se è una cella nell'angolo, = 5 se sul bordo e = 8 se in mezzo alla matrice)
+	int conta_caselle_vicine(int, int) const;	// conta i vicini della cella (i, j) in totale (= 3 se è una cella nell'angolo, = 5 se sul bordo e = 8 se in mezzo alla matrice)
 	int conta_vicini(int, int, T) const;		// conta i vicini della cella (i, j) che sono pari all'elemento dato in input
 	bool conta_se_vicini(int, int, T) const;
 
@@ -129,7 +129,7 @@ void Matrice<T>::scambia_righe(int i, int j) {
 	data[j] = data[i];
 	data[i] = temp;
 }
-
+/*
 template <typename T>
 void Matrice<T>::resize(int altezza, int larghezza, T elemento) {
 	righe = altezza;
@@ -140,7 +140,7 @@ void Matrice<T>::resize(int altezza, int larghezza, T elemento) {
 		data[i].resize(larghezza, elemento);
 	}
 }
-
+*/
 template <typename T>
 bool Matrice<T>::indici_leciti(int i, int j) const
 {
@@ -150,7 +150,7 @@ bool Matrice<T>::indici_leciti(int i, int j) const
 template <typename T>
 bool Matrice<T>::is_elemento(int i, int j, T elemento) const
 {
-	return data[i][j] == elemento;
+	return indici_leciti(i,  j) && data[i][j] == elemento;			// controlla che l'elemento T è nel posto i e j; NON restituisce un errore nel caso l'indice non sia lecito, bensì restituisce falso
 }
 
 template <typename T>
@@ -183,14 +183,14 @@ int Matrice<T>::conta_vicini(int i, int j, T elemento) const
 	
 	int k = 0;
 
-	if (indici_leciti(i - 1, j - 1) && data[i - 1][j - 1] == elemento)	k++;
-	if (indici_leciti(i - 1, j)		&& data[i - 1][j] == elemento)		k++;
-	if (indici_leciti(i - 1, j + 1) && data[i - 1][j + 1] == elemento)	k++;
-	if (indici_leciti(i, j - 1)		&& data[i][j - 1] == elemento)		k++;
-	if (indici_leciti(i, j + 1)		&& data[i][j + 1] == elemento)		k++;
-	if (indici_leciti(i + 1, j - 1) && data[i + 1][j - 1] == elemento)	k++;
-	if (indici_leciti(i + 1, j)		&& data[i + 1][j] == elemento)		k++;
-	if (indici_leciti(i + 1, j + 1) && data[i + 1][j + 1] == elemento)	k++;
+	if (is_elemento(i - 1, j - 1, elemento))	k++;
+	if (is_elemento(i - 1, j, elemento))		k++;
+	if (is_elemento(i - 1, j + 1, elemento))	k++;
+	if (is_elemento(i, j - 1, elemento))		k++;
+	if (is_elemento(i, j + 1, elemento))		k++;
+	if (is_elemento(i + 1, j - 1, elemento))	k++;
+	if (is_elemento(i + 1, j, elemento))		k++;
+	if (is_elemento(i + 1, j + 1, elemento))	k++;
 
 	return k;
 }
@@ -200,14 +200,14 @@ bool Matrice<T>::conta_se_vicini(int i, int j, T elemento) const
 {
 	if (!indici_leciti(i, j)) throw std::domain_error("controllo su cella illegittima");
 
-	if (indici_leciti(i - 1, j - 1) && data[i - 1][j - 1] == elemento)	return true;
-	if (indici_leciti(i - 1, j)		&& data[i - 1][j] == elemento)		return true;
-	if (indici_leciti(i - 1, j + 1) && data[i - 1][j + 1] == elemento)	return true;
-	if (indici_leciti(i, j - 1)		&& data[i][j - 1] == elemento)		return true;
-	if (indici_leciti(i, j + 1)		&& data[i][j + 1] == elemento)		return true;
-	if (indici_leciti(i + 1, j - 1) && data[i + 1][j - 1] == elemento)	return true;
-	if (indici_leciti(i + 1, j)		&& data[i + 1][j] == elemento)		return true;
-	if (indici_leciti(i + 1, j + 1) && data[i + 1][j + 1] == elemento)	return true;
+	if (is_elemento(i - 1, j - 1, elemento))	return true;
+	if (is_elemento(i - 1, j, elemento))		return true;
+	if (is_elemento(i - 1, j + 1, elemento))	return true;
+	if (is_elemento(i, j - 1, elemento))		return true;
+	if (is_elemento(i, j + 1, elemento))		return true;
+	if (is_elemento(i + 1, j - 1, elemento))	return true;
+	if (is_elemento(i + 1, j, elemento))		return true;
+	if (is_elemento(i + 1, j + 1, elemento))	return true;
 	
 	return false;
 }
@@ -252,7 +252,7 @@ int somma_elementi(const std::vector<T>& vettore)
 	for (int i = 0; i < vettore.size(); i++) res += vettore[i];
 	return res;
 }
-
+/*
 template <typename T>
 T mult(std::vector<T> v, std::vector<T> w)
 {
@@ -314,6 +314,7 @@ Matrice<T> Matrice<T>::mul(const Matrice<T>& m) const
 	}
 	return res;
 }
+*/
 
 template <typename T>
 Matrice<T> Matrice<T>::riduzione_gaussiana()

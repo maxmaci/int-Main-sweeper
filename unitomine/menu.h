@@ -28,7 +28,7 @@ void partita_personalizzata(Campo& campo)
 			int altezza = std::stoi(input[0]);
 			int larghezza = std::stoi(input[1]);
 			int mine = std::stoi(input[2]);
-			campo.resize(altezza, larghezza, mine);
+			campo = Campo(altezza, larghezza, mine);
 			return;
 		}
 		else
@@ -50,15 +50,15 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco)
 			switch (comando_opzioni)
 			{
 			case 1:
-				gioco.resize(9, 9, 10);
+				gioco = Campo(9, 9, 10);
 				in_gioco = true;
 				return;
 			case 2:
-				gioco.resize(16, 16, 40);
+				gioco = Campo(16, 16, 40);
 				in_gioco = true;
 				return;
 			case 3:
-				gioco.resize(16, 30, 99);
+				gioco = Campo(16, 30, 99);
 				in_gioco = true;
 				return;
 			case 4:
@@ -75,7 +75,7 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco)
 				return;
 			case 42:
 				std::cout << u8"\"La Vita, l'Universo, e il Tutto. C'è una risposta. Ma ci devo pensare.\"" << std::endl;
-				gioco.resize(42, 42, 420);
+				gioco = Campo(42, 42, 420);
 				in_gioco = true;
 				return;
 			default:
