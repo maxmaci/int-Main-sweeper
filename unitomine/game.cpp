@@ -5,7 +5,7 @@
 
 #include "campo.h"
 #include "menu.h"
-
+/*
 int fact(int n) {
 	return n == 0 ? 1 : n * fact(n - 1);
 }
@@ -13,11 +13,11 @@ int fact(int n) {
 int bin(int n, int k) {
 	return fact(n) / (fact(k) * fact(n - k));
 }
-
-long long bin2(int n, int k) {
+*/
+double bin(int n, int k) {
 	double res = 1;
-	for (int i = 1; i <= k; i++) res *= double(n + 1 - i) / double(i);
-	return long long (res);
+	for (int i = 1; i <= k; i++) res *= (n + 1 - i) / double(i);
+	return res;
 }
 
 /* Classe Risolutore */
@@ -496,7 +496,8 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 {
 	auto start = std::chrono::steady_clock::now();
 
-	// FASE 1 : Preparazione. Prendiamo il bordo di celle incognite (quelle accanto a dei numeri e il cui numero di bandiere non è sufficiente) e segmentiamo il  le celle in modo che siano 
+	// FASE 1.1 : Preparazione. Prendiamo il bordo di celle incognite (quelle accanto a dei numeri e il cui numero
+	// di bandiere non è sufficiente) e segmentiamo le celle in modo che siano 
 
 	std::vector<int> mine_max_separate;
 
@@ -512,6 +513,12 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		mine_max_separate.push_back(mine_max);
 	}
 
+	// FASE 1.2:
+
+	int mine_rimanenti = partita._mine() - partita._numero_bandiere();
+	
+	// FASE 1.3:
+
 	std::vector<std::map<int, Matrice<bool>>> possibilita_per_sezione;
 
 	for (int a = 0; a < bordo_separato.size(); a++)
@@ -526,7 +533,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		std::vector<int> estremi;
 		estremi.push_back(mine_max_separate[a]);
 		estremi.push_back(static_cast<int>(sezione_bordo.size()));
-		estremi.push_back(partita._mine() - partita._numero_bandiere());
+		estremi.push_back(mine_rimanenti);
 
 		int estremo = *std::min_element(estremi.begin(), estremi.end());
 
@@ -579,17 +586,91 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		std::cout << std::endl;
 	}
 
-	std::vector<std::vector<double> > probabilità_per_sezione;
+	// FASE 2.1: contiamo tutte le celle non scavate di cui non abbiamo alcuna informazione
+
+	int celle_non_scavate_fuori_bordo = partita._campo_visibile().conta_tutti_elemento(-3);
+
+	for (int i = 0; i < bordo_separato.size(); i++)
+	{
+		celle_non_scavate_fuori_bordo -= bordo_separato[i].size();
+	}
+
+	// FASE 2.2: contiamo tutte le celle non scavate di cui non abbiamo alcuna informazione
+
+	std::vector<std::vector<double> > probabilita_per_sezione;
 
 	for (int i = 0; i < possibilita_per_sezione.size(); i++)
 	{
+		std::vector<double> probabilita_singola_sezione;
+
 		for (int j = 0; j < bordo_separato[i].size(); j++)
 		{
+			double numeratore = 0;
+			double denominatore = 0;
+			double calcolo_parziale = 0;
 			
+			for (std::map<int, Matrice<bool>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
+			{
+				for (int j = 0; j < possibilita_per_sezione.size(); j++)
+				{
+					if (j != i)
+					{
+						for (std::map<int, Matrice<bool>>::iterator jt = possibilita_per_sezione[j].begin(); jt != possibilita_per_sezione[j].end(); jt++)
+						{
+							calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first - (*jt).first);
+						}
+					}
+
+				}
+				if (possibilita_per_sezione.size() == 1)
+				{
+					calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
+				}
+				denominatore += (*it).second._righe() * calcolo_parziale;
+				numeratore += somma_elementi((*it).second.colonna(j)) * calcolo_parziale;
+			}
+
+			probabilita_singola_sezione.push_back(numeratore / denominatore);
 		}
+
+		probabilita_per_sezione.push_back(probabilita_singola_sezione);
+	}
+
+	for (int i = 0; i < probabilita_per_sezione.size(); i++)
+	{		
+		std::cout << u8"SEZIONE N°: " << i + 1 << std::endl;
+		for (int j = 0; j < bordo_separato[i].size(); j++)
+		{
+			std::cout << "(" << bordo_separato[i][j].first + 1 << ", " << bordo_separato[i][j].second + 1 << ") ";
+		}
+		std::cout << std::endl;
+		std::cout << u8"PROBABILITà: " << std::endl;
+		for (int j = 0; j < probabilita_per_sezione[i].size(); j++)
+		{
+			std::cout << probabilita_per_sezione[i][j] << " ";
+		}
+		std::cout << std::endl;
 	}
 	
+	Coord indice_minore;
+	double probabilita_minore = 1;
 
+	for (int i = 0; i < probabilita_per_sezione.size(); i++)
+	{
+		for (int j = 0; j < probabilita_per_sezione[i].size(); j++)
+		{
+			if (probabilita_per_sezione[i][j] == 0) partita.gioca(bordo_separato[i][j].first, bordo_separato[i][j].second, 'S');
+			else if (probabilita_per_sezione[i][j] == 1) partita.gioca(bordo_separato[i][j].first, bordo_separato[i][j].second, 'B');
+			else if (probabilita_per_sezione[i][j] < probabilita_minore)
+			{
+				indice_minore = std::make_pair(i, j);
+				probabilita_minore = probabilita_per_sezione[i][j];
+			}
+		}
+	}
+	if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-3) == celle_non_scavate_precedenti) partita.gioca(bordo_separato[indice_minore.first][indice_minore.second].first, bordo_separato[indice_minore.first][indice_minore.second].second, 'S');
+
+	std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") ";
 
 	auto end = std::chrono::steady_clock::now();
 
@@ -608,16 +689,6 @@ void Risolutore::risolve()
 	while (partita._status() == '-')
 	{
 		std::cout << "Applico il metodo meccanico." << std::endl;
-
-		auto start = std::chrono::steady_clock::now();
-
-		std::cout << bin2(54, 27) << std::endl;
-
-		auto end = std::chrono::steady_clock::now();
-
-		auto diff = end - start;
-
-		std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
 
 		metodo_meccanico();
 		std::cout << partita << std::endl;
