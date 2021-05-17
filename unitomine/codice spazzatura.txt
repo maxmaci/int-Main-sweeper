@@ -2197,3 +2197,19 @@ void Risolutore::metodo_probabilistico()
 
 }
 */
+
+/*
+bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, const std::vector<Coord>& numeri_separati, std::vector<bool>& disposizione)
+{
+	Campo copia_partita = partita;
+	for (int i = 0; i < disposizione.size(); i++)
+	{
+		if (disposizione[i]) copia_partita.gioca(bordo_separato[i].first, bordo_separato[i].second, 'B');
+	}
+	for (int i = 0; i < numeri_separati.size(); i++)
+	{
+		if (copia_partita._campo_visibile()[numeri_separati[i].first][numeri_separati[i].second] - copia_partita.conta_bandiere_vicine(numeri_separati[i].first, numeri_separati[i].second)) return false;
+	}
+	return true;
+}
+*/

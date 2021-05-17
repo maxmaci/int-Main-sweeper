@@ -118,9 +118,10 @@ std::vector<T> Matrice<T>::colonna(int j) const {
 
 template <typename T>
 void Matrice<T>::push_back(std::vector<T> riga) {
-	if (riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
+	if (colonne != 0 && riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
 	data.push_back(riga);
 	righe = righe + 1;
+	if (colonne == 0) colonne = riga.size();
 }
 
 template <typename T>

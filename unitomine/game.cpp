@@ -6,6 +6,20 @@
 #include "campo.h"
 #include "menu.h"
 
+int fact(int n) {
+	return n == 0 ? 1 : n * fact(n - 1);
+}
+
+int bin(int n, int k) {
+	return fact(n) / (fact(k) * fact(n - k));
+}
+
+long long bin2(int n, int k) {
+	double res = 1;
+	for (int i = 1; i <= k; i++) res *= double(n + 1 - i) / double(i);
+	return long long (res);
+}
+
 /* Classe Risolutore */
 class Risolutore
 {
@@ -25,9 +39,9 @@ private:
 
 	/* METODI RISOLUTIVI */
 	void metodo_meccanico();
-	void metodo_gaussiano();
-	void metodo_probabilistico();
-
+	void metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati);
+	void metodo_probabilistico(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati);
+	void metodo_probabilistico2(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati);
 public:
 	/* COSTRUTTORE */
 	Risolutore(const Campo&);
@@ -334,14 +348,11 @@ void Risolutore::metodo_meccanico()
 
 /* METODO GAUSSIANO */
 
-void Risolutore::metodo_gaussiano()
+void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati)
 {
 	auto start = std::chrono::steady_clock::now();
 
 	// FASE 1: creazione della matrice di incognite
-
-	std::vector< std::vector<Coord>> numeri_separati = separa_numeri();
-	std::vector< std::vector<Coord>> bordo_separato = separa_bordo();
 
 	for (int a = 0; a < numeri_separati.size(); a++)
 	{
@@ -462,21 +473,6 @@ void Risolutore::metodo_gaussiano()
 
 bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, const std::vector<Coord>& numeri_separati, std::vector<bool>& disposizione)
 {
-	Campo copia_partita = partita;
-	for (int i = 0; i < disposizione.size(); i++)
-	{
-		if (disposizione[i]) copia_partita.gioca(bordo_separato[i].first, bordo_separato[i].second, 'B');
-	}
-	for (int i = 0; i < numeri_separati.size(); i++)
-	{
-		if (copia_partita._campo_visibile()[numeri_separati[i].first][numeri_separati[i].second] - copia_partita.conta_bandiere_vicine(numeri_separati[i].first, numeri_separati[i].second)) return false;
-	}
-	return true;
-}
-
-/*
-bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, const std::vector<Coord>& numeri_separati, std::vector<bool>& disposizione)
-{
 	for (int i = 0; i < numeri_separati.size(); i++)
 	{
 		int conta_mine_cella = 0;
@@ -495,17 +491,12 @@ bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, c
 	return true;
 
 }
-*/
 
-void Risolutore::metodo_probabilistico()
+void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati)
 {
 	auto start = std::chrono::steady_clock::now();
 
 	// FASE 1 : Preparazione. Prendiamo il bordo di celle incognite (quelle accanto a dei numeri e il cui numero di bandiere non è sufficiente) e segmentiamo il  le celle in modo che siano 
-
-	std::vector<std::vector<Coord> > bordo_separato = separa_bordo();
-
-	std::vector<std::vector<Coord> > numeri_separati = separa_numeri();
 
 	std::vector<int> mine_max_separate;
 
@@ -514,21 +505,21 @@ void Risolutore::metodo_probabilistico()
 		int mine_max = 0;
 		for (int j = 0; j < numeri_separati[i].size(); j++)
 		{
-			std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ")";
+			//if (partita.conta_numeri_vicini(numeri_separati[i][j].first, numeri_separati[i][j].second) == 1) std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ")";
 			mine_max += partita._campo_visibile()[numeri_separati[i][j].first][numeri_separati[i][j].second] - partita.conta_bandiere_vicine(numeri_separati[i][j].first, numeri_separati[i][j].second);
 		}
-		std::cout << std::endl;
+		//std::cout << std::endl;
 		mine_max_separate.push_back(mine_max);
 	}
 
-	std::vector<std::map<int, std::vector<std::vector<bool>>>> possibilita_per_sezione;
+	std::vector<std::map<int, Matrice<bool>>> possibilita_per_sezione;
 
 	for (int a = 0; a < bordo_separato.size(); a++)
 	{
 		std::vector<Coord> sezione_numeri = numeri_separati[a];
 		std::vector<Coord> sezione_bordo = bordo_separato[a];
 
-		std::map<int, std::vector<std::vector<bool>>> disposizioni_per_sezione;
+		std::map<int, Matrice<bool>> disposizioni_per_sezione;
 
 		//std::vector<bool> disposizione(sezione_bordo.size());
 
@@ -571,30 +562,34 @@ void Risolutore::metodo_probabilistico()
 	for (int i = 0; i < possibilita_per_sezione.size(); i++)
 	{
 		std::cout << u8"SEZIONE N°: " << i + 1 << std::endl;
-		for (int k = 0; k < bordo_separato[i].size(); k++)
+		for (int j = 0; j < bordo_separato[i].size(); j++)
 		{
-			std::cout << "(" << bordo_separato[i][k].first + 1 << ", " << bordo_separato[i][k].second + 1 << ") ";
+			std::cout << "(" << bordo_separato[i][j].first + 1 << ", " << bordo_separato[i][j].second + 1 << ") ";
 		}
 		std::cout << std::endl;
 
-		for (std::map<int, std::vector<std::vector<bool>>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
+		for (std::map<int, Matrice<bool>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
 		{
 			std::cout << u8"N° MINE: " << (*it).first << std::endl;
-			std::cout << u8"N° COMBINAZIONI: " << (*it).second.size() << std::endl;
-			
-			for (int j = 0; j < (*it).second.size(); j++)
-			{
-				for (int k = 0; k < (*it).second[j].size(); k++)
-				{
-					std::cout << (*it).second[j][k];
-				}
-			std::cout << std::endl;
-			
-			}
+			std::cout << u8"N° COMBINAZIONI: " << (*it).second._righe() << std::endl;
+
+			std::cout << (*it).second;
 			std::cout << std::endl;
 		}
 		std::cout << std::endl;
 	}
+
+	std::vector<std::vector<double> > probabilità_per_sezione;
+
+	for (int i = 0; i < possibilita_per_sezione.size(); i++)
+	{
+		for (int j = 0; j < bordo_separato[i].size(); j++)
+		{
+			
+		}
+	}
+	
+
 
 	auto end = std::chrono::steady_clock::now();
 
@@ -614,6 +609,16 @@ void Risolutore::risolve()
 	{
 		std::cout << "Applico il metodo meccanico." << std::endl;
 
+		auto start = std::chrono::steady_clock::now();
+
+		std::cout << bin2(54, 27) << std::endl;
+
+		auto end = std::chrono::steady_clock::now();
+
+		auto diff = end - start;
+
+		std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+
 		metodo_meccanico();
 		std::cout << partita << std::endl;
 		std::cout << "STATUS: " << partita._status() << std::endl;
@@ -625,7 +630,11 @@ void Risolutore::risolve()
 		{
 			std::cout << "Non ho messo nuove bandiere nè scavato celle, passo al metodo Gaussiano." << std::endl;
 
-			metodo_gaussiano();
+			std::vector<std::vector<Coord> > bordo_separato = separa_bordo();
+
+			std::vector<std::vector<Coord> > numeri_separati = separa_numeri();
+
+			metodo_gaussiano(bordo_separato, numeri_separati);
 			std::cout << partita << std::endl;
 			std::cout << "STATUS: " << partita._status() << std::endl;
 			std::cout << "NUMERO BANDIERE: " << partita._numero_bandiere() << "/" << partita._mine() << ", bandiere precedenti: " << bandiere_precedenti << "/" << partita._mine() << std::endl;
@@ -637,7 +646,7 @@ void Risolutore::risolve()
 			{
 				std::cout << "Non ho messo nuove bandiere nè scavato celle, passo al metodo probabilistico." << std::endl;
 
-				metodo_probabilistico();
+				metodo_probabilistico(bordo_separato, numeri_separati);
 
 				//std::vector<Coord> celle_incognite = estrai_celle_incognite();
 				//int random = std::rand() % celle_incognite.size();
