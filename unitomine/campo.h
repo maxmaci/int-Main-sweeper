@@ -61,6 +61,7 @@ private:
 public:
 	/* COSTRUTTORE */
 	Campo(int = 9, int = 9, int = 10);
+	Campo(Matrice<bool>);
 
 	/* LEGGI CAMPI PRIVATE */
 	int _altezza() const { return altezza; };
@@ -110,6 +111,21 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 	altezza = input_altezza;
 	larghezza = input_larghezza;
 	mine = input_mine;
+	numero_bandiere = 0;
+	status = '-';
+}
+
+Campo::Campo(Matrice<bool> campo_input)
+{
+	if (campo_input._righe() < 1 || campo_input._righe() > 50 || campo_input._colonne() < 1 || campo_input._colonne() > 50) throw std::domain_error("dimensioni del campo invalide");
+	if (campo_input.conta_tutti_elemento(true) < 1 || campo_input.conta_tutti_elemento(true) >= campo_input._righe() * campo_input._colonne()) throw std::domain_error("numero delle mine illegale");
+
+	campo_nascosto = campo_input;
+	campo_visibile = Matrice<int>(campo_input._righe(), campo_input._colonne(), -3);
+
+	altezza = campo_input._righe();
+	larghezza = campo_input._colonne();
+	mine = campo_input.conta_tutti_elemento(true);
 	numero_bandiere = 0;
 	status = '-';
 }

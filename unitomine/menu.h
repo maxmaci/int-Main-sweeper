@@ -3,6 +3,22 @@
 
 #include "campo.h"
 
+Campo leggi_campo_da_file(std::istream& is) {
+	Matrice<bool> campo_input;
+	std::string stringa;
+	while (is >> stringa)
+	{
+		std::vector<bool> futura_riga(stringa.size(), false);
+		for (int i = 0; i < futura_riga.size(); i++)
+		{
+			if (stringa[i] == '*') futura_riga[i] = true;
+		}
+		campo_input.push_back(futura_riga);
+	}
+	Campo res(campo_input);
+	return res;
+}
+
 /* FUNZIONI MENÙ */
 
 /* CONTROLLI sulla validità dell'input */
@@ -38,8 +54,10 @@ void partita_personalizzata(Campo& campo)
 	}
 }
 
-void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco)
+void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool& campo_generato, bool& prima_mossa_effettuata)
 {
+	std::ifstream f("epic_scheme.txt");
+	
 	while (true)
 	{
 		std::vector<std::string> input = leggi_input();
@@ -63,9 +81,11 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco)
 				return;
 			case 4:
 				std::cout << "We're no stranger to love..." << std::endl;
+				gioco = Campo(leggi_campo_da_file(f));
+				campo_generato = true;
+				//prima_mossa_effettuata = true;
 				in_gioco = true;
 				return;
-				/* TO DO: metterci la tabella */
 			case 5:
 				partita_personalizzata(gioco);
 				in_gioco = true;
@@ -166,7 +186,7 @@ void menu_opzioni_breve(Campo& gioco, bool& uscita_programma, bool& in_risolutor
 	}
 }
 
-void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, bool& in_gioco, bool& campo_generato)
+void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, bool& in_gioco, bool& prima_mossa_effettuata)
 {
 	while (true)
 	{
@@ -183,7 +203,7 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 				partita.reset_giocatore();
 				partita.reset_numero_bandiere();
 
-				campo_generato = false;
+				prima_mossa_effettuata = false;
 				return;
 			case 3:
 				partita.rivela();
@@ -212,7 +232,7 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 	}
 }
 
-void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando, bool& in_risolutore, bool& campo_generato)
+void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando, bool& in_risolutore, bool& prima_mossa_effettuata)
 {
 	while (true)
 	{
@@ -244,7 +264,7 @@ void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando, bo
 			riga = std::stoi(input[0]);
 			colonna = std::stoi(input[1]);
 
-			if (!campo_generato && std::toupper(input[2][0]) == 'R')
+			if (!prima_mossa_effettuata && std::toupper(input[2][0]) == 'R')
 			{
 				comando = 'S';
 				in_risolutore = true;

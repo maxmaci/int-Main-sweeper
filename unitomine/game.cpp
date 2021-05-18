@@ -3,7 +3,6 @@
 #include <stack>
 #include <algorithm>
 
-#include "campo.h"
 #include "menu.h"
 /*
 int fact(int n) {
@@ -11,7 +10,7 @@ int fact(int n) {
 }
 
 int bin(int n, int k) {
-	return fact(n) / (fact(k) * fact(n - k));
+	return fact(n) / (fact(k) * fact(n - k)); 
 }
 */
 long double bin(int n, int k) {
@@ -41,7 +40,6 @@ private:
 	void metodo_meccanico();
 	void metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati);
 	void metodo_probabilistico(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati);
-	void metodo_probabilistico2(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati);
 public:
 	/* COSTRUTTORE */
 	Risolutore(const Campo&);
@@ -546,7 +544,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		{
 			std::vector<bool> disposizione(sezione_bordo.size());
 
-			for (int j = 0; j < i; j++)
+			for (int j = 0; j <= i; j++)
 			{
 				disposizione[j] = true;
 			}
@@ -554,6 +552,11 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 			std::sort(disposizione.begin(), disposizione.end());
 			do
 			{
+				//for (int j = 0; j < i; j++)
+				//{
+				//	std::cout << disposizione[j];
+				//}
+				//std::cout << std::endl;
 				if (disposizione_lecita(bordo_separato[a], numeri_separati[a], disposizione))
 				{
 					disposizioni_per_sezione[somma_elementi(disposizione)].push_back(disposizione);
@@ -683,21 +686,19 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 			}
 		}
 	}
-	long double probabilita_media = 1; // TO DO: definire la probabilità media come la probabilità che uno becchi una cella non sul bordo a casso e che essa sia una mina.
+	long double probabilita_media = long double(partita._campo_visibile().conta_tutti_elemento(-3)) / long double(mine_rimanenti); // TO DO: definire la probabilità media come la probabilità che uno becchi una cella non sul bordo a casso e che essa sia una mina.
 	if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-3) == celle_non_scavate_precedenti)
 	{
 		if (probabilita_minore < probabilita_media)
 		{
 			partita.gioca(bordo_separato[indice_minore.first][indice_minore.second].first, bordo_separato[indice_minore.first][indice_minore.second].second, 'S');
 			std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") " << std::endl;
-
 		}
 		else
 		{
-			// TO DO: scegliere una cella non sul bordo completamente a random
+			// TO DO: scegliere una cella completamente a random
 		}
 	}
-
 	
 	auto end = std::chrono::steady_clock::now();
 
@@ -869,7 +870,7 @@ int main()
 					<< u8"• PERSONALIZZATO\t\t\t\t\t(5)\n"
 					<< u8"• ESCI DAL GIOCO \t\t\t\t\t(6)" << std::endl;
 		
-		menu_principale(partita, uscita_programma, in_gioco);
+		menu_principale(partita, uscita_programma, in_gioco, campo_generato, prima_mossa_effettuata);
 
 	/* TO DO: menù per chiedere risolutore */
 
@@ -883,14 +884,14 @@ int main()
 				std::cout << u8"Inserisci una mossa nel formato 'riga colonna comando' oppure anche solo 'riga colonna' se intendi scavare quella cella.\nPer il menù delle opzioni, scrivi nel prompt 'O'." << std::endl;
 				std::cout << "Hai messo " << partita._numero_bandiere() << " bandiere su " << partita._mine() << " mine presenti." << std::endl;
 				
-				interpreta_mossa(partita, riga, colonna, comando, in_risolutore, campo_generato);
+				interpreta_mossa(partita, riga, colonna, comando, in_risolutore, prima_mossa_effettuata);
 				
 				// Esce dalla partita per le opzioni
 				if (comando == 'O') break;
 
 				/* RANDOMIZZATORE: */
 				// Se la mossa è la prima (tranne quando si ricomincia la partita), il campo viene popolato dalle mine secondo le regole di 'randomizza_campo'
-				if (!prima_mossa_effettuata)
+				if (!campo_generato)
 				{
 					partita.randomizza_campo(riga - 1, colonna - 1);
 					campo_generato = true;
@@ -923,7 +924,7 @@ int main()
 					<< u8"• Torna al menù principale.\t(4)\n"
 					<< u8"• Esci dal gioco.\t\t(5)" << std::endl;
 
-				menu_opzioni(partita, uscita_programma, in_risolutore, in_gioco, campo_generato);
+				menu_opzioni(partita, uscita_programma, in_risolutore, in_gioco, prima_mossa_effettuata);
 
 			}
 			else

@@ -3,6 +3,8 @@
 
 /* FUNZIONI PER LA LETTURA DI INPUT */
 
+#include <fstream>
+
 std::vector<std::string> separa_spazi(std::string input)
 {
 	std::vector<std::string> res;
