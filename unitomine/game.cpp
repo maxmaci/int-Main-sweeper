@@ -506,7 +506,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		int mine_max = 0;
 		for (int j = 0; j < numeri_separati[i].size(); j++)
 		{
-			//if (partita.conta_numeri_vicini(numeri_separati[i][j].first, numeri_separati[i][j].second) == 1) std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ")";
+			std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ")";
 			mine_max += partita._campo_visibile()[numeri_separati[i][j].first][numeri_separati[i][j].second] - partita.conta_bandiere_vicine(numeri_separati[i][j].first, numeri_separati[i][j].second);
 		}
 		//std::cout << std::endl;
@@ -592,10 +592,13 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 
 	for (int i = 0; i < bordo_separato.size(); i++)
 	{
-		celle_non_scavate_fuori_bordo -= bordo_separato[i].size();
+		celle_non_scavate_fuori_bordo -= static_cast<int>(bordo_separato[i].size());
 	}
 
-	// FASE 2.2: contiamo tutte le celle non scavate di cui non abbiamo alcuna informazione
+	std::cout << celle_non_scavate_fuori_bordo << std::endl;
+
+	// FASE 2.2: per ogni singola cella del bordo calcoliamo la sua probabilità di essere una mina
+	// se 
 
 	std::vector<std::vector<double> > probabilita_per_sezione;
 
@@ -627,6 +630,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 					calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
 				}
 				denominatore += (*it).second._righe() * calcolo_parziale;
+				std::cout << somma_elementi((*it).second.colonna(j));
 				numeratore += somma_elementi((*it).second.colonna(j)) * calcolo_parziale;
 			}
 
@@ -641,7 +645,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		std::cout << u8"SEZIONE N°: " << i + 1 << std::endl;
 		for (int j = 0; j < bordo_separato[i].size(); j++)
 		{
-			std::cout << "(" << bordo_separato[i][j].first + 1 << ", " << bordo_separato[i][j].second + 1 << ") ";
+			std::cout << "(" << bordo_separato[i][j].first + 1 << ", " << bordo_separato[i][j].second + 1 << ") " ;
 		}
 		std::cout << std::endl;
 		std::cout << u8"PROBABILITà: " << std::endl;
@@ -659,8 +663,16 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 	{
 		for (int j = 0; j < probabilita_per_sezione[i].size(); j++)
 		{
-			if (probabilita_per_sezione[i][j] == 0) partita.gioca(bordo_separato[i][j].first, bordo_separato[i][j].second, 'S');
-			else if (probabilita_per_sezione[i][j] == 1) partita.gioca(bordo_separato[i][j].first, bordo_separato[i][j].second, 'B');
+			if (probabilita_per_sezione[i][j] == 0)
+			{
+				std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") " << std::endl;
+				partita.gioca(bordo_separato[i][j].first, bordo_separato[i][j].second, 'S');
+			}
+			else if (probabilita_per_sezione[i][j] == 1)
+			{
+				std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") " << std::endl;
+				partita.gioca(bordo_separato[i][j].first, bordo_separato[i][j].second, 'B');
+			}
 			else if (probabilita_per_sezione[i][j] < probabilita_minore)
 			{
 				indice_minore = std::make_pair(i, j);
@@ -668,16 +680,18 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 			}
 		}
 	}
-	if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-3) == celle_non_scavate_precedenti) partita.gioca(bordo_separato[indice_minore.first][indice_minore.second].first, bordo_separato[indice_minore.first][indice_minore.second].second, 'S');
+	if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-3) == celle_non_scavate_precedenti)
+	{
+		partita.gioca(bordo_separato[indice_minore.first][indice_minore.second].first, bordo_separato[indice_minore.first][indice_minore.second].second, 'S');
+	}
 
-	std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") ";
+	std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") " << std::endl;
 
 	auto end = std::chrono::steady_clock::now();
 
 	auto diff = end - start;
 
 	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
-
 }
 
 void Risolutore::risolve()

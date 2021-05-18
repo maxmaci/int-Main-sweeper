@@ -121,7 +121,7 @@ void Matrice<T>::push_back(std::vector<T> riga) {
 	if (colonne != 0 && riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
 	data.push_back(riga);
 	righe = righe + 1;
-	if (colonne == 0) colonne = riga.size();
+	if (colonne == 0) colonne = static_cast<int>(riga.size());
 }
 
 template <typename T>
@@ -253,69 +253,6 @@ int somma_elementi(const std::vector<T>& vettore)
 	for (int i = 0; i < vettore.size(); i++) res += vettore[i];
 	return res;
 }
-/*
-template <typename T>
-T mult(std::vector<T> v, std::vector<T> w)
-{
-	if (v.size() != w.size()) throw std::domain_error("dimensioni dei vettori incompatibili per il prodotto");
-	T res = T();
-	for (int i = 0; i < v.size(); i++)	res += v[i] * w[i];
-	return res;
-}
-
-template <typename T>
-std::vector<T> Matrice<T>::converti() const
-{
-	if (righe > 1 && colonne > 1) throw std::domain_error("la matrice non può essere convertita in un vettore");
-	else if (righe == 1) return data[0];
-	else return colonna(0);
-	
-}
-
-template <typename T>
-Matrice<T> converti_in_vettore_riga(const std::vector<T>& v)
-{
-	Matrice<T> v_matriciale(1, v.size());
-	v_matriciale[0] = v;
-	return v_matriciale;
-}
-
-template <typename T>
-Matrice<T> converti_in_vettore_colonna(const std::vector<T>& v)
-{
-	Matrice<T> v_matriciale(v.size(), 1);
-	for (int i = 0; i < v.size(); i++)
-	{
-		v_matriciale[i][0] = v[i];
-	}
-	return v_matriciale;
-}
-
-std::vector<int> converti_to_int(const std::vector<bool>& v)
-{
-	std::vector<int> v_convertito;
-	for (int i = 0; i < v.size(); i++)
-	{
-		v_convertito.push_back(v[i]);
-	}
-	return v_convertito;
-}
-
-
-template <typename T>
-Matrice<T> Matrice<T>::mul(const Matrice<T>& m) const
-{
-	Matrice<T> res (righe, m.colonne);
-	for (int i = 0; i < righe; i++)
-	{
-		for (int j = 0; j < m.colonne; j++)
-		{
-			res[i][j] = mult(data[i], m.colonna(j)); //
-		}
-	}
-	return res;
-}
-*/
 
 template <typename T>
 Matrice<T> Matrice<T>::riduzione_gaussiana()
