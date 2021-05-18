@@ -14,9 +14,9 @@ int bin(int n, int k) {
 	return fact(n) / (fact(k) * fact(n - k));
 }
 */
-double bin(int n, int k) {
-	double res = 1;
-	for (int i = 1; i <= k; i++) res *= (n + 1 - i) / double(i);
+long double bin(int n, int k) {
+	long double res = 1;
+	for (int i = 1; i <= k; i++) res *= (n + 1 - i) / long double(i);
 	return res;
 }
 
@@ -600,40 +600,43 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 	// FASE 2.2: per ogni singola cella del bordo calcoliamo la sua probabilità di essere una mina
 	// se 
 
-	std::vector<std::vector<double> > probabilita_per_sezione;
+	std::vector<std::vector<long double> > probabilita_per_sezione;
 
 	for (int i = 0; i < possibilita_per_sezione.size(); i++)
 	{
-		std::vector<double> probabilita_singola_sezione;
+		std::vector<long double> probabilita_singola_sezione;
 
 		for (int j = 0; j < bordo_separato[i].size(); j++)
 		{
-			double numeratore = 0;
-			double denominatore = 0;
-			double calcolo_parziale = 0;
+			long double numeratore = 0;
+			long double denominatore = 0;
 			
 			for (std::map<int, Matrice<bool>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
 			{
-				for (int j = 0; j < possibilita_per_sezione.size(); j++)
+				long double calcolo_parziale = 0;
+				
+				for (int k = 0; k < possibilita_per_sezione.size(); k++)
 				{
-					if (j != i)
+					if (k != i)
 					{
-						for (std::map<int, Matrice<bool>>::iterator jt = possibilita_per_sezione[j].begin(); jt != possibilita_per_sezione[j].end(); jt++)
+						for (std::map<int, Matrice<bool>>::iterator kt = possibilita_per_sezione[k].begin(); kt != possibilita_per_sezione[k].end(); kt++)
 						{
-							calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first - (*jt).first);
+							calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first - (*kt).first);
 						}
 					}
+					//else
+					//{
+					//	calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
+					//}
 
 				}
-				if (possibilita_per_sezione.size() == 1)
-				{
-					calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
-				}
+				calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
+
 				denominatore += (*it).second._righe() * calcolo_parziale;
-				std::cout << somma_elementi((*it).second.colonna(j));
+				std::cout << somma_elementi((*it).second.colonna(j)) << " ";
 				numeratore += somma_elementi((*it).second.colonna(j)) * calcolo_parziale;
 			}
-
+			std::cout << std::endl;
 			probabilita_singola_sezione.push_back(numeratore / denominatore);
 		}
 
@@ -657,7 +660,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 	}
 	
 	Coord indice_minore;
-	double probabilita_minore = 1;
+	long double probabilita_minore = 1;
 
 	for (int i = 0; i < probabilita_per_sezione.size(); i++)
 	{
@@ -680,13 +683,22 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 			}
 		}
 	}
+	long double probabilita_media = 1; // TO DO: definire la probabilità media come la probabilità che uno becchi una cella non sul bordo a casso e che essa sia una mina.
 	if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elemento(-3) == celle_non_scavate_precedenti)
 	{
-		partita.gioca(bordo_separato[indice_minore.first][indice_minore.second].first, bordo_separato[indice_minore.first][indice_minore.second].second, 'S');
+		if (probabilita_minore < probabilita_media)
+		{
+			partita.gioca(bordo_separato[indice_minore.first][indice_minore.second].first, bordo_separato[indice_minore.first][indice_minore.second].second, 'S');
+			std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") " << std::endl;
+
+		}
+		else
+		{
+			// TO DO: scegliere una cella non sul bordo completamente a random
+		}
 	}
 
-	std::cout << "(" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << ") " << std::endl;
-
+	
 	auto end = std::chrono::steady_clock::now();
 
 	auto diff = end - start;
