@@ -20,14 +20,28 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="campo.h">
-      <Filter>File di risorse</Filter>
+    <ClInclude Include="menu.h">
+      <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="gioco.h">
-      <Filter>File di risorse</Filter>
+    <ClInclude Include="matrice.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="campo.h">
+      <Filter>File di intestazione</Filter>
     </ClInclude>
     <ClInclude Include="input.h">
-      <Filter>File di risorse</Filter>
+      <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="vettore.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="codice spazzatura.txt">
+      <Filter>File di risorse</Filter>
+    </Text>
+    <Text Include="epic_scheme.txt">
+      <Filter>File di risorse</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -144,9 +144,15 @@
     <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="vettore.h" />
+    <ClInclude Include="menu.h" />
+    <ClInclude Include="matrice.h" />
     <ClInclude Include="campo.h" />
-    <ClInclude Include="gioco.h" />
     <ClInclude Include="input.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="codice spazzatura.txt" />
+    <Text Include="epic_scheme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
