@@ -21,8 +21,8 @@ private:
 	void init(int, int, T);
 public:
 	/* COSTRUTTORI */
-	Matrice(int = 0, int = 0);											// costruttore con valore di default pari a T() dato in input iniziale
-	Matrice(int, int, T);												// costruttore con valore di default delle celle dato in input iniziale
+	Matrice(int = 0, int = 0, T = T());											// costruttore con valore di default pari a T() dato in input iniziale
+	//Matrice(int, int, T);												// costruttore con valore di default delle celle dato in input iniziale
 
 	/* LETTORE NUMERO DI RIGHE/COLONNE */
 	int _righe() const						{ return righe; };			// legge il numero di righe della matrice
@@ -43,7 +43,7 @@ public:
 	/* METODI PER OTTENERE INFORMAZIONI SUGLI ELEMENTI DELLA MATRICE */
 	bool indici_leciti(int, int) const;			// restituisce se le coordinate date sta nella matrice o meno
 	bool is_elemento(int, int, T) const;		// restituisce se l'elemento 
-	int conta_tutti_elemento(T) const;
+	int conta_tutti_elementi(T) const;
 	int conta_caselle_vicine(int, int) const;	// conta i vicini della cella (i, j) in totale (= 3 se è una cella nell'angolo, = 5 se sul bordo e = 8 se in mezzo alla matrice)
 	int conta_vicini(int, int, T) const;		// conta i vicini della cella (i, j) che sono pari all'elemento dato in input
 	bool conta_se_vicini(int, int, T) const;
@@ -70,17 +70,20 @@ void Matrice<T>::init(int numero_righe, int numero_colonne, T elemento)
 }
 
 template <typename T>
-Matrice<T>::Matrice(int numero_righe, int numero_colonne )
+Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
 {
-	init(numero_righe, numero_colonne, T());
+	if (numero_righe < 0 || numero_colonne < 0) throw std::domain_error("dimensioni della matrice invalide");
+	righe = numero_righe;
+	colonne = numero_colonne;
+	data.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
 }
-
+/*
 template <typename T>
 Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
 {
 	init(numero_righe, numero_colonne, elemento);
 }
-
+*/
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const Matrice<T>& matrice)
 {
@@ -155,7 +158,7 @@ bool Matrice<T>::is_elemento(int i, int j, T elemento) const
 }
 
 template <typename T>
-int Matrice<T>::conta_tutti_elemento(T elemento) const
+int Matrice<T>::conta_tutti_elementi(T elemento) const
 {
 	int k = 0;
 

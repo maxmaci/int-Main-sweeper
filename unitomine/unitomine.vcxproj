@@ -151,7 +151,6 @@
     <ClInclude Include="input.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="codice spazzatura.txt" />
     <Text Include="epic_scheme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

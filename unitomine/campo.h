@@ -51,7 +51,7 @@ private:
 	void aggiorna_cella(int, int);
 
 	/* METODI DI LETTURA DI GIOCO */
-	Matrice<bool> _campo_nascosto() const { return campo_nascosto; };			// to do: non lo uso mai ed è prono ad essere abusato per gli scopi malvagi di risolutore: ci converrà metterlo in privato
+	//Matrice<bool> _campo_nascosto() const { return campo_nascosto; };			// to do: non lo uso mai ed è prono ad essere abusato per gli scopi malvagi di risolutore: ci converrà metterlo in privato
 	int conta_mine_vicine(int, int) const;
 
 	/* SCONFITTA / VITTORIA */
@@ -85,16 +85,16 @@ public:
 	void reset();											// pulisce il campo da gioco e del giocatore, resetta lo status a '-'
 
 	/* METODI DI GIOCO */
-	void resize(int, int, int);								// aggiorna il campo da gioco e del giocatore con nuovi valori di altezza, larghezza e mine
+	//void resize(int, int, int);							// aggiorna il campo da gioco e del giocatore con nuovi valori di altezza, larghezza e mine
 	void gioca(int, int, char);								// compie le azioni di gioco
 	void rivela();											// rivela il campo da gioco al giocatore nelle opzioni
 
 	/* FUNZIONI DI LETTURA STATUS */
 	int conta_non_scavati_vicini(int, int) const;
 	int conta_bandiere_vicine(int, int) const;
-	bool conta_se_numeri_vicini(int, int) const;
+	//bool conta_se_numeri_vicini(int, int) const;
 	int conta_numeri_vicini(int i, int j) const;
-	bool bordo_non_scavato(int, int) const;
+	//bool bordo_non_scavato(int, int) const;
 
 	/* FUNZIONI DI STAMPA */
 	friend std::ostream& operator<<(std::ostream&, const Campo&);
@@ -118,14 +118,14 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 Campo::Campo(Matrice<bool> campo_input)
 {
 	if (campo_input._righe() < 1 || campo_input._righe() > 50 || campo_input._colonne() < 1 || campo_input._colonne() > 50) throw std::domain_error("dimensioni del campo invalide");
-	if (campo_input.conta_tutti_elemento(true) < 1 || campo_input.conta_tutti_elemento(true) >= campo_input._righe() * campo_input._colonne()) throw std::domain_error("numero delle mine illegale");
+	if (campo_input.conta_tutti_elementi(true) < 1 || campo_input.conta_tutti_elementi(true) >= campo_input._righe() * campo_input._colonne()) throw std::domain_error("numero delle mine illegale");
 
 	campo_nascosto = campo_input;
 	campo_visibile = Matrice<int>(campo_input._righe(), campo_input._colonne(), -3);
 
 	altezza = campo_input._righe();
 	larghezza = campo_input._colonne();
-	mine = campo_input.conta_tutti_elemento(true);
+	mine = campo_input.conta_tutti_elementi(true);
 	numero_bandiere = 0;
 	status = '-';
 }
@@ -220,7 +220,7 @@ int Campo::conta_numeri_vicini(int i, int j) const
 {
 	return campo_visibile.conta_vicini(i, j, 1) + campo_visibile.conta_vicini(i, j, 2) + campo_visibile.conta_vicini(i, j, 3) + campo_visibile.conta_vicini(i, j, 4) + campo_visibile.conta_vicini(i, j, 5) + campo_visibile.conta_vicini(i, j, 6) + campo_visibile.conta_vicini(i, j, 7) + campo_visibile.conta_vicini(i, j, 8);
 }
-
+/*
 bool Campo::conta_se_numeri_vicini(int i, int j) const
 {
 	return campo_visibile.conta_se_vicini(i, j, 1) || campo_visibile.conta_se_vicini(i, j, 2) || campo_visibile.conta_se_vicini(i, j, 3) || campo_visibile.conta_se_vicini(i, j, 4) || campo_visibile.conta_se_vicini(i, j, 5) || campo_visibile.conta_se_vicini(i, j, 6) || campo_visibile.conta_se_vicini(i, j, 7) || campo_visibile.conta_se_vicini(i, j, 8);
@@ -230,7 +230,7 @@ bool Campo::bordo_non_scavato(int i, int j) const
 {
 	return campo_visibile.is_elemento(i, j, -3) && conta_se_numeri_vicini(i, j);
 }
-
+*/
 void Campo::aggiorna_cella(int i, int j)
 {
 	if (campo_nascosto[i][j]) campo_visibile[i][j] = -1;
@@ -381,7 +381,7 @@ void Campo::sconfitta(int x, int y)
 
 void Campo::vittoria()
 {
-	if (campo_visibile.conta_tutti_elemento(-2) + campo_visibile.conta_tutti_elemento(-3) == mine)
+	if (campo_visibile.conta_tutti_elementi(-2) + campo_visibile.conta_tutti_elementi(-3) == mine)
 	{
 		int mine_identificate = 0;
 		for (int i = 0; i < altezza; i++)

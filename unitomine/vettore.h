@@ -26,5 +26,4 @@ public:
 	T mul(const Vector<T>&) const;
 };
 
-
 #endif // __VETTORE_H__

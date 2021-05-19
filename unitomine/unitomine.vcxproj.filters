@@ -37,9 +37,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="codice spazzatura.txt">
-      <Filter>File di risorse</Filter>
-    </Text>
     <Text Include="epic_scheme.txt">
       <Filter>File di risorse</Filter>
     </Text>
