@@ -504,7 +504,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		int mine_max = 0;
 		for (int j = 0; j < numeri_separati[i].size(); j++)
 		{
-			std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ")";
+			//std::cout << "(" << numeri_separati[i][j].first + 1 << ", " << numeri_separati[i][j].second + 1 << ")";
 			mine_max += partita._campo_visibile()[numeri_separati[i][j].first][numeri_separati[i][j].second] - partita.conta_bandiere_vicine(numeri_separati[i][j].first, numeri_separati[i][j].second);
 		}
 		//std::cout << std::endl;
@@ -559,7 +559,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 
 		possibilita_per_sezione.push_back(disposizioni_per_sezione);
 	}
-
+	/*
 	std::cout << u8"N° SEZIONI: " << possibilita_per_sezione.size() << std::endl;
 
 	for (int i = 0; i < possibilita_per_sezione.size(); i++)
@@ -581,7 +581,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 		}
 		std::cout << std::endl;
 	}
-
+	*/
 	// FASE 2.1: contiamo tutte le celle non scavate di cui non abbiamo alcuna informazione
 
 	int celle_non_scavate_fuori_bordo = partita._campo_visibile().conta_tutti_elementi(-3);
@@ -590,8 +590,6 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 	{
 		celle_non_scavate_fuori_bordo -= static_cast<int>(bordo_separato[i].size());
 	}
-
-	std::cout << celle_non_scavate_fuori_bordo << std::endl;
 
 	// FASE 2.2: per ogni singola cella del bordo calcoliamo la sua probabilità di essere una mina
 	// se 
@@ -636,7 +634,7 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 
 		probabilita_per_sezione.push_back(probabilita_singola_sezione);
 	}
-
+	
 	for (int i = 0; i < probabilita_per_sezione.size(); i++)
 	{		
 		std::cout << u8"SEZIONE N°: " << i + 1 << std::endl;
@@ -873,10 +871,15 @@ int main()
 	// A meno di uscire per tornare al menù principale, tutte le azioni vengono svolte in questo loop
 		while (!uscita_programma && in_gioco)
 		{
+			std::cout << u8"\nInserisci una mossa nel formato 'riga colonna comando' oppure anche solo 'riga colonna' se intendi scavare quella cella.\nPer il menù delle opzioni, scrivi nel prompt la lettera 'O'." << std::endl;
+			std::cout << "COMANDI DISPONIBILI:\n"
+				<< "B: mette la bandierina (se non presente)\n"
+				<< "T: toglie la bandierina (se presente)\n"
+				<< u8"S: scava la cella (se non è presente la bandierina)\n"
+				<< u8"R: scava la cella indicata e attiva il risolutore automatico (può essere solo attivato alla prima mossa)" << std::endl;
 			while (!in_risolutore && partita._status() == '-')
 			{
 				std::cout << partita << std::endl;
-				std::cout << u8"Inserisci una mossa nel formato 'riga colonna comando' oppure anche solo 'riga colonna' se intendi scavare quella cella.\nPer il menù delle opzioni, scrivi nel prompt 'O'." << std::endl;
 				std::cout << "Hai messo " << partita._numero_bandiere() << " bandiere su " << partita._mine() << " mine presenti." << std::endl;
 				
 				interpreta_mossa(partita, riga, colonna, comando, in_risolutore, prima_mossa_effettuata);
