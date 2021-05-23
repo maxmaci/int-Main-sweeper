@@ -17,49 +17,80 @@ private:
 	int colonne;							// 0 <= colonne
 	std::vector<std::vector<T> > data;
 
-	/* INIZIALIZZATORE DEI COSTRUTTORI */
-	void init(int, int, T);
+/* INIZIALIZZATORE DEI COSTRUTTORI */
+	//void init(int, int, T);
 public:
-	/* COSTRUTTORI */
-	Matrice(int = 0, int = 0, T = T());											// costruttore con valore di default pari a T() dato in input iniziale
-	//Matrice(int, int, T);												// costruttore con valore di default delle celle dato in input iniziale
+/* COSTRUTTORI */
+// Crea una matrice di dimensioni righe x colonne, i cui elementi sono tutti pari all'elemento dato in input.
+	Matrice(int = 0, int = 0, T = T());											
+	
+	//Matrice(int, int, T);	// TO DO: eliminare	// costruttore con valore di default delle celle dato in input iniziale
 
-	/* LETTORE NUMERO DI RIGHE/COLONNE */
-	int _righe() const						{ return righe; };			// legge il numero di righe della matrice
-	int _colonne() const					{ return colonne; };		// legge il numero di colonne della matrice
+/* LETTORI CAMPI PRIVATI */
 
-	/* LETTURA/SCRITTURA DELLE RIGHE */
-	std::vector<T> operator[](int i) const	{ return data.at(i); };		// legge la riga i-esima della matrice
-	std::vector<T>& operator[](int i)		{ return data.at(i); };		// scrive la riga i-esima della matrice
-	std::vector<T> colonna(int) const;									// legge la colonna j-esima della matrice
+	// Restituisce il numero di righe della matrice. 
+	int _righe() const						{ return righe; };
+	// Restituisce il numero di colonne della matrice.
+	int _colonne() const					{ return colonne; };
 
-	/* METODI PER MODIFICARE LA MATRICE */
-	void push_back(std::vector<T>);				// aggiunge una riga alla matrice
-	void scambia_righe(int, int);				// scambia due righe della matrice
+/* LETTURA/SCRITTURA DELLE RIGHE */
+
+	// Legge la riga i-esima della matrice.
+	std::vector<T> operator[](int i) const	{ return data.at(i); };
+	// Scrive la riga i-esima della matrice.
+	std::vector<T>& operator[](int i)		{ return data.at(i); };
+	// Legge la colonna j-esima della matrice.
+	std::vector<T> colonna(int) const;
+
+/* METODI PER MODIFICARE LA MATRICE */
+
+	// Aggiunge una nuova riga in fondo alla matrice, dopo quelle già presenti.
+	void push_back(const std::vector<T>&);
+	// Scambia la i-esima riga della matrice con la j-esima.
+	void scambia_righe(int, int);
+	// Sostituisce ogni elemento della matrice con quello dato in input. Di default sostituisce tutti gli elementi con l'elemento di default del tipo T.
+	void sostituisci_tutti(T = T());
+
 	//void resize(int, int, T);	// TO DO: cancellare
-	void reset(T = T());						// pulisce la matrice ad uno stato iniziale (ha senso?)
-	//std::vector<T> converti() const;
 
-	/* METODI PER OTTENERE INFORMAZIONI SUGLI ELEMENTI DELLA MATRICE */
-	bool indici_leciti(int, int) const;			// restituisce se le coordinate date sta nella matrice o meno
-	bool is_elemento(int, int, T) const;		// restituisce se l'elemento 
+/* METODI PER OTTENERE INFORMAZIONI SUGLI ELEMENTI DELLA MATRICE */
+
+	// Restituisce 'vero' se gli indici (i, j) dati in input si riferiscono ad un potenziale elemento della matrice o meno.
+	bool indici_leciti(int, int) const;
+	// Restituisce 'true' se l'elemento nella posizione (i, j) è uguale all'elemento dato in input, 'false' altrimenti.
+	bool is_elemento(int, int, T) const;
+	// Conta il numero di elementi presenti nella matrice che sono uguali all'elemento dato in input.
 	int conta_tutti_elementi(T) const;
-	int conta_caselle_vicine(int, int) const;	// conta i vicini della cella (i, j) in totale (= 3 se è una cella nell'angolo, = 5 se sul bordo e = 8 se in mezzo alla matrice)
-	int conta_vicini(int, int, T) const;		// conta i vicini della cella (i, j) che sono pari all'elemento dato in input
+		
+	// Conta il numero di elementi presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j) che sono uguali all'elemento dato in input.
+	int conta_vicini(int, int, T) const;
+	
+	// Restituisce 'true' se c'è almeno un elemento pari all'elemento dato in input nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	bool conta_se_vicini(int, int, T) const;
 
-	/* METODI PER CONFRONTO DI MATRICI */
-	template <typename T> friend bool operator==(const Matrice<T>& sinistra, const Matrice<T>& destra);
+	//int conta_caselle_vicine(int, int) const; // TO DO: cancellare // conta i vicini della cella (i, j) in totale (= 3 se è una cella nell'angolo, = 5 se sul bordo e = 8 se in mezzo alla matrice)
 
-	/* OPERAZIONI CON MATRICI */
+
+/* METODI PER CONFRONTARE DI MATRICI */
+
+	//template <typename T> friend bool operator==(const Matrice<T>& sinistra, const Matrice<T>& destra); // TO DO: cancellare
+
+/* OPERAZIONI CON MATRICI */
+
+	// Restituisce la matrice (potenzialmente anche intesa come matrice riga o colonna) ottenuta dalla moltiplicazione matriciale.
 	Matrice<T> mul(const Matrice<T>& m) const;
 
-	/* RIDUSSIONE GAUSSIANA E RANGO */
+/* RIDUSSIONE GAUSSIANA E RANGO */
+	
+	// Opera la riduzione Gaussiana sulla matrice per restituire (come una nuova matrice) la matrice ridotta a scaloni.
 	Matrice<T> riduzione_gaussiana();
-	std::pair<Matrice<T>, std::vector<T>> riduzione_gaussiana_con_termine_noto(std::vector<T>&);
+	// Opera la riduzione Gaussiana sulla matrice e su un opportuno termine noto. La matrice e il termine noto ridotto vengono restituiti come pair. 
+	std::pair<Matrice<T>, std::vector<T>> riduzione_gaussiana_con_termine_noto(const std::vector<T>&);
+	// Restituisce il rango della matrice grazie alla riduzione Gaussiana.
 	int rango();
 };
 
+/*
 template <typename T>
 void Matrice<T>::init(int numero_righe, int numero_colonne, T elemento)
 {
@@ -68,6 +99,14 @@ void Matrice<T>::init(int numero_righe, int numero_colonne, T elemento)
 	colonne = numero_colonne;
 	data.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
 }
+*/
+/*
+template <typename T>
+Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
+{
+	init(numero_righe, numero_colonne, elemento);
+}
+*/
 
 template <typename T>
 Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
@@ -77,13 +116,7 @@ Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
 	colonne = numero_colonne;
 	data.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
 }
-/*
-template <typename T>
-Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
-{
-	init(numero_righe, numero_colonne, elemento);
-}
-*/
+
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const Matrice<T>& matrice)
 {
@@ -99,7 +132,7 @@ std::ostream& operator<<(std::ostream& os, const Matrice<T>& matrice)
 }
 
 template <typename T>
-void Matrice<T>::reset(T elemento) {
+void Matrice<T>::sostituisci_tutti(T elemento) {
 	for (int i = 0; i < righe; i++)
 	{
 		for (int j = 0; j < colonne; j++)
@@ -120,7 +153,7 @@ std::vector<T> Matrice<T>::colonna(int j) const {
 }
 
 template <typename T>
-void Matrice<T>::push_back(std::vector<T> riga) {
+void Matrice<T>::push_back(const std::vector<T>& riga) {
 	if (colonne != 0 && riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
 	data.push_back(riga);
 	righe = righe + 1;
@@ -171,7 +204,7 @@ int Matrice<T>::conta_tutti_elementi(T elemento) const
 	}
 	return k;
 }
-
+/*
 template <typename T>
 int Matrice<T>::conta_caselle_vicine(int i, int j) const
 {
@@ -179,7 +212,7 @@ int Matrice<T>::conta_caselle_vicine(int i, int j) const
 	else if (i == 0 || j == 0 || i == righe - 1 || j == colonne - 1) return 5;
 	else return 8;
 }
-
+*/
 template <typename T>
 int Matrice<T>::conta_vicini(int i, int j, T elemento) const
 {
@@ -216,6 +249,7 @@ bool Matrice<T>::conta_se_vicini(int i, int j, T elemento) const
 	return false;
 }
 
+/*
 template <typename T>
 bool operator==(const Matrice<T>& sinistra, const Matrice<T>& destra)
 {
@@ -229,33 +263,7 @@ bool operator==(const Matrice<T>& sinistra, const Matrice<T>& destra)
 	}
 	return true;
 }
-
-// TO DO: spostare nella nuova classe Vettore
-template <typename T>
-int trova_indice_elemento(const std::vector<T>& vettore, T elemento, int indice_partenza = 0)
-{
-	if (indice_partenza > vettore.size()) throw std::range_error("indice di partenza non lecito");
-	typename std::vector<T>::const_iterator it;
-	int res = static_cast<int>(std::find(vettore.cbegin() + indice_partenza, vettore.cend(), elemento) - vettore.cbegin());
-	if (res == vettore.size()) throw std::domain_error("elemento non trovato");
-	else return res;
-}
-
-template <typename T>
-bool trova_elemento(const std::vector<T>& vettore, T elemento)
-{
-	typename std::vector<T>::const_iterator it;
-	it = std::find(vettore.cbegin(), vettore.cend(), elemento);
-	return it != vettore.end();
-}
-
-template <typename T>
-int somma_elementi(const std::vector<T>& vettore)
-{
-	int res = 0;
-	for (int i = 0; i < vettore.size(); i++) res += vettore[i];
-	return res;
-}
+*/
 
 template <typename T>
 Matrice<T> Matrice<T>::riduzione_gaussiana()
@@ -313,7 +321,7 @@ Matrice<T> Matrice<T>::riduzione_gaussiana()
 }
 
 template <typename T>
-std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termine_noto(std::vector<T>& termine_noto)
+std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termine_noto(const std::vector<T>& termine_noto)
 {
 	Matrice<T> matrice_ridotta = (*this);
 	std::vector<T> termine_noto_ridotto = termine_noto;

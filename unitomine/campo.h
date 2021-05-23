@@ -35,74 +35,98 @@ typedef std::pair<int, int> Coord;
 class Campo
 {
 private:
-	int altezza;						// 0 < altezza < 50
-	int larghezza;						// 0 < larghezza < 50
+	int altezza;						// 1 < altezza < 50
+	int larghezza;						// 1 < larghezza < 50
 	int mine;							// 0 < mine < altezza * larghezza
 
 	int numero_bandiere;				// 0 <= numero_bandiere < altezza * larghezza
 
-	char status;						// '-': nè persa, nè vinta; 'S': sconfitta; 'V': vittoria. 
+	char status;						// '-': nè persa, nè vinta; 'S': sconfitta; 'V': vittoria.
 
 	Matrice<bool> campo_nascosto;
 	Matrice<int> campo_visibile;
 
-	/* METODI DI GIOCO */
+/* METODI DI GIOCO */
 	void scava_celle(int, int, Matrice<bool>&);				// metodo che 'scava' le celle (utilizzando l'algoritmo di Fill usato ad es. in Microsoft Paint)
 	void aggiorna_cella(int, int);
 
-	/* METODI DI LETTURA DI GIOCO */
-	//Matrice<bool> _campo_nascosto() const { return campo_nascosto; };			// to do: non lo uso mai ed è prono ad essere abusato per gli scopi malvagi di risolutore: ci converrà metterlo in privato
+/* METODI DI LETTURA DI GIOCO */
 	int conta_mine_vicine(int, int) const;
 
-	/* SCONFITTA / VITTORIA */
+/* SCONFITTA / VITTORIA */
 	void sconfitta(int, int);								// visualizzando il campo con le mine, imposta lo status a S(confitta)
 	void vittoria();										// controlla se le mine sono state tutte segnate con la bandierina. Se è così, imposta lo status a V(ittoria)
 
 public:
-	/* COSTRUTTORE */
+/* COSTRUTTORE */
+	// Costruisce un Campo vuoto di dimensioni altezza x larghezza con un numero di mine dato in input. Il costruttore NON piazza mine di suo.
 	Campo(int = 9, int = 9, int = 10);
+	// Costruisce un Campo partendo dal campo delle mine, che viene dato in input come matrice booleana.
 	Campo(Matrice<bool>);
 
-	/* LEGGI CAMPI PRIVATE */
+/* LEGGI CAMPI PRIVATI */
+	// Restituisce l'altezza del campo di gioco.
 	int _altezza() const { return altezza; };
+	// Restituisce la larghezza del campo di gioco.
 	int _larghezza() const { return larghezza; };
+	// Restituisce il numero di mine presenti nel campo di gioco (nascosto).
 	int _mine() const { return mine; };
-
+	// Restituisce il numero di bandiere piazzate nel campo di gioco (visibile) 
 	int _numero_bandiere() const { return numero_bandiere; };
-	
+	// Restituisce lo status della partita.
 	char _status() const { return status; };
-	
+	// Restituisce il campo visibile al giocatore.
 	Matrice<int> _campo_visibile() const { return campo_visibile; };
 
-	/* FUNZIONI DI GENERAZIONE DEL CAMPO */
-	void randomizza_campo(int, int);						// randomizza il campo con le mine 
+/* FUNZIONI DI GENERAZIONE DEL CAMPO */
+	
+	// Pone  nel campo nascosto in modo casuale un numero di mine (cioè di celle uguali a 'true') pari al valore del campo privato 'mine' di Campo. Se è possibile, evita di piazzare mine nelle celle intorno alle coordinate date in input.
+	void randomizza_campo(int, int);
 
-	/* FUNZIONI DI RESET */
-	void reset_gioco() { campo_nascosto.reset(); };			// pulisce il campo da gioco dalle mine
-	void reset_giocatore() { campo_visibile.reset(-3); };	// pulisce il campo dell giocatore allo stato originale
-	void reset_status() { status = '-'; };					// resetta lo status
-	void reset_numero_bandiere() { numero_bandiere = 0; };	// resetta il numero di bandiere segnate
-	void reset();											// pulisce il campo da gioco e del giocatore, resetta lo status a '-'
+/* METODI DI RESET */
+	
+	// Elimina le mine dal campo nascosto.
+	void reset_campo_nascosto() { campo_nascosto.sostituisci_tutti(); };
+	// Elimina qualunque modifica (bandiere, celle scavate, ecc...) fatta sul campo visibile, sostituendo tutte le celle con celle non scavate in modo da riportarlo allo stato originale.
+	void reset_campo_visibile() { campo_visibile.sostituisci_tutti(-3); };
+	// Resetta lo status del campo a '-'.
+	void reset_status() { status = '-'; };
+	// Resetta il numero delle bandiere piazzata a 0.
+	void reset_numero_bandiere() { numero_bandiere = 0; };
+	// Resetta il campo nascosto, il campo visibile, lo status e il numero delle bandiere piazzate contemporaneamente.
+	void reset();											
 
-	/* METODI DI GIOCO */
-	//void resize(int, int, int);							// aggiorna il campo da gioco e del giocatore con nuovi valori di altezza, larghezza e mine
-	void gioca(int, int, char);								// compie le azioni di gioco
-	void rivela();											// rivela il campo da gioco al giocatore nelle opzioni
+/* METODI DI GIOCO */
 
-	/* FUNZIONI DI LETTURA STATUS */
+	//void resize(int, int, int); // TO DO: eliminare	// aggiorna il campo da gioco e del giocatore con nuovi valori di altezza, larghezza e mine
+
+	// Compie sulla cella (i, j) data in input l'azione di gioco sulla base del comando dato in input.
+	void gioca(int, int, char);
+	// Modifica il campo visibile "scavando" tutto il campo e mostrando tutto al giocatore (sia numeri, sia mine).
+	void rivela();
+
+/* FUNZIONI DI LETTURA STATUS */
+	// Conta il numero di celle non scavate presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	int conta_non_scavati_vicini(int, int) const;
+	// Conta il numero di bandiere presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	int conta_bandiere_vicine(int, int) const;
-	//bool conta_se_numeri_vicini(int, int) const;
-	int conta_numeri_vicini(int i, int j) const;
-	//bool bordo_non_scavato(int, int) const;
+	// Conta quanti numeri sono presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
+	int conta_numeri_vicini(int i, int j) const; // TO DO: l'unico uso che ne facciamo è di verificare se ce ne sono, non quanti. Potrebbe sostituirlo con un conta se numeri vicini
+
+	// TO DO: sostituire non scavati e bandiere vicine col metodo conta vicini di matrice, spostandolo qui - non ha senso contare gli elementi vicini ad una matrice o no?
+
+	//bool conta_se_numeri_vicini(int, int) const; // TO DO: eliminare
+
+	//bool bordo_non_scavato(int, int) const; // TO DO: eliminare
 
 	/* FUNZIONI DI STAMPA */
+	// Stampa in modo carino il campo, con attorno le coordinate per facilitare l'utente.
 	friend std::ostream& operator<<(std::ostream&, const Campo&);
 };
 
 Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 {
-	if (input_altezza < 1 || input_altezza > 50 ||  input_larghezza < 1 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
+	if (input_altezza < 2 || input_altezza > 50 ||  input_larghezza < 2 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	
 	campo_nascosto = Matrice<bool>(input_altezza, input_larghezza);
@@ -117,7 +141,7 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 
 Campo::Campo(Matrice<bool> campo_input)
 {
-	if (campo_input._righe() < 1 || campo_input._righe() > 50 || campo_input._colonne() < 1 || campo_input._colonne() > 50) throw std::domain_error("dimensioni del campo invalide");
+	if (campo_input._righe() < 2 || campo_input._righe() > 50 || campo_input._colonne() < 2 || campo_input._colonne() > 50) throw std::domain_error("dimensioni del campo invalide");
 	if (campo_input.conta_tutti_elementi(true) < 1 || campo_input.conta_tutti_elementi(true) >= campo_input._righe() * campo_input._colonne()) throw std::domain_error("numero delle mine illegale");
 
 	campo_nascosto = campo_input;
@@ -337,8 +361,8 @@ void Campo::randomizza_campo(int i, int j)
 
 void Campo::reset()
 {
-	reset_gioco();
-	reset_giocatore();
+	reset_campo_nascosto();
+	reset_campo_visibile();
 	reset_status();
 	reset_numero_bandiere();
 }

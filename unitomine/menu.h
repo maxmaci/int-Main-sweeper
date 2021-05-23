@@ -201,7 +201,7 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 			case 1:
 				return;
 			case 2:
-				partita.reset_giocatore();
+				partita.reset_campo_visibile();
 				partita.reset_numero_bandiere();
 
 				prima_mossa_effettuata = false;

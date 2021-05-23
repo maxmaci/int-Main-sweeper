@@ -144,6 +144,7 @@
     <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="risolutore.h" />
     <ClInclude Include="vettore.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="matrice.h" />

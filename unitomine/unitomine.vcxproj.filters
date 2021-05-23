@@ -35,6 +35,9 @@
     <ClInclude Include="vettore.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="risolutore.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="epic_scheme.txt">
