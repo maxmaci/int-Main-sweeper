@@ -88,7 +88,7 @@ int main()
   \____/|_| |_|_|\__\___/|_|  |_|_|_| |_|\___|
                                                                                       
 )";
-		std::cout << "Un gioco in C++ programmato da Bertolotti Massimo e Buffa Guido." << std::endl << std::endl;
+		std::cout << "Un gioco in C++ programmato da Massimo Bertolotti e Guido Buffa." << std::endl << std::endl;
 
 
 		/* MENU */
