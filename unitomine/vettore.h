@@ -3,7 +3,6 @@
 
 #ifdef _WIN32
 // Se compilato su un computer con Windows includiamo la libreria windows.h, necessaria per la compatibilità UTF-8.
-// È consigliato usare Dejavù Sans Mono dato che supporta molti caratteri unicode.
 // Per motivi di incompatibilità di macro della libreria, useremo la notazione con parentesi per (std::min) and (std::max).
 #include <windows.h>
 #endif
@@ -13,21 +12,19 @@
 #include <vector>		// classe vector
 
 template <typename T>
-class Vector {
+class Vector {				//TO DO: sistemare la questione dei nomi della classe
 private:
 	std::vector<T> data;
 public:
 	Vector();
 	T operator[](int) const;
 	T& operator[](int);
-	//Vector<T> add(const Vector<T>&) const;
-	//Vector<T> sub(const Vector<T>&) const;
-	//Vector<T> mul(T) const;
-	//T mul(const Vector<T>&) const;
+
 };
 
-//TO DO : spostare nella nuova classe Vettore
 template <typename T>
+
+
 int trova_indice_elemento(const std::vector<T>& vettore, T elemento, int indice_partenza = 0)
 {
 	if (indice_partenza > vettore.size()) throw std::range_error("indice di partenza non lecito");

@@ -37,11 +37,11 @@ int main()
 
 /* VARIABILI DI GIOCO/OPZIONI */
 
-	// resetta il clock per rendere la generazione (pseudo)-casuale più casuale
+	// resetta il clock per rendere la generazione (pseudo)-casuale 'più casuale'
 
 	std::srand(static_cast<int>( std::time(nullptr) ));
 
-	// Variabili per comandi di gioco: coordinate della cella + comando dell'azione
+	// Inizializzazione di delle variabili per comandi di gioco: coordinate della cella + comando dell'azione
 
 	int riga = 1;
 	int colonna = 1;
@@ -62,6 +62,9 @@ int main()
 	// in modo da non rigenerare le mine ogni volta 
 
 	bool prima_mossa_effettuata = false;
+
+	// 'campo_generato' segnala che campo sia già stato genrato o meno, di ri-generarlo accidentalmente una volta iniziata la partita;
+	// cambia di stato dopo che viene caricato uno schema predefinito o una volta giocata la prima mossa
 
 	bool campo_generato = false;
 
@@ -94,11 +97,9 @@ int main()
 		/* MENU */
 
 			// Inserendo come input il corrispettivo numero è possibile scegliere una modalità fra quelle predefinite
-			// (PRINCIPANTE, INTERMEDIO, ESPERTO), la EPIC MODE (un piccolo Easter Egg), creare una tabella personalizzata
-			// OPPURE uscire dal gioco. Se il comando non è uno di questi sei OPPURE il numero 42 (altro piccolo Easter Egg) non fa nulla
-			// eccetto segnalare al giocatore che il commando non è riconosciuto e ripropone il prompt.
-
-		/* TO DO: mettere questo lettore input come l'altro in gioco */
+			// (PRINCIPANTE, INTERMEDIO, ESPERTO), la EPIC MODE (un piccolo Easter Egg) OPPURE uscire dal gioco. 
+			// Se il comando non è uno di questi OPPURE il numero 42 (altro piccolo Easter Egg)
+			// segnala all'utente che il commando non è riconosciuto e ripropone il prompt.
 
 		std::cout << "Seleziona un opzione scrivendo il numero corrispondendente nel prompt:" << std::endl;
 		std::cout	<< u8"• PRINCIPIANTE \t\t(Campo  9 x  9, 10 mine) \t(1)\n"
@@ -129,11 +130,11 @@ int main()
 				
 				interpreta_mossa(partita, riga, colonna, comando, in_risolutore, prima_mossa_effettuata);
 				
-				// Esce dalla partita per le opzioni
+				// Esce dalla partita e apre le opzioni se si dà 'O' in input
 				if (comando == 'O') break;
 
 				/* RANDOMIZZATORE: */
-				// Se la mossa è la prima (tranne quando si ricomincia la partita), il campo viene popolato dalle mine secondo le regole di 'randomizza_campo'
+				// Se la mossa è la prima (tranne quando si RICOMINCIA la partita), il campo viene popolato dalle mine secondo le regole di 'randomizza_campo'
 				if (!campo_generato)
 				{
 					partita.randomizza_campo(riga - 1, colonna - 1);
@@ -162,7 +163,7 @@ int main()
 			{
 				std::cout << "OPZIONI:\n"
 					<< u8"• Torna al gioco.\t\t(1)\n"
-					<< u8"• Ricomincia la partita.\t(2)\n"
+					<< u8"• Ricomincia la partita con lo stesso schema di mine.\t(2)\n"
 					<< u8"• Rivela il campo.\t\t(3)\n"
 					<< u8"• Torna al menù principale.\t(4)\n"
 					<< u8"• Esci dal gioco.\t\t(5)" << std::endl;

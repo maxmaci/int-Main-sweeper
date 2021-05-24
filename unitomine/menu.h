@@ -4,6 +4,8 @@
 
 #include "campo.h"
 
+//'leggi_campo_da_file' utilizza come schema predefinito per le mine quello fornito da un file .txt, il campo NON viene generato randomicamente,
+//converte i caratteri (- e *) rispettivamente in 0 e 1, indicando celle vuote e mine
 Campo leggi_campo_da_file(std::istream& is) {
 	Matrice<bool> campo_input;
 	std::string stringa;
@@ -23,19 +25,21 @@ Campo leggi_campo_da_file(std::istream& is) {
 /* FUNZIONI MENÙ */
 
 /* CONTROLLI sulla validità dell'input */
-bool input_menu_lecito(std::vector<std::string> input)
+bool input_menu_lecito(std::vector<std::string> input)  //Verifica che il comando per le operazioni nel menu sia della forma corretta (un numero intero)
+														//NB: l'input viene preso come vettore di stringhe formate solo da interi, viene quindi
+														//verificato che sia UNA stringa (->inserire '42' come input non dà errori)
 {
 	return input.size() == 1 && solo_numeri(input[0]);
 }
 
-bool input_personalizzata_lecito(std::vector<std::string> input)
+bool input_personalizzata_lecito(std::vector<std::string> input) //Verifica che il comando per le dimensioni del campo personalizzato sia lecito
 {
 	return input.size() == 3 && solo_numeri(input[0]) && solo_numeri(input[1]) && solo_numeri(input[2]);
 }
 
-void partita_personalizzata(Campo& campo)
+void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con campo personalizzato, se scelta nel menu
 {
-	std::cout << "Inserisci altezza, larghezza e numero di mine (nel formato 'altezza', 'larghezza', 'mine'):" << std::endl; // TO DO: evitare errori di crash
+	std::cout << "Inserisci altezza, larghezza e numero di mine (nel formato 'altezza', 'larghezza', 'mine'):" << std::endl;
 
 	while (true)
 	{
@@ -57,7 +61,7 @@ void partita_personalizzata(Campo& campo)
 
 void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool& campo_generato, bool& prima_mossa_effettuata)
 {
-	std::ifstream f("epic_scheme.txt");
+	std::ifstream f("epic_scheme.txt");  //legge il file così denominato per utilizzarlo come schema predefinito. Per usare uno schema 
 	
 	while (true)
 	{
@@ -83,7 +87,8 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool&
 			case 4:
 				std::cout << "We're no stranger to love..." << std::endl;
 				gioco = Campo(leggi_campo_da_file(f));
-				campo_generato = true;
+				campo_generato = true;  //visto che viene utilizzato uno schema predefinito dal file .txt campo_generato passa a true, evita che venga
+										//generato di nuovo 
 				//prima_mossa_effettuata = true;
 				in_gioco = true;
 				return;
@@ -100,11 +105,8 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool&
 				in_gioco = true;
 				return;
 			default:
-				std::cout << u8"Lo vedi che ci sono solo numeri dall'1 al 6, vero? Che diamine scrivi "
-					<< comando_opzioni
-					<< u8" quando chiaramente\nnon ti mostrerà nulla di importante?"
-					<< u8" Piuttosto che perdere tempo così, potresti chiederti\n"
-					<< u8"se c'è una risposta alla Vita, all'Universo, al Tutto." << std::endl;
+				std::cout << u8"Riprova! Devi scrivere un numero da 1 a 6! smh "
+				<< std::endl;
 			}
 		}
 		else
