@@ -89,7 +89,7 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool&
 				gioco = Campo(leggi_campo_da_file(f));
 				campo_generato = true;  //visto che viene utilizzato uno schema predefinito dal file .txt campo_generato passa a true, evita che venga
 										//generato di nuovo 
-				//prima_mossa_effettuata = true;
+										//prima_mossa_effettuata = true;
 				in_gioco = true;
 				return;
 			case 5:
@@ -150,6 +150,7 @@ void menu_risolutore(bool& in_risolutore)
 	}
 }
 
+//menu di fine partita con risolutore (vittoria o sconfitta), resetta stato di gioco
 void menu_opzioni_breve(Campo& gioco, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
 {
 	std::cout << "OPZIONI:\n"
@@ -259,7 +260,6 @@ void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando, bo
 
 			return;
 		case 3:
-			// TO DO: controllare qualche caso
 			if (!solo_numeri(input[0]) || !solo_numeri(input[1])) break;
 			if (!partita._campo_visibile().indici_leciti(std::stoi(input[0]) - 1, std::stoi(input[1]) - 1)) break;				// throw std::invalid_argument("coordinate non valide");
 			if (input[2].size() > 1 || (!comando_lecito(std::toupper(input[2][0])) && std::toupper(input[2][0]) != 'R')) break;	// throw std::domain_error("comando non valido");

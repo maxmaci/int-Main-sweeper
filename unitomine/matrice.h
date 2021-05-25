@@ -24,8 +24,6 @@ public:
 // Crea una matrice di dimensioni righe x colonne, i cui elementi sono tutti pari all'elemento dato in input.
 	Matrice(int = 0, int = 0, T = T());											
 	
-	//Matrice(int, int, T);	// TO DO: eliminare	// costruttore con valore di default delle celle dato in input iniziale
-
 /* LETTORI CAMPI PRIVATI */
 
 	// Restituisce il numero di righe della matrice. 
@@ -51,8 +49,6 @@ public:
 	// Sostituisce ogni elemento della matrice con quello dato in input. Di default sostituisce tutti gli elementi con l'elemento di default del tipo T.
 	void sostituisci_tutti(T = T());
 
-	//void resize(int, int, T);	// TO DO: cancellare
-
 /* METODI PER OTTENERE INFORMAZIONI SUGLI ELEMENTI DELLA MATRICE */
 
 	// Restituisce 'vero' se gli indici (i, j) dati in input si riferiscono ad un potenziale elemento della matrice o meno.
@@ -68,46 +64,18 @@ public:
 	// Restituisce 'true' se c'è almeno un elemento pari all'elemento dato in input nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	bool conta_se_vicini(int, int, T) const;
 
-	//int conta_caselle_vicine(int, int) const; // TO DO: cancellare // conta i vicini della cella (i, j) in totale (= 3 se è una cella nell'angolo, = 5 se sul bordo e = 8 se in mezzo alla matrice)
-
-
-/* METODI PER CONFRONTARE DI MATRICI */
-
-	//template <typename T> friend bool operator==(const Matrice<T>& sinistra, const Matrice<T>& destra); // TO DO: cancellare
-
 /* OPERAZIONI CON MATRICI */
 
 	// Restituisce la matrice (potenzialmente anche intesa come matrice riga o colonna) ottenuta dalla moltiplicazione matriciale.
 	Matrice<T> mul(const Matrice<T>& m) const;
 
-/* RIDUSSIONE GAUSSIANA E RANGO */
+/* RIDUSSIONE GAUSSIANA */
 	
-	// Opera la riduzione Gaussiana sulla matrice per restituire (come una nuova matrice) la matrice ridotta a scaloni.
-	Matrice<T> riduzione_gaussiana();
 	// Opera la riduzione Gaussiana sulla matrice e su un opportuno termine noto. La matrice e il termine noto ridotto vengono restituiti come pair. 
 	std::pair<Matrice<T>, std::vector<T>> riduzione_gaussiana_con_termine_noto(const std::vector<T>&);
-	// Restituisce il rango della matrice grazie alla riduzione Gaussiana.
-	int rango();
 };
 
-/*
-template <typename T>
-void Matrice<T>::init(int numero_righe, int numero_colonne, T elemento)
-{
-	if (numero_righe < 0 || numero_colonne < 0 ) throw std::domain_error("dimensioni della matrice invalide");
-	righe = numero_righe;
-	colonne = numero_colonne;
-	data.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
-}
-*/
-/*
-template <typename T>
-Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
-{
-	init(numero_righe, numero_colonne, elemento);
-}
-*/
-
+// Generazione della matrice
 template <typename T>
 Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
 {
@@ -117,6 +85,7 @@ Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
 	data.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
 }
 
+// Metodo di stampa a terminale di matrici, ->DEBUG
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const Matrice<T>& matrice)
 {
@@ -166,18 +135,7 @@ void Matrice<T>::scambia_righe(int i, int j) {
 	data[j] = data[i];
 	data[i] = temp;
 }
-/*
-template <typename T>
-void Matrice<T>::resize(int altezza, int larghezza, T elemento) {
-	righe = altezza;
-	colonne = larghezza;
-	data.resize(altezza, std::vector<T>(larghezza, elemento));
-	for (int i = 0; i < altezza; i++)
-	{
-		data[i].resize(larghezza, elemento);
-	}
-}
-*/
+
 template <typename T>
 bool Matrice<T>::indici_leciti(int i, int j) const
 {
@@ -187,7 +145,7 @@ bool Matrice<T>::indici_leciti(int i, int j) const
 template <typename T>
 bool Matrice<T>::is_elemento(int i, int j, T elemento) const
 {
-	return indici_leciti(i,  j) && data[i][j] == elemento;			// controlla che l'elemento T è nel posto i e j; NON restituisce un errore nel caso l'indice non sia lecito, bensì restituisce falso
+	return indici_leciti(i,  j) && data[i][j] == elemento;			// Controlla che l'elemento T è nel posto i e j; NON restituisce un errore nel caso l'indice non sia lecito, bensì restituisce falso
 }
 
 template <typename T>
@@ -204,15 +162,8 @@ int Matrice<T>::conta_tutti_elementi(T elemento) const
 	}
 	return k;
 }
-/*
-template <typename T>
-int Matrice<T>::conta_caselle_vicine(int i, int j) const
-{
-	if ((i == 0 && j == 0) || (i == righe - 1 && j == colonne - 1)) return 3;
-	else if (i == 0 || j == 0 || i == righe - 1 || j == colonne - 1) return 5;
-	else return 8;
-}
-*/
+
+// Conta il numero di celle adiacenti a quella selezionata (verifica che non sia una cella del bordo se k=8)
 template <typename T>
 int Matrice<T>::conta_vicini(int i, int j, T elemento) const
 {
@@ -232,6 +183,8 @@ int Matrice<T>::conta_vicini(int i, int j, T elemento) const
 	return k;
 }
 
+// Template per contare il numero di celle adiacenti (completando il quadrato 3x3 circostante alla cella presa in considerazione) 
+// di un certo tipo (ne servono diverse versioni, per contare bandiere, celle vuote ecc)
 template <typename T>
 bool Matrice<T>::conta_se_vicini(int i, int j, T elemento) const
 {
@@ -249,77 +202,7 @@ bool Matrice<T>::conta_se_vicini(int i, int j, T elemento) const
 	return false;
 }
 
-/*
-template <typename T>
-bool operator==(const Matrice<T>& sinistra, const Matrice<T>& destra)
-{
-	if (sinistra.righe != destra.righe || sinistra.colonne != destra.colonne) return false;
-	for (int i = 0; i < sinistra.righe; i++)
-	{
-		for (int j = 0; j < sinistra.colonne; j++)
-		{
-			if (sinistra[i][j] != destra[i][j]) return false;
-		}
-	}
-	return true;
-}
-*/
-
-template <typename T>
-Matrice<T> Matrice<T>::riduzione_gaussiana()
-{
-	Matrice<T> matrice_ridotta = (*this);
-
-	int h = 0;
-	int k = 0;
-
-	while (h < righe && k < colonne)
-	{
-
-		// TO DO: inserire lettore colonna
-
-		std::vector<int> colonna_completa;
-		std::vector<int> colonna;
-
-		for (int p = 0; p < righe; p++)
-		{
-			colonna_completa.push_back(std::abs(matrice_ridotta[p][k]));
-		}
-
-		for (int p = h; p < righe; p++)
-		{
-			colonna.push_back(std::abs(matrice_ridotta[p][k]));
-		}
-
-		int i_max = trova_indice_elemento(colonna_completa, *std::max_element(colonna.cbegin(), colonna.cend()), h);
-
-		if (matrice_ridotta[i_max][k] == 0)
-		{
-			k += 1;
-		}
-		else
-		{
-			matrice_ridotta.scambia_righe(h, i_max);
-			for (int i = h + 1; i < righe; i++)
-			{
-				int mult = matrice_ridotta[i][k] / matrice_ridotta[h][k];
-				matrice_ridotta[i][k] = 0;
-				for (int j = k + 1; j < colonne; j++)
-				{
-					matrice_ridotta[i][j] = matrice_ridotta[i][j] - matrice_ridotta[h][j] * mult;
-				}
-			}
-
-			h++;
-			k++;
-
-		}
-
-	}
-
-	return matrice_ridotta;
-}
-
+// Template per ridurre le matrici ottenute con i metodi de Il Risolutore™ tramite la riduzione gaussiana per le matrici
 template <typename T>
 std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termine_noto(const std::vector<T>& termine_noto)
 {
@@ -331,7 +214,6 @@ std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termin
 	while (h < righe && k < colonne)
 	{
 
-		// TO DO: inserire lettore colonna
 
 		std::vector<int> colonna_completa;
 		std::vector<int> colonna;
@@ -375,21 +257,6 @@ std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termin
 	}
 
 	return std::make_pair(matrice_ridotta, termine_noto_ridotto);
-}
-
-template <typename T>
-int Matrice<T>::rango()
-{
-	Matrice<T> matrice_ridotta = riduzione_gaussiana();
-	
-	std::vector<T> riga_vuota(matrice_ridotta.colonne, 0);
-
-	int righe_non_nulle = 0;
-	for (int i = 0; i < matrice_ridotta.righe; i++)
-	{
-		if (matrice_ridotta[i] != riga_vuota) righe_non_nulle++;
-	}
-	return righe_non_nulle;
 }
 
 #endif // __MATRICE_H__
