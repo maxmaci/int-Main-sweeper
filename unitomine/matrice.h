@@ -100,6 +100,7 @@ std::ostream& operator<<(std::ostream& os, const Matrice<T>& matrice)
 	return os;
 }
 
+// Metodo per sostituire tutti gli elementi della griglia con l'elemento dato
 template <typename T>
 void Matrice<T>::sostituisci_tutti(T elemento) {
 	for (int i = 0; i < righe; i++)
@@ -111,6 +112,7 @@ void Matrice<T>::sostituisci_tutti(T elemento) {
 	}
 }
 
+// Inserisce una nuova colonna nella matrice data
 template <typename T>
 std::vector<T> Matrice<T>::colonna(int j) const {
 	std::vector<T> col;
@@ -121,6 +123,7 @@ std::vector<T> Matrice<T>::colonna(int j) const {
 	return col;
 }
 
+// Inserisce una nuova riga nella matrice data, controlla che abbia dimensioni compatibili
 template <typename T>
 void Matrice<T>::push_back(const std::vector<T>& riga) {
 	if (colonne != 0 && riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
@@ -129,6 +132,7 @@ void Matrice<T>::push_back(const std::vector<T>& riga) {
 	if (colonne == 0) colonne = static_cast<int>(riga.size());
 }
 
+// Scambia due righe all'interno della matrice data
 template <typename T>
 void Matrice<T>::scambia_righe(int i, int j) {
 	std::vector<T> temp (data[j]);
@@ -136,18 +140,21 @@ void Matrice<T>::scambia_righe(int i, int j) {
 	data[i] = temp;
 }
 
+// Mantiene gli indici degli elementi della matrice tra 0 e numero di righe e colonne
 template <typename T>
 bool Matrice<T>::indici_leciti(int i, int j) const
 {
 	return i >= 0 && i < righe&& j >= 0 && j < colonne;
 }
 
+// Controlla che l'elemento T è nel posto i e j; NON restituisce un errore nel caso l'indice non sia lecito, bensì restituisce falso
 template <typename T>
 bool Matrice<T>::is_elemento(int i, int j, T elemento) const
 {
-	return indici_leciti(i,  j) && data[i][j] == elemento;			// Controlla che l'elemento T è nel posto i e j; NON restituisce un errore nel caso l'indice non sia lecito, bensì restituisce falso
+	return indici_leciti(i,  j) && data[i][j] == elemento;
 }
 
+// Conta tutti gli elementi di un certo tipo all'interno della matrice data
 template <typename T>
 int Matrice<T>::conta_tutti_elementi(T elemento) const
 {
@@ -202,7 +209,7 @@ bool Matrice<T>::conta_se_vicini(int i, int j, T elemento) const
 	return false;
 }
 
-// Template per ridurre le matrici ottenute con i metodi de Il Risolutore™ tramite la riduzione gaussiana per le matrici
+// Riduce le matrici tramite la riduzione gaussiana per matrici (passaggio necessario per il Metodo Gaussiano all'interno de Il Risolutore™)
 template <typename T>
 std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termine_noto(const std::vector<T>& termine_noto)
 {
