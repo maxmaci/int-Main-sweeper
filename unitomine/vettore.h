@@ -19,12 +19,9 @@ public:
 	Vector();
 	T operator[](int) const;
 	T& operator[](int);
-
 };
 
 template <typename T>
-
-
 int trova_indice_elemento(const std::vector<T>& vettore, T elemento, int indice_partenza = 0)
 {
 	if (indice_partenza > vettore.size()) throw std::range_error("indice di partenza non lecito");

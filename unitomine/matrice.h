@@ -112,7 +112,7 @@ void Matrice<T>::sostituisci_tutti(T elemento) {
 	}
 }
 
-// Inserisce una nuova colonna nella matrice data
+// Legge una colonna j della matrice data come vettore
 template <typename T>
 std::vector<T> Matrice<T>::colonna(int j) const {
 	std::vector<T> col;
@@ -123,7 +123,7 @@ std::vector<T> Matrice<T>::colonna(int j) const {
 	return col;
 }
 
-// Inserisce una nuova riga nella matrice data, controlla che abbia dimensioni compatibili
+// Inserisce una nuova riga in fondo alla matrice data, controllando che abbia dimensioni compatibili
 template <typename T>
 void Matrice<T>::push_back(const std::vector<T>& riga) {
 	if (colonne != 0 && riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
