@@ -115,22 +115,21 @@ public:
 
 	// TO DO: sostituire non scavati e bandiere vicine col metodo conta vicini di matrice, spostandolo qui - non ha senso contare gli elementi vicini ad una matrice o no?
 
-	//bool conta_se_numeri_vicini(int, int) const; // TO DO: eliminare
-
-	//bool bordo_non_scavato(int, int) const; // TO DO: eliminare
 
 	/* FUNZIONI DI STAMPA */
 	// Stampa in modo carino il campo, con attorno le coordinate per facilitare l'utente.
 	friend std::ostream& operator<<(std::ostream&, const Campo&);
 };
 
+// Genera il campo di gioco, verifica che le dimensioni fornite dall'utente siano accettabili (compreso strettamente tra un quadro 2x2 e uno 50x50)
+// Verifica anche che il numero di mine sia conforme con la convenzione di Ginevra (deve essere compreso tra 1 e area-del-campo - 1)
 Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 {
 	if (input_altezza < 2 || input_altezza > 50 ||  input_larghezza < 2 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
 	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
 	
-	campo_nascosto = Matrice<bool>(input_altezza, input_larghezza);
-	campo_visibile = Matrice<int>(input_altezza, input_larghezza, -3);
+	campo_nascosto = Matrice<bool>(input_altezza, input_larghezza);		// Matrice booleana, contiene solo informazioni sulla presenza di mine
+	campo_visibile = Matrice<int>(input_altezza, input_larghezza, -3);	// Matrice a valori interi, contiene tutte le altre infomazioni utili al gioco (e al giocatore)
 
 	altezza = input_altezza;
 	larghezza = input_larghezza;
@@ -139,6 +138,7 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 	status = '-';
 }
 
+// Genera il campo di gioco a partire dallo schema fornito, verificando che sia un formato valido (rettangolare, con condizioni sulle dimensioni come prima)
 Campo::Campo(Matrice<bool> campo_input)
 {
 	if (campo_input._righe() < 2 || campo_input._righe() > 50 || campo_input._colonne() < 2 || campo_input._colonne() > 50) throw std::domain_error("dimensioni del campo invalide");
@@ -244,17 +244,7 @@ int Campo::conta_numeri_vicini(int i, int j) const
 {
 	return campo_visibile.conta_vicini(i, j, 1) + campo_visibile.conta_vicini(i, j, 2) + campo_visibile.conta_vicini(i, j, 3) + campo_visibile.conta_vicini(i, j, 4) + campo_visibile.conta_vicini(i, j, 5) + campo_visibile.conta_vicini(i, j, 6) + campo_visibile.conta_vicini(i, j, 7) + campo_visibile.conta_vicini(i, j, 8);
 }
-/*
-bool Campo::conta_se_numeri_vicini(int i, int j) const
-{
-	return campo_visibile.conta_se_vicini(i, j, 1) || campo_visibile.conta_se_vicini(i, j, 2) || campo_visibile.conta_se_vicini(i, j, 3) || campo_visibile.conta_se_vicini(i, j, 4) || campo_visibile.conta_se_vicini(i, j, 5) || campo_visibile.conta_se_vicini(i, j, 6) || campo_visibile.conta_se_vicini(i, j, 7) || campo_visibile.conta_se_vicini(i, j, 8);
-}
 
-bool Campo::bordo_non_scavato(int i, int j) const
-{
-	return campo_visibile.is_elemento(i, j, -3) && conta_se_numeri_vicini(i, j);
-}
-*/
 void Campo::aggiorna_cella(int i, int j)
 {
 	if (campo_nascosto[i][j]) campo_visibile[i][j] = -1;
@@ -267,6 +257,11 @@ bool comando_lecito(char comando)
 	return comando == 'B' || comando == 'T' || comando == 'S';
 }
 
+// È la funzione che scava in sequenza quando si "clicca" su una cella senza numeri, in maniera che continui a scavare fin quando non trova i bordi 
+// del campo oppure delle celle numerate; sfrutta la caratterizzazione delle celle vuote (identificate come "-1"), utilizzando poi oggetti di tipo
+// queue per continuare a scavare "a cascata" in tutte le direzioni in base alla cella di partenza, applicando lo stesso processo anche alle celle
+// apperna scavate e aggiornando la coda per ridurre lo sforzo computazionale (si rischia di far "rimbalzare" i check sulle celle da una parte 
+// all'altra del campo all'infinito)
 void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
 {
 	std::queue<Coord > coda;
@@ -281,7 +276,7 @@ void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
 			aggiorna_cella(cella.first, cella.second);
 
 			celle_processate[cella.first][cella.second] = true;
-			if (conta_mine_vicine(cella.first, cella.second) == 0) // controlla che la casella non sia un fiore; in caso contrario non aggiungerà i nodi alla coda
+			if (conta_mine_vicine(cella.first, cella.second) == 0) // controlla che la casella non sia una mina; in caso contrario non aggiungerà i nodi alla coda
 			{
 				coda.push(Coord(cella.first - 1, cella.second - 1));
 				coda.push(Coord(cella.first - 1, cella.second));
@@ -298,12 +293,13 @@ void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
 	return;
 }
 
+// Applica i comandi dati in input o da Il Risolutore™ al campo, verificando che siano leciti
 void Campo::gioca(int i, int j, char comando)
 {
 	comando = std::toupper(comando);
 	if (!comando_lecito(comando)) throw std::invalid_argument("comando illecito");
 	
-	if (comando == 'B' && campo_visibile[i][j] == -3)
+	if (comando == 'B' && campo_visibile[i][j] == -3) // Aggiorna i contatori di bandiere segnalandone ("B") o togliendone ("T")
 	{
 		campo_visibile[i][j] = -2;
 		numero_bandiere++;
@@ -313,7 +309,7 @@ void Campo::gioca(int i, int j, char comando)
 		campo_visibile[i][j] = -3;
 		numero_bandiere--;
 	}
-	else if (campo_visibile[i][j] != -2)
+	else if (campo_visibile[i][j] != -2) // Segnala la sconfitta se si scava su di una mina, altrimenti esegue l'operazione di scavo e aggiorna il campo
 	{
 		if (campo_nascosto[i][j])
 		{
@@ -329,9 +325,12 @@ void Campo::gioca(int i, int j, char comando)
 			scava_celle(i, j, celle_processate);
 		}	
 	}
-	vittoria(); // controllo della vittoria TO DO: migliorare, se prendo tutte le mine con le bandiere dovrei poter comunque vincere
+	vittoria();
 }
 
+// Una volta scelte le dimensioni del campo e giocata la prima mossa genera il campo di mine, applicando un metodo basato sul numero di mine 
+// scelto e selezionando in maniera casuale le coordinate dove piazzare le mine (tolto il blocco 3x3 circostante alla cella della prima mossa)
+// fino al raggiungimento del numero finale delle mine
 void Campo::randomizza_campo(int i, int j)
 {
 	int k = 1;
@@ -366,18 +365,8 @@ void Campo::reset()
 	reset_status();
 	reset_numero_bandiere();
 }
-/*
-void Campo::resize(int input_altezza, int input_larghezza, int input_mine)
-{
-	if (input_altezza < 1 || input_altezza > 50 || input_larghezza < 1 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
-	if (input_mine < 1 || input_mine >= input_altezza * input_larghezza) throw std::domain_error("numero delle mine illegale");
-	altezza = input_altezza;
-	larghezza = input_larghezza;
-	mine = input_mine;
-	campo_nascosto = Matrice<bool> (altezza, larghezza);
-	campo_visibile = Matrice<int> (altezza, larghezza, -3);
-}
-*/
+
+// Svela le mine del campo se si sceglie questa opzione dal menù
 void Campo::rivela()
 {
 	for (int i = 0; i < altezza; i++)
@@ -390,6 +379,7 @@ void Campo::rivela()
 	std::cout << *this;
 }
 
+// In caso di sconfitta vengono mostrate le mine rimanenti e viene evidenziata quella fatta esplodere
 void Campo::sconfitta(int x, int y)
 {
 	status = 'S';
