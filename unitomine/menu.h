@@ -39,7 +39,8 @@ bool input_personalizzata_lecito(std::vector<std::string> input) //Verifica che 
 
 void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con campo personalizzato, se scelta nel menu
 {
-	std::cout << "Inserisci altezza, larghezza e numero di mine (nel formato 'altezza', 'larghezza', 'mine'):" << std::endl;
+	std::cout	<< "Inserisci altezza (compresa fra 2 e 50), larghezza (compresa fra 2 e 50) e numero di mine (compreso fra 1 e altezza * larghezza - 1)\n"
+				<< "nel formato 'altezza larghezza mine'." << std::endl;
 
 	while (true)
 	{
@@ -49,8 +50,16 @@ void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con
 			int altezza = std::stoi(input[0]);
 			int larghezza = std::stoi(input[1]);
 			int mine = std::stoi(input[2]);
-			campo = Campo(altezza, larghezza, mine);
-			return;
+			
+			if (altezza > 1 && altezza <= 50 && larghezza > 1 && larghezza <= 50 && mine >= 1 && mine < altezza * larghezza)
+			{
+				campo = Campo(altezza, larghezza, mine);
+				return;
+			}
+			else
+			{
+				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
+			}
 		}
 		else
 		{
@@ -114,39 +123,6 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool&
 			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
 		}
 
-	}
-}
-
-void menu_risolutore(bool& in_risolutore)
-{
-	std::cout << u8"Vuoi che il Risolutore™ giochi al posto tuo?\n"
-		<< u8"• Sì, fai giocare il Risolutore™.\t (1)\n"
-		<< u8"• No, voglio giocare io.\t\t (2)" << std::endl;
-
-	while (true)
-	{
-		std::vector<std::string> input = leggi_input();
-
-		if (input_menu_lecito(input))
-		{
-			int comando_opzioni = std::stoi(input[0]);
-
-			switch (comando_opzioni)
-			{
-			case 1:
-				in_risolutore = true;
-				return;
-			case 2:
-				return;
-			default:
-				std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
-				break;
-			}
-		}
-		else
-		{
-			std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
-		}
 	}
 }
 

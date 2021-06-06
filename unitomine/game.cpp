@@ -111,18 +111,16 @@ int main()
 		
 		menu_principale(partita, uscita_programma, in_gioco, campo_generato, prima_mossa_effettuata);
 
-	/* TO DO: menù per chiedere risolutore */
-
 	/* LOOP DI GIOCO*/
 	// A meno di uscire per tornare al menù principale, tutte le azioni vengono svolte in questo loop
 		while (!uscita_programma && in_gioco)
 		{
 			std::cout << u8"\nInserisci una mossa nel formato 'riga colonna comando' oppure anche solo 'riga colonna' se intendi scavare quella cella.\nPer il menù delle opzioni, scrivi nel prompt la lettera 'O'." << std::endl;
 			std::cout << "COMANDI DISPONIBILI:\n"
-				<< "B: mette la bandierina (se non presente)\n"
-				<< "T: toglie la bandierina (se presente)\n"
-				<< u8"S: scava la cella (se non è presente la bandierina)\n"
-				<< u8"R: scava la cella indicata e attiva il risolutore automatico (può essere solo attivato alla prima mossa)" << std::endl;
+				<< u8"• B: mette la bandierina (se non presente)\n"
+				<< u8"• T: toglie la bandierina (se presente)\n"
+				<< u8"• S: scava la cella (se non è presente la bandierina)\n"
+				<< u8"• R: scava la cella indicata e attiva il Risolutore™ automatico (può essere solo attivato alla prima mossa)" << std::endl;
 			while (!in_risolutore && partita._status() == '-')
 			{
 				std::cout << partita << std::endl;

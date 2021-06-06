@@ -17,7 +17,7 @@ class Risolutore
 {
 private:
 	Campo partita;						
-	int bandiere_precedenti;			// 0 <= bandiere_precedenti < partita._altezza() * partita._larghezza()		// TO DO: controllare per l'uguale
+	int bandiere_precedenti;			// 0 <= bandiere_precedenti <= partita._altezza() * partita._larghezza()
 	int celle_non_scavate_precedenti;	// 0 <= bandiere_precedenti <= partita._altezza() * partita._larghezza()
 
 /* METODI PER RICAVARE INFORMAZIONI SUL CAMPO */
@@ -67,6 +67,7 @@ Risolutore::Risolutore(const Campo& campo)
 
 void Risolutore::aggiorna(const Campo& campo)
 {
+	
 	partita = campo;
 	bandiere_precedenti = campo._numero_bandiere();
 	celle_non_scavate_precedenti = campo._campo_visibile().conta_tutti_elementi(-3);
@@ -301,7 +302,7 @@ void Risolutore::metodo_meccanico()
 		for (int j = 0; j < partita._larghezza(); j++)
 		{
 			// PRIMA FASE: mette le bandierine se attorno al numero n trova n celle non scavata (con potenzialmente già delle bandierine
-			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) != 0 && partita.conta_non_scavati_vicini(i, j) + partita.conta_bandiere_vicine(i, j) == partita._campo_visibile()[i][j])	// TO DO: controllare se l'ultima condizione cambia qualcosa o menopausa
+			if (partita._campo_visibile()[i][j] > 0 && partita.conta_non_scavati_vicini(i, j) != 0 && partita.conta_non_scavati_vicini(i, j) + partita.conta_bandiere_vicine(i, j) == partita._campo_visibile()[i][j])
 			{
 				for (int n = i - 1; n <= i + 1; n++)
 				{
@@ -419,6 +420,7 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_
 
 			if (upper_bound == termine_noto_ridotto[i])
 			{
+				// tutti i termini con coefficiente >0 sono mine, tutti quelli con coefficiente <0 non lo sono
 
 				for (int j = 0; j < matrice_ridotta._colonne(); j++)
 				{
@@ -434,7 +436,7 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_
 			}
 			else if (lower_bound == termine_noto_ridotto[i])
 			{
-				// tutti i termini con coefficiente -1 sono mine, tutti quelli con coefficiente 1 non lo sono
+				// tutti i termini con coefficiente <0 sono mine, tutti quelli con coefficiente >0 non lo sono
 
 				for (int j = 0; j < matrice_ridotta._colonne(); j++)
 				{
@@ -546,13 +548,6 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 
 		int estremo = *std::min_element(estremi.begin(), estremi.end());
 
-		/* // TO DO: eliminare
-		std::cout << "estremo: " << estremo << std::endl;
-		std::cout << "mine_max_separate: " << estremi[0] << std::endl;
-		std::cout << "singola_disposizione.size(): " << estremi[1] << std::endl;
-		std::cout << "mine_rimanenti: " << estremi[2] << std::endl;
-		*/
-
 		for (int i = 0; i < estremo; i++)
 		{
 			std::vector<bool> disposizione(sezione_bordo.size());
@@ -572,30 +567,6 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 
 		possibilita_per_sezione.push_back(disposizioni_per_sezione);
 	}
-
-	/* TO DO: eliminare
-	std::cout << u8"N° SEZIONI: " << possibilita_per_sezione.size() << std::endl;
-
-	for (int i = 0; i < possibilita_per_sezione.size(); i++)
-	{
-		std::cout << u8"SEZIONE N°: " << i + 1 << std::endl;
-		for (int j = 0; j < bordo_separato[i].size(); j++)
-		{
-			std::cout << "(" << bordo_separato[i][j].first + 1 << ", " << bordo_separato[i][j].second + 1 << ") ";
-		}
-		std::cout << std::endl;
-
-		for (std::map<int, Matrice<bool>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
-		{
-			std::cout << u8"N° MINE: " << (*it).first << std::endl;
-			std::cout << u8"N° COMBINAZIONI: " << (*it).second._righe() << std::endl;
-
-			std::cout << (*it).second;
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-	*/
 
 	// FASE 2: CALCOLO DELLE PROBABILITÀ
 

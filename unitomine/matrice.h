@@ -16,9 +16,6 @@ private:
 	int	righe;								// 0 <= righe
 	int colonne;							// 0 <= colonne
 	std::vector<std::vector<T> > data;
-
-/* INIZIALIZZATORE DEI COSTRUTTORI */
-	//void init(int, int, T);
 public:
 /* COSTRUTTORI */
 // Crea una matrice di dimensioni righe x colonne, i cui elementi sono tutti pari all'elemento dato in input.
@@ -63,11 +60,6 @@ public:
 	
 	// Restituisce 'true' se c'è almeno un elemento pari all'elemento dato in input nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	bool conta_se_vicini(int, int, T) const;
-
-/* OPERAZIONI CON MATRICI */
-
-	// Restituisce la matrice (potenzialmente anche intesa come matrice riga o colonna) ottenuta dalla moltiplicazione matriciale.
-	Matrice<T> mul(const Matrice<T>& m) const;
 
 /* RIDUSSIONE GAUSSIANA */
 	

@@ -9,8 +9,6 @@
 #include "matrice.h"
 #include "input.h"
 
-// TO DO: sostituire campo "numero bandiere" con il conta elementi per le bandiere
-
 // Definiamo una mappa che associa ad ogni numero un carattere colorato, ci serve per la stampa del campo visto dal giocatore.
 
 std::map<int, std::string > mappa_conversione
@@ -39,7 +37,7 @@ private:
 	int larghezza;						// 1 < larghezza < 50
 	int mine;							// 0 < mine < altezza * larghezza
 
-	int numero_bandiere;				// 0 <= numero_bandiere < altezza * larghezza
+	int numero_bandiere;				// 0 <= numero_bandiere <= altezza * larghezza
 
 	char status;						// '-': nè persa, nè vinta; 'S': sconfitta; 'V': vittoria.
 
@@ -47,24 +45,27 @@ private:
 	Matrice<int> campo_visibile;
 
 /* METODI DI GIOCO */
-	void scava_celle(int, int, Matrice<bool>&);				// metodo che 'scava' le celle (utilizzando l'algoritmo di Fill usato ad es. in Microsoft Paint)
+	void scava_celle(int, int);				// metodo che 'scava' le celle (utilizzando l'algoritmo di Fill usato ad es. in Microsoft Paint)
 	void aggiorna_cella(int, int);
 
 /* METODI DI LETTURA DI GIOCO */
+	// Conta il numero di mine presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	int conta_mine_vicine(int, int) const;
 
 /* SCONFITTA / VITTORIA */
 	void sconfitta(int, int);								// visualizzando il campo con le mine, imposta lo status a S(confitta)
-	void vittoria();										// controlla se le mine sono state tutte segnate con la bandierina. Se è così, imposta lo status a V(ittoria)
+	void vittoria();										// controlla se le mine sono state tutte segnate con la bandierina e le altre celle sono state scavate. Se è così, imposta lo status a V(ittoria)
 
 public:
 /* COSTRUTTORE */
+
 	// Costruisce un Campo vuoto di dimensioni altezza x larghezza con un numero di mine dato in input. Il costruttore NON piazza mine di suo.
 	Campo(int = 9, int = 9, int = 10);
 	// Costruisce un Campo partendo dal campo delle mine, che viene dato in input come matrice booleana.
 	Campo(Matrice<bool>);
 
 /* LEGGI CAMPI PRIVATI */
+
 	// Restituisce l'altezza del campo di gioco.
 	int _altezza() const { return altezza; };
 	// Restituisce la larghezza del campo di gioco.
@@ -98,14 +99,13 @@ public:
 
 /* METODI DI GIOCO */
 
-	//void resize(int, int, int); // TO DO: eliminare	// aggiorna il campo da gioco e del giocatore con nuovi valori di altezza, larghezza e mine
-
 	// Compie sulla cella (i, j) data in input l'azione di gioco sulla base del comando dato in input.
 	void gioca(int, int, char);
 	// Modifica il campo visibile "scavando" tutto il campo e mostrando tutto al giocatore (sia numeri, sia mine).
 	void rivela();
 
 /* FUNZIONI DI LETTURA STATUS */
+
 	// Conta il numero di celle non scavate presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	int conta_non_scavati_vicini(int, int) const;
 	// Conta il numero di bandiere presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
@@ -115,14 +115,17 @@ public:
 
 	// TO DO: sostituire non scavati e bandiere vicine col metodo conta vicini di matrice, spostandolo qui - non ha senso contare gli elementi vicini ad una matrice o no?
 
-
 	/* FUNZIONI DI STAMPA */
 	// Stampa in modo carino il campo, con attorno le coordinate per facilitare l'utente.
 	friend std::ostream& operator<<(std::ostream&, const Campo&);
 };
 
-// Genera il campo di gioco, verifica che le dimensioni fornite dall'utente siano accettabili (compreso strettamente tra un quadro 2x2 e uno 50x50)
-// Verifica anche che il numero di mine sia conforme con la convenzione di Ginevra (deve essere compreso tra 1 e area-del-campo - 1)
+// Genera il campo di gioco, verifica che le dimensioni fornite dall'utente siano accettabili (il campo deve essere un rettangolo compreso di dimensioni minime 2x2 e dimensioni massime 50x50).
+// Verifica anche che il numero di mine sia conforme con la convenzione di Ginevra (deve essere compreso tra 1 e area-del-campo - 1).
+// INPUT: 
+// •  (int) input_altezza: altezza del campo
+// •  (int) input_larghezza: larghezza del campo
+// •  (int) input_mine: numero delle mine nel campo
 Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 {
 	if (input_altezza < 2 || input_altezza > 50 ||  input_larghezza < 2 || input_larghezza > 50) throw std::domain_error("dimensioni del campo invalide");
@@ -138,7 +141,9 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 	status = '-';
 }
 
-// Genera il campo di gioco a partire dallo schema fornito, verificando che sia un formato valido (rettangolare, con condizioni sulle dimensioni come prima)
+// Genera il campo di gioco a partire dallo schema con mine fornito in input, verificando che sia valido (rettangolare, con condizioni sulle dimensioni e sulle mine come l'altro costruttore).
+// INPUT: 
+// •  Matrice<bool> campo_input: campo nascosto con le mine già piazzate
 Campo::Campo(Matrice<bool> campo_input)
 {
 	if (campo_input._righe() < 2 || campo_input._righe() > 50 || campo_input._colonne() < 2 || campo_input._colonne() > 50) throw std::domain_error("dimensioni del campo invalide");
@@ -154,6 +159,9 @@ Campo::Campo(Matrice<bool> campo_input)
 	status = '-';
 }
 
+// Overload dell'operatore di stampa. Stampa il campo visibile al giocatore in modo carino, con coordinate attorno al campo per facilitare l'uso dei comandi di gioco. 
+// INPUT: 
+// •  const Campo& campo: il Campo da stampare
 std::ostream& operator<<(std::ostream& os, const Campo& campo)
 {
 	if (campo.altezza > 9)
@@ -225,45 +233,73 @@ std::ostream& operator<<(std::ostream& os, const Campo& campo)
 	return os;
 }
 
+// Conta il numero di celle non scavate presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
+// INPUT: 
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
 int Campo::conta_non_scavati_vicini(int i, int j) const
 {
 	return campo_visibile.conta_vicini(i, j, -3);
 }
 
+// Conta il numero di bandiere presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
+// INPUT: 
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
 int Campo::conta_bandiere_vicine(int i, int j) const
 {
 	return campo_visibile.conta_vicini(i, j, -2);
 }
 
+// Conta il numero di mine presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
+// INPUT: 
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
 int Campo::conta_mine_vicine(int i, int j) const
 {
 	return campo_nascosto.conta_vicini(i, j, true);
 }
 
+// Conta quanti numeri sono presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
+// INPUT: 
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
 int Campo::conta_numeri_vicini(int i, int j) const
 {
 	return campo_visibile.conta_vicini(i, j, 1) + campo_visibile.conta_vicini(i, j, 2) + campo_visibile.conta_vicini(i, j, 3) + campo_visibile.conta_vicini(i, j, 4) + campo_visibile.conta_vicini(i, j, 5) + campo_visibile.conta_vicini(i, j, 6) + campo_visibile.conta_vicini(i, j, 7) + campo_visibile.conta_vicini(i, j, 8);
 }
 
+// Aggiorna la cella del campo visibile con le informazioni provienti dalla cella corrispondente nel campo nascosto. Se è una mina, mette '-1', se non
+//  è una mina conta quante mine ha attorno e mette il numero ottenuto.
+// INPUT: 
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
 void Campo::aggiorna_cella(int i, int j)
 {
 	if (campo_nascosto[i][j]) campo_visibile[i][j] = -1;
-	else if (conta_mine_vicine(i, j) == 0) campo_visibile[i][j] = 0;
 	else campo_visibile[i][j] = conta_mine_vicine(i, j);
 }
 
+// Controlla se l'input dato è uno dei tre comandi che agiscono sul campo: 'B' per mettere una bandiera, 'T' per toglierla, 'S' per scavare la cella.
+// INPUT: 
+// •  char comando: un carattere che identifica il comando.
 bool comando_lecito(char comando)
 {
 	return comando == 'B' || comando == 'T' || comando == 'S';
 }
 
 // È la funzione che scava in sequenza quando si "clicca" su una cella senza numeri, in maniera che continui a scavare fin quando non trova i bordi 
-// del campo oppure delle celle numerate; sfrutta la caratterizzazione delle celle vuote (identificate come "-1"), utilizzando poi oggetti di tipo
-// queue per continuare a scavare "a cascata" in tutte le direzioni in base alla cella di partenza, applicando lo stesso processo anche alle celle
-// apperna scavate e aggiornando la coda per ridurre lo sforzo computazionale (si rischia di far "rimbalzare" i check sulle celle da una parte 
-// all'altra del campo all'infinito)
-void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
+// del campo oppure delle celle numerate. L'algoritmo usato è basato sull'algoritmo di "riempimento col secchiello" usato ad esempio in Microsoft Paint.
+// Inizializzato un oggetto di tipo queue che funge da "lista di attesa" in cui immagazzinare le celle da controllare, si aggiunge come prima cella della coda
+// quella selezionata (i, j) e si controlla che non sia un "bordo" (ovvero deve essere una cella effettiva del campo, non deve essere una bandiera né una mina e non deve essere già stata controllata).
+// Se non è un "bordo", la cella viene aggiornata, aggiunta alla matrice Booleana di celle già processate dal metodo e tutte le 8 celle (anche potenzialmente inesistenti) attorno ad essa vengono aggiunti alla coda.
+// Il procedimento si ripete ad infinitum finché la coda non sarà completamente esaurita.
+// INPUT: 
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
+void Campo::scava_celle(int i, int j)
 {
+	Matrice<bool> celle_processate(altezza, larghezza);
 	std::queue<Coord > coda;
 	coda.push(Coord(i, j));
 	while (coda.size() != 0)
@@ -276,7 +312,7 @@ void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
 			aggiorna_cella(cella.first, cella.second);
 
 			celle_processate[cella.first][cella.second] = true;
-			if (conta_mine_vicine(cella.first, cella.second) == 0) // controlla che la casella non sia una mina; in caso contrario non aggiungerà i nodi alla coda
+			if (conta_mine_vicine(cella.first, cella.second) == 0) // Controlla che la casella non sia una mina; in caso contrario non aggiungerà le celle alla coda
 			{
 				coda.push(Coord(cella.first - 1, cella.second - 1));
 				coda.push(Coord(cella.first - 1, cella.second));
@@ -293,23 +329,27 @@ void Campo::scava_celle(int i, int j, Matrice<bool>& celle_processate)
 	return;
 }
 
-// Applica i comandi dati in input o da Il Risolutore™ al campo, verificando che siano leciti
+// Applica il comando dato in input alla cella (i, j) del campo, verificando innanzitutto che siano comandi leciti
+// INPUT: 
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
+// •  char comando: un carattere che identifica il comando: 'B' per mettere una bandiera, 'T' per toglierla, 'S' per scavare la cella.
 void Campo::gioca(int i, int j, char comando)
 {
 	comando = std::toupper(comando);
 	if (!comando_lecito(comando)) throw std::invalid_argument("comando illecito");
 	
-	if (comando == 'B' && campo_visibile[i][j] == -3) // Aggiorna i contatori di bandiere segnalandone ("B") o togliendone ("T")
+	if (comando == 'B' && campo_visibile[i][j] == -3) // Se la cella visibile non è ancora stata scavata l'aggiorna mettendoci una bandiera e aumentando il contatore del numero di bandiere.
 	{
 		campo_visibile[i][j] = -2;
 		numero_bandiere++;
 	}
-	else if (comando == 'T' && campo_visibile[i][j] == -2)
+	else if (comando == 'T' && campo_visibile[i][j] == -2) // Se la cella visibile è una bandiera l'aggiorna togliendola (ripristinando la cella ad una non scavata) e diminuendo il contatore del numero di bandiere.
 	{
 		campo_visibile[i][j] = -3;
 		numero_bandiere--;
 	}
-	else if (campo_visibile[i][j] != -2) // Segnala la sconfitta se si scava su di una mina, altrimenti esegue l'operazione di scavo e aggiorna il campo
+	else if (campo_visibile[i][j] != -2) // Se la cella scavata è una mina segnala la sconfitta, altrimenti esegue l'operazione di scavo e aggiorna il campo.
 	{
 		if (campo_nascosto[i][j])
 		{
@@ -320,17 +360,17 @@ void Campo::gioca(int i, int j, char comando)
 		{
 			aggiorna_cella(i, j);
 
-			Matrice<bool> celle_processate(altezza, larghezza);
-
-			scava_celle(i, j, celle_processate);
+			scava_celle(i, j);
 		}	
 	}
-	vittoria();
+	vittoria(); // Controlla se la partita è stata vinta dopo le operazioni di scavo.
 }
 
-// Una volta scelte le dimensioni del campo e giocata la prima mossa genera il campo di mine, applicando un metodo basato sul numero di mine 
-// scelto e selezionando in maniera casuale le coordinate dove piazzare le mine (tolto il blocco 3x3 circostante alla cella della prima mossa)
-// fino al raggiungimento del numero finale delle mine
+// Una volta scelte le dimensioni del campo e giocata la prima mossa genera il campo di mine, selezionando in maniera casuale le coordinate
+// dove piazzare le mine (tolto, se possibile, il blocco 3x3 circostante alla cella della prima mossa) fino al raggiungimento del numero finale
+// di mine.
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
 void Campo::randomizza_campo(int i, int j)
 {
 	int k = 1;
@@ -358,6 +398,8 @@ void Campo::randomizza_campo(int i, int j)
 	}
 }
 
+
+// Resetta contemporaneamente il campo nascosto, il campo visibile, lo status e il numero di bandiere allo status di default del costruttore. 
 void Campo::reset()
 {
 	reset_campo_nascosto();
@@ -366,7 +408,7 @@ void Campo::reset()
 	reset_numero_bandiere();
 }
 
-// Svela le mine del campo se si sceglie questa opzione dal menù
+// Svela il campo completamente scavato con anche le mine del campo.
 void Campo::rivela()
 {
 	for (int i = 0; i < altezza; i++)
@@ -379,20 +421,25 @@ void Campo::rivela()
 	std::cout << *this;
 }
 
-// In caso di sconfitta vengono mostrate le mine rimanenti e viene evidenziata quella fatta esplodere
-void Campo::sconfitta(int x, int y)
+// Entra in azione solo in caso di sconfitta, mostrando le mine rimanenti e viene evidenziata la cella (i, j) che conteneva la mina fatta esplodere.
+// •  int i: indice della riga della cella scelta
+// •  int j: indice della colonna della cella scelta
+void Campo::sconfitta(int i, int j)
 {
 	status = 'S';
-	for (int i = 0; i < altezza; i++)
+	for (int x = 0; x < altezza; x++)
 	{
-		for (int j = 0; j < larghezza; j++)
+		for (int y = 0; y < larghezza; y++)
 		{
-			if (campo_nascosto[i][j]) campo_visibile[i][j] = -1;
+			if (campo_nascosto[x][y]) campo_visibile[x][y] = -1;
 		}
 	}
-	campo_visibile[x][y] = -4;
+	campo_visibile[i][j] = -4;
 }
 
+// Controlla se il numero di celle non scavate sommato a quello delle celle 'bandierate' coincide con il numero di mine; in caso affermativo prosegue
+// e verifica (per doppio controllo) se effettivamente tali celle sono delle mine: se il numero di mine trovate così ('identificate') coincide con il
+// numero di mine reali impone lo status di vittoria e mette le bandiere su tutte le celle non scavate rimanenti (che sono delle mine). 
 void Campo::vittoria()
 {
 	if (campo_visibile.conta_tutti_elementi(-2) + campo_visibile.conta_tutti_elementi(-3) == mine)

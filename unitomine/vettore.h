@@ -11,15 +11,31 @@
 #include <iostream>		// std::cout / std::cin
 #include <vector>		// classe vector
 
-template <typename T>
-class Vector {				//TO DO: sistemare la questione dei nomi della classe
+template <typename T, int N>
+class Vettore {				//TO DO: sistemare la questione dei nomi della classe
 private:
 	std::vector<T> data;
 public:
-	Vector();
+	Vettore();
 	T operator[](int) const;
 	T& operator[](int);
 };
+
+template <typename T, int N>
+Vettore<T, N>::Vettore() {
+	if (N < 0) throw std::domain_error("Dimensione vettore non lecita.");
+	data.resize(N, T());
+}
+
+template <typename T, int N>
+T Vettore<T, N>::operator[](int i) const {
+	return data.at(i);
+}
+
+template <typename T, int N>
+T& Vettore<T, N>::operator[](int i) {
+	return data.at(i);
+}
 
 template <typename T>
 int trova_indice_elemento(const std::vector<T>& vettore, T elemento, int indice_partenza = 0)
