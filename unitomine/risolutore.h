@@ -456,7 +456,6 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_
 				{
 					for (int a = 0; a < matrice_ridotta._colonne(); a++)
 					{
-						// TO DO: rendere l'operatore - parte di una specifica classe vettore che funge da base ad una classe matrix adattata - > campo deve diventare solo nel caso della classe Gioco (che potremmo rinominare Campo).
 						matrice_ridotta[b][a] -= matrice_ridotta[i][a];
 					}
 					termine_noto_ridotto[b] -= termine_noto_ridotto[i];

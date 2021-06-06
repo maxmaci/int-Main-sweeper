@@ -12,34 +12,6 @@
 #include <vector>		// classe vector
 
 template <typename T>
-class Vettore {				//TO DO: sistemare la questione dei nomi della classe
-private:
-	int dimensione;	// dimensione >= 0
-	std::vector<T> data;
-public:
-	Vettore(int, T = T());
-	int size() const { return dimensione; } ;
-	T operator[](int) const;
-	T& operator[](int);
-};
-
-template <typename T>
-Vettore<T>::Vettore(int dimensione, T elemento) {
-	if (dimensione < 0) throw std::domain_error("Dimensione vettore non lecita.");
-	data.resize(dimensione, elemento);
-}
-
-template <typename T>
-T Vettore<T>::operator[](int i) const {
-	return data.at(i);
-}
-
-template <typename T>
-T& Vettore<T>::operator[](int i) {
-	return data.at(i);
-}
-
-template <typename T>
 int trova_indice_elemento(const std::vector<T>& vettore, T elemento, int indice_partenza = 0)
 {
 	if (indice_partenza > vettore.size()) throw std::range_error("indice di partenza non lecito");

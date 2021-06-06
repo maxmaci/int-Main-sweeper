@@ -6,8 +6,6 @@
 
 #include "vettore.h"
 
-// TO DO: usare una classe Vettore personalizzata (vedi Padovani) in modo che non si possa per errore ridimensionare una riga al di fuori delle dimensioni prestabilite
-
 template <typename T>
 class Matrice
 {

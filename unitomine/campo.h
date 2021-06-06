@@ -113,8 +113,6 @@ public:
 	// Conta quanti numeri sono presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	int conta_numeri_vicini(int i, int j) const; // TO DO: l'unico uso che ne facciamo è di verificare se ce ne sono, non quanti. Potrebbe sostituirlo con un conta se numeri vicini
 
-	// TO DO: sostituire non scavati e bandiere vicine col metodo conta vicini di matrice, spostandolo qui - non ha senso contare gli elementi vicini ad una matrice o no?
-
 	/* FUNZIONI DI STAMPA */
 	// Stampa in modo carino il campo, con attorno le coordinate per facilitare l'utente.
 	friend std::ostream& operator<<(std::ostream&, const Campo&);

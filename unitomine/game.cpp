@@ -80,16 +80,17 @@ int main()
 		/* SCHERMATA PRINCIPALE */
 
 		// Piccola ASCII art con il titolo; il prefisso R"( ... )" indica che il contenuto delle parentesi
-		// viene stampato così com'è, quindi '\' NON è prefisso per alcun "code" e.g. \n o \t.
+		// viene stampato così com'è, quindi '\' NON è prefisso per alcun carattere speciale tipo \n o \t.
 
 			std::cout << R"(
-  _    _       _ _        __  __ _            
- | |  | |     (_) |      |  \/  (_)           
- | |  | |_ __  _| |_ ___ | \  / |_ _ __   ___ 
- | |  | | '_ \| | __/ _ \| |\/| | | '_ \ / _ \
- | |__| | | | | | || (_) | |  | | | | | |  __/
-  \____/|_| |_|_|\__\___/|_|  |_|_|_| |_|\___|
-                                                                                      
+ _       _                     _        ____                                        
+(_)     | |                   (_)      / /\ \                                       
+ _ _ __ | |_   _ __ ___   __ _ _ _ __ | |  | |_____      _____  ___ _ __   ___ _ __ 
+| | '_ \| __| | '_ ` _ \ / _` | | '_ \| |  | / __\ \ /\ / / _ \/ _ \ '_ \ / _ \ '__|
+| | | | | |_  | | | | | | (_| | | | | | |  | \__ \\ V  V /  __/  __/ |_) |  __/ |   
+|_|_| |_|\__| |_| |_| |_|\__,_|_|_| |_| |  | |___/ \_/\_/ \___|\___| .__/ \___|_|   
+                                       \_\/_/                      | |              
+                                                                   |_|              
 )";
 		std::cout << "Un gioco in C++ programmato da Massimo Bertolotti e Guido Buffa." << std::endl << std::endl;
 
