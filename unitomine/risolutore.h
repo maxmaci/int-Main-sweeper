@@ -591,26 +591,25 @@ void Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 			long double numeratore = 0;
 			long double denominatore = 0;
 
-			for (std::map<int, Matrice<bool>>::iterator it = possibilita_per_sezione[i].begin(); it != possibilita_per_sezione[i].end(); it++)
+			for (std::map<int, Matrice<bool>>::const_iterator it = possibilita_per_sezione[i].cbegin(); it != possibilita_per_sezione[i].cend(); it++)
 			{
 				long double calcolo_parziale = 0;
 
-				for (int k = 0; k < possibilita_per_sezione.size(); k++)
+				if (celle_non_scavate_fuori_bordo == 0) calcolo_parziale = 1;
+				else
 				{
-					if (k != i)
+					for (int k = 0; k < possibilita_per_sezione.size(); k++)
 					{
-						for (std::map<int, Matrice<bool>>::iterator kt = possibilita_per_sezione[k].begin(); kt != possibilita_per_sezione[k].end(); kt++)
+						if (k != i)
 						{
-							calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first - (*kt).first);
+							for (std::map<int, Matrice<bool>>::const_iterator kt = possibilita_per_sezione[k].cbegin(); kt != possibilita_per_sezione[k].cend(); kt++)
+							{
+								calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first - (*kt).first);
+							}
 						}
 					}
-					//else
-					//{
-					//	calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
-					//}
-
+					calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
 				}
-				calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first);
 
 				denominatore += (*it).second._righe() * calcolo_parziale;
 				numeratore += somma_elementi((*it).second.colonna(j)) * calcolo_parziale;
