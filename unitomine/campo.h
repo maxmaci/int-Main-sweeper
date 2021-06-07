@@ -118,7 +118,7 @@ public:
 	friend std::ostream& operator<<(std::ostream&, const Campo&);
 };
 
-// Genera il campo di gioco, verifica che le dimensioni fornite dall'utente siano accettabili (il campo deve essere un rettangolo compreso di dimensioni minime 2x2 e dimensioni massime 50x50).
+// COSTRUTTORE: Genera il campo di gioco, verifica che le dimensioni fornite dall'utente siano accettabili (il campo deve essere un rettangolo compreso di dimensioni minime 2x2 e dimensioni massime 50x50).
 // Verifica anche che il numero di mine sia conforme con la convenzione di Ginevra (deve essere compreso tra 1 e area-del-campo - 1).
 // INPUT: 
 // •  (int) input_altezza: altezza del campo
@@ -139,7 +139,7 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 	status = '-';
 }
 
-// Genera il campo di gioco a partire dallo schema con mine fornito in input, verificando che sia valido (rettangolare, con condizioni sulle dimensioni e sulle mine come l'altro costruttore).
+// COSTRUTTORE: Genera il campo di gioco a partire dallo schema con mine fornito in input, verificando che sia valido (rettangolare, con condizioni sulle dimensioni e sulle mine come l'altro costruttore).
 // INPUT: 
 // •  Matrice<bool> campo_input: campo nascosto con le mine già piazzate
 Campo::Campo(Matrice<bool> campo_input)
