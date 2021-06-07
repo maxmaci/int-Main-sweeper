@@ -153,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="epic_scheme.txt" />
+    <Text Include="LEGGIMI.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

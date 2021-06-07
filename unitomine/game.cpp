@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 	// <dimensione massima delle sezioni per il metodo probabilistico del risolutore> è un intero strettamente positivo; il valore consigliato è 20.
 	if (argc != 2) {
 		std::cerr	<< "Argomenti di compilazione non corretti.\n"
-					<< "Utilizzo: game <dimensione massima delle sezioni per il metodo probabilistico del risolutore>." << std::endl;
+					<< "Utilizzo: game <dimensione massima della sezione di incognite che il risolutore può controllare per il metodo probabilistico>." << std::endl;
 	}	
 	else
 	{

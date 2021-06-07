@@ -1,0 +1,27 @@
+﻿NOME DEL PROGETTO: "int Main()sweeper"
+
+AUTORI: Massimo Bertolotti (Matricola n° 919899) e Guido Buffa (Matricola n° 915640)
+
+PROBLEMA: Il programma cerca di implementare in C++ il gioco del Campo Minato e un risolutore automatico per esso.
+•  Il gioco ha diverse difficoltà di gioco predefinite (FACILE: 9x9 con 10 mine, INTERMEDIO: 16x16 con 40 mine, DIFFICILE: 16x30 con 99 mine), nonchè una
+modalità per creare campi PERSONALIZZATI (con un campo di dimensioni minime 2x2 fino a 50x50, con un numero di mine compreso fra 1 e 'altezza * larghezza - 1').
+• Che devo metterci??? help guido
+
+CLASSI: 
+• Matrice: implementa una template per matrici; l'implementazione è simile alla classe Matrix fornita durante le lezioni ma, per motivi di incompatibilità
+  di quest'ultima classe (basata su una ulteriore classe Vettore) con il tipo bool, è basata invece su std::vector<std::vector<T> >. Non sono state
+  implementati metodi presenti in Matrix che non venissero utilizzati ai fini del programma, ma è stato implementato un metodo di risoluzione di un sistema
+  con il metodo di Gauss.
+• Campo: implementa il campo da gioco di Campo Minato, usando in particolare una matrice Booleana per contenere le informazioni sulla posizione delle mine
+  e una matrice di interi per contenere le informazioni visibili al giocatore (celle non scavate, numeri, celle vuote, bandiere ed eventualmente mine)
+• Risolutore: implementa il risolutore automatico a partire da una partita di Campo Minato; per risolvere al meglio la partita usa 4 metodi differenti, da quelli
+  assolutamente certi di scavare (o bandierare) correttamente le celle per arrivare a quelli che utilizzano metodi probabilistici o casuali per risolvere eventuali empasse
+  ottenuti coi metodi precedenti.
+INDICAZIONI SULL'USO: Il programma deve essere compilato con argomento 'game.cpp <dimensione massima della sezione di incognite che il risolutore può controllare per il metodo probabilistico>';
+infatti, uno dei metodi di risoluzione automatica è particolarmente intensiva computazionalmente e sopra il valore sperimentale ottimale di '20' può impiegare
+parecchio tempo. Lasciamo tuttavia la possibilità di cambiare il parametro e verificare il funzionamento del metodo probabilistico anche con valori maggiori
+- a rischio e pericolo dell'utente (e della sua macchina).
+
+RIFERIMENTI:
+• Per l'algoritmo di base del metodo gaussiano e del metodo probabilistico rimandiamo al paper di A. Fowler, A. Young "Minesweeper: A Statistical and Computational Analysis": https://research.wsulibs.wsu.edu/xmlui/bitstream/handle/2376/2460/Fowler%2C%20A.%20and%20Young%20A.%20%20Minesweeper%20a%20statistical%20and%20computational.pdf .
+• Per l'algoritmo usato per il metodo scava rimandiamo all'algoritmo del "Flood fill": https://en.wikipedia.org/wiki/Flood_fill .
