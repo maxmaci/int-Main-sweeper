@@ -16,7 +16,7 @@ CLASSI:
   con il metodo di Gauss.
 • Campo: implementa il campo da gioco di Campo Minato, usando in particolare una matrice Booleana per contenere le informazioni sulla posizione delle mine
   e una matrice di interi per contenere le informazioni visibili al giocatore (celle non scavate, numeri, celle vuote, bandiere ed eventualmente mine)
-• Risolutore: implementa il risolutore automatico a partire da una partita di Campo Minato; per risolvere al meglio la partita usa 4 metodi differenti, da quelli
+• Risolutore: implementa Il Risolutore™ automatico a partire da una partita di Campo Minato; per risolvere al meglio la partita usa 4 metodi differenti, da quelli
   assolutamente certi di scavare (o bandierare) correttamente le celle per arrivare a quelli che utilizzano metodi probabilistici o casuali per risolvere eventuali empasse
   ottenuti coi metodi precedenti.
 INDICAZIONI SULL'USO: Il programma deve essere compilato con argomento 'game.cpp <dimensione massima della sezione di incognite che Il Risolutore™ può controllare per il metodo probabilistico>';
