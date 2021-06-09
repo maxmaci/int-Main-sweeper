@@ -50,11 +50,15 @@ int main(int argc, char* argv[])
 
 		/* FLAG per controllare i loop di gioco */
 
-		// uscita_programma : se è 'true', bypassa tutti i loop successivi ed esce dal programma
+		// uscita_programma : se è 'true', bypassa tutti i loop successivi ed esce dal programma.
 
 		bool uscita_programma = false;
 
+		// in_gioco : se è 'false', esce e bypassa i loop di gioco.
+
 		bool in_gioco = false;
+
+		// in_risolutore : se è 'false', esce e bypassa il loop del risolutore.
 
 		bool in_risolutore = false;
 
@@ -75,7 +79,7 @@ int main(int argc, char* argv[])
 
 		while (!uscita_programma)
 		{
-			Campo partita(9, 9, 10);
+			//Campo partita(9, 9, 10);
 
 			/* SCHERMATA PRINCIPALE */
 
@@ -109,7 +113,7 @@ int main(int argc, char* argv[])
 				<< u8"• PERSONALIZZATO\t\t\t\t\t(5)\n"
 				<< u8"• ESCI DAL GIOCO \t\t\t\t\t(6)" << std::endl;
 
-			menu_principale(partita, uscita_programma, in_gioco, campo_generato, prima_mossa_effettuata);
+			Campo partita = menu_principale(uscita_programma, in_gioco, campo_generato);
 
 			/* LOOP DI GIOCO*/
 			// A meno di uscire per tornare al menù principale, tutte le azioni vengono svolte in questo loop
@@ -162,11 +166,11 @@ int main(int argc, char* argv[])
 				if (partita._status() == '-')
 				{
 					std::cout << "OPZIONI:\n"
-						<< u8"• Torna al gioco.\t\t(1)\n"
+						<< u8"• Torna al gioco.\t\t\t\t\t(1)\n"
 						<< u8"• Ricomincia la partita con lo stesso schema di mine.\t(2)\n"
-						<< u8"• Rivela il campo.\t\t(3)\n"
-						<< u8"• Torna al menù principale.\t(4)\n"
-						<< u8"• Esci dal gioco.\t\t(5)" << std::endl;
+						<< u8"• Rivela il campo.\t\t\t\t\t(3)\n"
+						<< u8"• Torna al menù principale.\t\t\t\t(4)\n"
+						<< u8"• Esci dal gioco.\t\t\t\t\t(5)" << std::endl;
 
 					menu_opzioni(partita, uscita_programma, in_risolutore, in_gioco, prima_mossa_effettuata);
 

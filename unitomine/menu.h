@@ -51,9 +51,8 @@ bool input_partita_personalizzata_lecito(std::vector<std::string> input)
 // Funzione contenente il menù della creazione di una partita personalizzata. Rimane nel loop (e ripropone all'utente il prompt) finché l'input
 // non viene dato correttamente.
 // OUTPUT:
-// • (Campo): il campo personalizzato
-
-void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con campo personalizzato, se scelta nel menu
+// • (Campo): il campo personalizzato secondo le condizioni fornite come input (tramite leggi_input() DENTRO al corpo della funzione)
+Campo partita_personalizzata()
 {
 	std::cout	<< "Inserisci altezza (compresa fra 2 e 50), larghezza (compresa fra 2 e 50) e numero di mine (compreso fra 1 e altezza * larghezza - 1)\n"
 				<< "nel formato 'altezza larghezza mine'." << std::endl;
@@ -69,8 +68,7 @@ void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con
 			
 			if (altezza > 1 && altezza <= 50 && larghezza > 1 && larghezza <= 50 && mine >= 1 && mine < altezza * larghezza)
 			{
-				campo = Campo(altezza, larghezza, mine);
-				return;
+				return Campo(altezza, larghezza, mine);
 			}
 			else
 			{
@@ -84,9 +82,12 @@ void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con
 	}
 }
 
-void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool& campo_generato, bool& prima_mossa_effettuata)
+// Funzione contenente il menù principale. Rimane nel loop (e ripropone all'utente il prompt) finché l'input non viene dato correttamente.
+// OUTPUT:
+// • (Campo): il campo scelto secondo le condizioni fornite come input
+Campo menu_principale(bool& uscita_programma, bool& in_gioco, bool& campo_generato)
 {
-	std::ifstream f("epic_scheme.txt");  //legge il file così denominato per utilizzarlo come schema predefinito. Per usare uno schema 
+	std::ifstream f("epic_scheme.txt");  // Legge il file così denominato per utilizzarlo come schema per la EPIC MODE. 
 	
 	while (true)
 	{
@@ -97,40 +98,35 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool&
 			int comando_opzioni = std::stoi(input[0]);
 			switch (comando_opzioni)
 			{
-			case 1:
-				gioco = Campo(9, 9, 10);
+			case 1: // PRINCIPIANTE
 				in_gioco = true;
-				return;
-			case 2:
-				gioco = Campo(16, 16, 40);
+				return Campo(9, 9, 10);
+			case 2: // INTERMEDIO
 				in_gioco = true;
-				return;
-			case 3:
-				gioco = Campo(16, 30, 99);
+				return Campo(16, 16, 40);
+			case 3: // ESPERTO
 				in_gioco = true;
-				return;
-			case 4:
+				return Campo(16, 30, 99);
+			case 4: // EPIC MODE: easter egg, legge il campo contenuto in f: il campo contiene la scritta
+					// "NEVER GONNA GIVE YOU UP" dall'omonima canzone di Rick Astley. La funzione può essere generalizzata in "carica campo personalizzato",
+					// se desiderato, modificando opportunamente il file .txt . 
 				std::cout << "We're no stranger to love..." << std::endl;
-				gioco = Campo(leggi_campo_da_file(f));
-				campo_generato = true;  //visto che viene utilizzato uno schema predefinito dal file .txt campo_generato passa a true, evita che venga
-										//generato di nuovo 
-										//prima_mossa_effettuata = true;
+				campo_generato = true;  // Visto che viene utilizzato uno schema predefinito dal file .txt campo_generato passa a true, evita che venga
+										// generato di nuovo il campo randomicamente
 				in_gioco = true;
-				return;
-			case 5:
-				partita_personalizzata(gioco);
+				return Campo(leggi_campo_da_file(f));
+			case 5: // PERSONALIZZATA
 				in_gioco = true;
-				return;
-			case 6:
+				return partita_personalizzata();
+			case 6: // ESCI DALLA PARTITA
 				uscita_programma = true;
-				return;
-			case 42:
+				return Campo(9, 9, 10);		// Restituiamo un campo del tutto futile, dato che non verrà giocato.
+			case 42: // EASTER EGG basato sulla "Guida Galattica per Autostoppisti", da cui è tratta la citazione stampata a schermo e il numero 42, usato per le dimensioni del campo.
 				std::cout << u8"\"La Vita, l'Universo, e il Tutto. C'è una risposta. Ma ci devo pensare.\"" << std::endl;
-				gioco = Campo(42, 42, 420);
 				in_gioco = true;
-				return;
+				return Campo(42, 42, 420);
 			default:
-				std::cout << u8"Riprova! Devi scrivere un numero da 1 a 6! smh "
+				std::cout << u8"Riprova! Devi scrivere un numero da 1 a 6."
 				<< std::endl;
 			}
 		}
@@ -142,8 +138,15 @@ void menu_principale(Campo& gioco, bool& uscita_programma, bool& in_gioco, bool&
 	}
 }
 
-//menu di fine partita con risolutore (vittoria o sconfitta), resetta stato di gioco
-void menu_opzioni_breve(Campo& gioco, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
+// Funzione contenente il menù delle opzioni "corto". Viene chiamato se la partita è stata svelata oppure alla fine di una partita (vinta o persa).
+// Rimane nel loop (e ripropone all'utente il prompt) finché l'input non viene dato correttamente: nel menù viene proposto la possibilità di tornare
+// al menù principale OPPURE di uscire dal gioco.
+// INPUT:
+// • (Campo&) partita: la partita
+// • (bool) uscita_programma: se è 'true', bypassa tutti i loop successivi ed esce dal programma.
+// • (bool) in_risolutore: se è 'false', esce e bypassa il loop del risolutore.
+// • (bool) in_gioco: se è 'false', esce e bypassa i loop di gioco.
+void menu_opzioni_breve(Campo& partita, bool& uscita_programma, bool& in_risolutore, bool& in_gioco)
 {
 	std::cout << "OPZIONI:\n"
 		<< u8"• Torna al menù principale.\t (1)\n"
@@ -160,7 +163,7 @@ void menu_opzioni_breve(Campo& gioco, bool& uscita_programma, bool& in_risolutor
 			switch (comando_opzioni)
 			{
 			case 1:
-				gioco.reset();
+				partita.reset();
 
 				in_gioco = false;
 				in_risolutore = false;
@@ -182,6 +185,16 @@ void menu_opzioni_breve(Campo& gioco, bool& uscita_programma, bool& in_risolutor
 	}
 }
 
+// Funzione contenente il menù delle opzioni "completo". Viene chiamato col comando 'O' (lettera) durante il gioco.
+// Rimane nel loop (e ripropone all'utente il prompt) finché l'input non viene dato correttamente.
+// INPUT:
+// • (Campo&) partita: la partita
+// • (bool) uscita_programma: se è 'true', bypassa tutti i loop successivi ed esce dal programma.
+// • (bool) in_risolutore: se è 'false', esce e bypassa il loop del risolutore.
+// • (bool) in_gioco: se è 'false', esce e bypassa i loop di gioco.
+// • (bool) prima_mossa_effettuata : ad inizio partita è posta come 'false'; quando si fa la prima mossa entrando in un IF si randomizza
+// il campo di mine in modo da generare uno spazio vuoto (o con numeri) 3x3 attorno alla casella scelta, poi viene settata come 'true'
+// in modo da non rigenerare le mine ogni volta 
 void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, bool& in_gioco, bool& prima_mossa_effettuata)
 {
 	while (true)
@@ -227,6 +240,18 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 		}
 	}
 }
+
+// Funzione che interpreta l'input ricevuto dal giocatore durante il loop di gioco per convertirlo o in un opportuno comando di gioco
+// oppure per attivare il menù delle opzioni oppure per attivare il risolutore.
+// INPUT:
+// • (Campo&) partita: la partita
+// • (int) riga: l'indice della riga della cella su cui compieremo il comando.
+// • (int) colonna: l'indice della della cella su cui compieremo il comando.
+// • (char) comando: la lettera che identifica il comando che andremo a compiere.
+// • (bool) in_risolutore: se è 'false', esce e bypassa il loop del risolutore.
+// • (bool) prima_mossa_effettuata : ad inizio partita è posta come 'false'; quando si fa la prima mossa entrando in un IF si randomizza
+// il campo di mine in modo da generare uno spazio vuoto (o con numeri) 3x3 attorno alla casella scelta, poi viene settata come 'true'
+// in modo da non rigenerare le mine ogni volta 
 
 void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando, bool& in_risolutore, bool& prima_mossa_effettuata)
 {
@@ -279,6 +304,7 @@ void interpreta_mossa(Campo& partita, int& riga, int& colonna, char& comando, bo
 	}
 }
 
+/*
 void inizializza_risolutore(Campo& partita)
 {
 	while (true)
@@ -302,5 +328,6 @@ void inizializza_risolutore(Campo& partita)
 		std::cout << "Comando non riconosciuto o lecito. Riprova!" << std::endl;
 	}
 }
+*/
 
 #endif // __MENU_H__
