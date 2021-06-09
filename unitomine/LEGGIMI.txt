@@ -40,14 +40,15 @@ CHAR | NOME								 | CODE
 │	 | Box Drawings Light Vertical		 | U+2502
 
 In particolare, è ottimizzato per l'utilizzo del font DejaVuSansMono.
--	Per l'utenza Windows: alleghiamo il un file .zip contenente i .ttf del font, bisognerà aprire 
-	il file denominato "DejaVuSansMono" e cliccare su "Installa". A questo punto è necessario cercare e aprire "Editor del Registro di sistema". All'interno dell'Editor copiate
-	e inserite:
+-	Per l'utenza Windows: alleghiamo il un file .zip contenente i .ttf del font, bisognerà aprire il file denominato "DejaVuSansMono" e cliccare su
+	"Installa". A questo punto è necessario cercare e aprire "Editor del Registro di sistema". All'interno dell'Editor copiate e inserite:
 		HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
-	come percorso. Bisognerà ora utilizzare "Click destro > Nuovo > Valore stringa". Scegliete un numero che NON sia già presente tra l'elenco dei font in questa schermata (ES: "001").
-	Fate doppio click e in "Dati valore" inserite il nome del font ("DejaVuSansMono", comprese le maiuscole e senza spazi).
-	A questo punto potrete utilizzare DejaVuSansMono come font per il terminale: aprite il Prompt dei comandi e fate click destro sulla barra del titolo, andate su 
-	"Predefinite > Tipo di carattere" e scegliete DejaVuSansMono, dopodiché cliccate su "OK". A questo punto DejaVuSansMono sarà il font predefinito per il vostro terminale!
+	come percorso. Bisognerà ora utilizzare "Click destro > Nuovo > Valore stringa". Scegliete un numero che NON sia già presente tra l'elenco dei font 
+	in questa schermata (ES: "001"). Fate doppio click e in "Dati valore" inserite il nome del font ("DejaVuSansMono", comprese le maiuscole e senza spazi).
+	A questo punto potrete utilizzare DejaVuSansMono come font per il terminale: aprite il Prompt dei comandi e fate click destro sulla barra del titolo,
+	andate su :
+		Predefinite > Tipo di carattere
+	e scegliete DejaVuSansMono, dopodiché cliccate su "OK". A questo punto DejaVuSansMono sarà il font predefinito per il vostro terminale!
  
 
 RIFERIMENTI:

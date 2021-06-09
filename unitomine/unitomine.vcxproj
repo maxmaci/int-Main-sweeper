@@ -155,6 +155,9 @@
     <Text Include="epic_scheme.txt" />
     <Text Include="LEGGIMI.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="dejavu-sans-mono.zip" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
