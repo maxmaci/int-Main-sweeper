@@ -29,7 +29,7 @@ INDICAZIONI SULL'USO:
 • Il programma necessita di font che supportino i caratteri unicode seguenti:
 
 CHAR     | NOME								 | CODE
------+-----------------------------------+--------
+---------+---------------------------------------------------------------+--------
 ✱	 | Heavy Asterisk						 | U+2731
 ⚑	 | Black Flag							 | U+2691
 ⎕	 | APL Functional Symbol Quad		 			 | U+2395
