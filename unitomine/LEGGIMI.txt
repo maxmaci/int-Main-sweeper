@@ -6,12 +6,12 @@ PROBLEMA: Il programma cerca di implementare in C++ il gioco del Campo Minato e 
 •  Il gioco ha diverse difficoltà di gioco predefinite (FACILE: 9x9 con 10 mine, INTERMEDIO: 16x16 con 40 mine, DIFFICILE: 16x30 con 99 mine), nonchè una
    modalità per creare campi di dimensione PERSONALIZZATA (con un campo di dimensioni minime 2x2 fino a 50x50, con un numero di mine compreso fra 1 e 'altezza * larghezza - 1').
    È anche disponibile una modalità EPICA di dimensione e numero di mine sconosciuto all'utente, con schema fisso e che non viene generato casualmente.
-•  Dopo aver scelto la modalità di gioco è possibile decidere se giocare personalmente o utilizzare invece Il Risolutore™ per vincere¹ la partita al posto tuo!
+•  Dopo aver scelto la modalità di gioco è possibile decidere se giocare personalmente o utilizzare invece Il Risolutore™ per vincere¹ la partita al posto del giocatore!
 
 
 CLASSI: 
-• Matrice: implementa una template per matrici; l'implementazione è simile alla classe Matrix fornita durante le lezioni ma, per motivi di incompatibilità
-  di quest'ultima classe (basata su una ulteriore classe Vettore) con il tipo bool, è basata invece su std::vector<std::vector<T> >. Non sono state
+• Matrice: implementa una classe template per matrici; l'implementazione è simile alla classe Matrix fornita durante le lezioni ma, per motivi di incompatibilità
+  di quest'ultima classe (basata su una ulteriore classe Vettore) con il tipo bool, è basata invece su std::vector<std::vector<T> >. Non sono stati
   implementati metodi presenti in Matrix che non venissero utilizzati ai fini del programma, ma è stato implementato un metodo di risoluzione di un sistema
   con il metodo di Gauss.
 • Campo: implementa il campo da gioco di Campo Minato, usando in particolare una matrice Booleana per contenere le informazioni sulla posizione delle mine
@@ -19,18 +19,35 @@ CLASSI:
 • Risolutore: implementa Il Risolutore™ automatico a partire da una partita di Campo Minato; per risolvere al meglio la partita usa 4 metodi differenti, da quelli
   assolutamente certi di scavare (o bandierare) correttamente le celle per arrivare a quelli che utilizzano metodi probabilistici o casuali per risolvere eventuali empasse
   ottenuti coi metodi precedenti.
-INDICAZIONI SULL'USO: Il programma deve essere compilato con argomento 'game.cpp <dimensione massima della sezione di incognite che Il Risolutore™ può controllare per il metodo probabilistico>';
-infatti, uno dei metodi di risoluzione automatica è particolarmente intensiva computazionalmente e sopra il valore sperimentale ottimale di '20' può impiegare
-parecchio tempo. Lasciamo tuttavia la possibilità di cambiare il parametro e verificare il funzionamento del metodo probabilistico anche con valori maggiori
-- a rischio e pericolo dell'utente (e della sua macchina).
-Il programma è ottimizzato per l'utilizzo del font DejaVuSansMono. Per l'utenza Windows: alleghiamo il un file .zip contenente i .ttf del font, bisognerà aprire 
-il file denominato "DejaVuSansMono" e cliccare su "Installa". A questo punto è necessario cercare e aprire "Editor del Registro di sistema". All'interno dell'Editor copiate
-e inserite:
-	HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
-come percorso. Bisognerà ora utilizzare "Click destro > Nuovo > Valore stringa". Scegliete un numero che NON sia già presente tra l'elenco dei font in questa schermata (ES: "001").
-Fate doppio click e in "Dati valore" inserite il nome del font ("DejaVuSansMono", comprese le maiuscole e senza spazi).
-A questo punto potrete utilizzare DejaVuSansMono come font per il terminale: aprite il Prompt dei comandi e fate click destro sulla barra del titolo, andate su 
-"Predefinite > Tipo di carattere" e scegliete DejaVuSansMono, dopodiché cliccate su "OK". A questo punto DejaVuSansMono sarà il font predefinito per il vostro terminale!
+
+
+INDICAZIONI SULL'USO:
+• Il programma deve essere compilato con argomento 'game.cpp <dimensione massima della sezione di incognite che Il Risolutore™ può controllare per il metodo probabilistico>';
+infatti, uno dei metodi di risoluzione automatica è particolarmente intensivo computazionalmente e sopra il valore sperimentale ottimale di '20' può impiegare
+parecchio tempo. Lasciamo tuttavia la possibilità di cambiare il parametro e verificare il funzionamento del metodo probabilistico anche con valori maggiori, a rischio e pericolo dell'utente (e della sua macchina).
+• Il programma necessita di font che supportino i caratteri unicode seguenti:
+
+CHAR | NOME								 | CODE
+-----+-----------------------------------+--------
+✱	 | Heavy Asterisk					 | U+2731
+⚑	 | Black Flag						 | U+2691
+⎕	 | APL Functional Symbol Quad		 | U+2395
+┌	 | Box Drawings Light Down and Right | U+250C
+└	 | Box Drawings Light Up and Right	 | U+2514
+┐	 | Box Drawings Light Down and Left	 | U+2510
+┘	 | Box Drawings Light Up and Left	 | U+2518
+─	 | Box Drawings Light Horizontal	 | U+2500
+│	 | Box Drawings Light Vertical		 | U+2502
+
+In particolare, è ottimizzato per l'utilizzo del font DejaVuSansMono.
+-	Per l'utenza Windows: alleghiamo il un file .zip contenente i .ttf del font, bisognerà aprire 
+	il file denominato "DejaVuSansMono" e cliccare su "Installa". A questo punto è necessario cercare e aprire "Editor del Registro di sistema". All'interno dell'Editor copiate
+	e inserite:
+		HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
+	come percorso. Bisognerà ora utilizzare "Click destro > Nuovo > Valore stringa". Scegliete un numero che NON sia già presente tra l'elenco dei font in questa schermata (ES: "001").
+	Fate doppio click e in "Dati valore" inserite il nome del font ("DejaVuSansMono", comprese le maiuscole e senza spazi).
+	A questo punto potrete utilizzare DejaVuSansMono come font per il terminale: aprite il Prompt dei comandi e fate click destro sulla barra del titolo, andate su 
+	"Predefinite > Tipo di carattere" e scegliete DejaVuSansMono, dopodiché cliccate su "OK". A questo punto DejaVuSansMono sarà il font predefinito per il vostro terminale!
  
 
 RIFERIMENTI:

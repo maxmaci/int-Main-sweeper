@@ -6,6 +6,12 @@
 
 #include "vettore.h"
 
+/* CLASSE MATRICE */
+// Implementa una classe template per matrici; l'implementazione è simile alla classe Matrix fornita durante le lezioni ma, per motivi di incompatibilità
+// di quest'ultima classe (basata su una ulteriore classe Vettore) con il tipo bool, è basata invece su std::vector<std::vector<T> >. Non sono stati
+// implementati metodi presenti in Matrix che non venissero utilizzati ai fini del programma, ma è stato implementato un metodo di risoluzione di un
+// sistema lineare con il metodo di Gauss, necessario per il metodo Gaussiano della classe Risolutore.
+
 template <typename T>
 class Matrice
 {
@@ -65,7 +71,12 @@ public:
 	std::pair<Matrice<T>, std::vector<T>> riduzione_gaussiana_con_termine_noto(const std::vector<T>&);
 };
 
-// Generazione della matrice
+// COSTRUTTORE: Crea una matrice di tipo T con ogni elemento di essa pari ad un elemento dato in input, verificando che le dimensioni fornite dall'utente siano accettabile (ergo non negative).
+// Se non viene fornito alcun elemento in input viene messo di default l'elemento nullo di T, cioè T().
+// INPUT: 
+// •  (int) numero_righe: numero delle righe
+// •  (int) numero_colonne: numero delle colonne
+// •  (int) elemento: elemento con cui 'riempire' la matrice
 template <typename T>
 Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
 {
@@ -75,7 +86,9 @@ Matrice<T>::Matrice(int numero_righe, int numero_colonne, T elemento)
 	data.resize(numero_righe, std::vector<T>(numero_colonne, elemento));
 }
 
-// Metodo di stampa a terminale di matrici, ->DEBUG
+// Stampa a terminale di matrici. È tenuta esclusivamente per motivi di DEBUG.
+// INPUT: 
+// •  (const Matrice<T>&) matrice: la matrice da stampare
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const Matrice<T>& matrice)
 {
@@ -90,7 +103,9 @@ std::ostream& operator<<(std::ostream& os, const Matrice<T>& matrice)
 	return os;
 }
 
-// Metodo per sostituire tutti gli elementi della griglia con l'elemento dato
+// Sostituisce tutti gli elementi della matrice con l'elemento dato.
+// INPUT: 
+// •  (T) elemento: l'elemento con cui sostituire gli elementi della matrice.
 template <typename T>
 void Matrice<T>::sostituisci_tutti(T elemento) {
 	for (int i = 0; i < righe; i++)
@@ -102,7 +117,11 @@ void Matrice<T>::sostituisci_tutti(T elemento) {
 	}
 }
 
-// Legge una colonna j della matrice data come vettore
+// Restituisce la j-esima colonna (con j=0 la prima colonna) della matrice come std::vector<T>.
+// INPUT: 
+// •  (int) j: indice della colonna.
+// OUTPUT:
+// •  (std::vector<T>): la colonna della matrice
 template <typename T>
 std::vector<T> Matrice<T>::colonna(int j) const {
 	std::vector<T> col;
@@ -113,7 +132,9 @@ std::vector<T> Matrice<T>::colonna(int j) const {
 	return col;
 }
 
-// Inserisce una nuova riga in fondo alla matrice data, controllando che abbia dimensioni compatibili
+// Inserisce una nuova riga in fondo alla matrice data, controllando che abbia dimensioni compatibili.
+// INPUT: 
+// •  (const std::vector<T>&) riga: riga da aggiungere in fondo alla matrice.
 template <typename T>
 void Matrice<T>::push_back(const std::vector<T>& riga) {
 	if (colonne != 0 && riga.size() != colonne) throw std::domain_error("dimensioni della nuova riga non compatibili con la matrice");
@@ -122,7 +143,10 @@ void Matrice<T>::push_back(const std::vector<T>& riga) {
 	if (colonne == 0) colonne = static_cast<int>(riga.size());
 }
 
-// Scambia due righe all'interno della matrice data
+// Scambia due righe all'interno della matrice data.
+// INPUT: 
+// •  (int) i: prima riga da scambiare.
+// •  (int) j: seconda riga da scambiare.
 template <typename T>
 void Matrice<T>::scambia_righe(int i, int j) {
 	std::vector<T> temp (data[j]);
@@ -130,21 +154,36 @@ void Matrice<T>::scambia_righe(int i, int j) {
 	data[i] = temp;
 }
 
-// Mantiene gli indici degli elementi della matrice tra 0 e numero di righe e colonne
+// Controlla se gli indici (i, j) possono essere indici di un cella della matrice.
+// INPUT: 
+// •  (int) i: indice della riga della potenziale cella.
+// •  (int) j: indice della colonna della potenziale cella.
+// OUTPUT:
+// •  (bool): 'true' se gli indici descrivono una cella effettiva della matrice, 'false' altrimenti
 template <typename T>
 bool Matrice<T>::indici_leciti(int i, int j) const
 {
-	return i >= 0 && i < righe&& j >= 0 && j < colonne;
+	return i >= 0 && i < righe && j >= 0 && j < colonne;
 }
 
-// Controlla che l'elemento T è nel posto i e j; NON restituisce un errore nel caso l'indice non sia lecito, bensì restituisce falso
+// Controlla che la cella (i, j) sia pari ad 'elemento'; NON restituisce un errore nel caso gli indici non siano leciti, bensì restituisce 'false'.
+// INPUT: 
+// •  (int) i: indice della riga della cella scelta.
+// •  (int) j: indice della colonna della cella scelta.
+// •  (T) elemento: elemento da confrontare con quello della cella (i, j).
+// OUTPUT:
+// •  (bool): 'true' se la cella (i, j) sta nella matrice ed è uguale a 'elemento', 'false' altrimenti.
 template <typename T>
 bool Matrice<T>::is_elemento(int i, int j, T elemento) const
 {
 	return indici_leciti(i,  j) && data[i][j] == elemento;
 }
 
-// Conta tutti gli elementi di un certo tipo all'interno della matrice data
+// Conta tutti le celle contenti 'elemento' all'interno della matrice data.
+// INPUT: 
+// •  (T) elemento: elemento da confrontare con quello delle celle della matrice.
+// OUTPUT:
+// •  (int): il numero di elementi pari a 'elemento'.
 template <typename T>
 int Matrice<T>::conta_tutti_elementi(T elemento) const
 {
@@ -160,7 +199,13 @@ int Matrice<T>::conta_tutti_elementi(T elemento) const
 	return k;
 }
 
-// Conta il numero di celle adiacenti a quella selezionata (verifica che non sia una cella del bordo se k=8)
+// Conta il numero di celle adiacenti a (i, j) uguali a 'elemento'. Controlla prima che la cella (i, j) sia effettivamente appartentente alla matrice.
+// INPUT: 
+// •  (int) i: indice della riga della cella scelta.
+// •  (int) j: indice della colonna della cella scelta.
+// •  (T) elemento: elemento da confrontare con quello delle celle adiacenti a (i, j).
+// OUTPUT:
+// •  (int): il numero di elementi attorno a (i, j) pari a 'elemento'.
 template <typename T>
 int Matrice<T>::conta_vicini(int i, int j, T elemento) const
 {
@@ -180,8 +225,13 @@ int Matrice<T>::conta_vicini(int i, int j, T elemento) const
 	return k;
 }
 
-// Template per contare il numero di celle adiacenti (completando il quadrato 3x3 circostante alla cella presa in considerazione) 
-// di un certo tipo (ne servono diverse versioni, per contare bandiere, celle vuote ecc)
+// Conta se almeno una delle celle adiacenti a (i, j) è uguale a 'elemento'. Controlla prima che la cella (i, j) sia effettivamente appartentente alla matrice.
+// INPUT: 
+// •  (int) i: indice della riga della cella scelta.
+// •  (int) j: indice della colonna della cella scelta.
+// •  (T) elemento: elemento da confrontare con quello delle celle adiacenti a (i, j).
+// OUTPUT:
+// •  (bool): 'true' se almeno una delle celle adiacenti coincide con 'elemento', 'false' altrimenti.
 template <typename T>
 bool Matrice<T>::conta_se_vicini(int i, int j, T elemento) const
 {
@@ -199,9 +249,13 @@ bool Matrice<T>::conta_se_vicini(int i, int j, T elemento) const
 	return false;
 }
 
-// Riduce le matrici tramite la riduzione gaussiana per matrici (passaggio necessario per il Metodo Gaussiano all'interno de Il Risolutore™)
+// Riduce la matrice (vista come sistema lineare) e un opportuno termine noto con la riduzione Gaussiana.
+// INPUT: 
+// •  (const std::vector<T>&) termine_noto: vettore che rappresenta il termine noto da ridurre insieme alla matrice a cui applichiamo il metodo
+// OUTPUT:
+// •  (std::pair<Matrice<T>, std::vector<T> >): coppia il cui primo elemento è la matrice ridotta, mentre il secondo è il termine noto ridotto.
 template <typename T>
-std::pair<Matrice<T>, std::vector<T>> Matrice<T>::riduzione_gaussiana_con_termine_noto(const std::vector<T>& termine_noto)
+std::pair<Matrice<T>, std::vector<T> > Matrice<T>::riduzione_gaussiana_con_termine_noto(const std::vector<T>& termine_noto)
 {
 	Matrice<T> matrice_ridotta = (*this);
 	std::vector<T> termine_noto_ridotto = termine_noto;

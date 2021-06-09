@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 					char comando = 'S';
 
 					std::cout << partita << std::endl;
-					std::cout << "Hai messo " << partita._numero_bandiere() << " bandiere su " << partita._mine() << " mine presenti." << std::endl;
+					std::cout << "Hai messo " << partita._bandiere() << " bandiere su " << partita._mine() << " mine presenti." << std::endl;
 
 					interpreta_mossa(partita, riga, colonna, comando, in_risolutore, prima_mossa_effettuata);
 

@@ -4,8 +4,8 @@
 
 #include "campo.h"
 
-//'leggi_campo_da_file' utilizza come schema predefinito per le mine quello fornito da un file .txt, il campo NON viene generato randomicamente,
-//converte i caratteri (- e *) rispettivamente in 0 e 1, indicando celle vuote e mine
+// Funzione che legge un file .txt e converte il contenuto nel campo nascosto di un Campo di Campo Minato.
+// La funzione converte i caratteri (- e *) rispettivamente in 0 e 1, indicando celle vuote e mine, pertanto il campo NON viene generato randomicamente.
 Campo leggi_campo_da_file(std::istream& is) {
 	Matrice<bool> campo_input;
 	std::string stringa;
@@ -25,17 +25,33 @@ Campo leggi_campo_da_file(std::istream& is) {
 /* FUNZIONI MENÙ */
 
 /* CONTROLLI sulla validità dell'input */
-bool input_menu_lecito(std::vector<std::string> input)  //Verifica che il comando per le operazioni nel menu sia della forma corretta (un numero intero)
-														//NB: l'input viene preso come vettore di stringhe formate solo da interi, viene quindi
-														//verificato che sia UNA stringa (->inserire '42' come input non dà errori)
+
+// Verifica che l'input per le operazioni nei menù (principale e delle opzioni) sia della forma corretta, cioè un numero intero positivo (nello
+// specifico, una stringa di cifre).
+// INPUT:
+// • (std::vector<std::string>) input: l'input dell'utente separato "parola per parola" dal metodo 'separa_spazi'
+// OUTPUT:
+// • 'true' se l'input è nella forma corretta, 'false' altrimenti.
+bool input_menu_lecito(std::vector<std::string> input) 
 {
 	return input.size() == 1 && solo_numeri(input[0]);
 }
 
-bool input_personalizzata_lecito(std::vector<std::string> input) //Verifica che il comando per le dimensioni del campo personalizzato sia lecito
+// Verifica che l'input per definire una partita personalizzata sia della forma corretta, cioè tre numero intero positivo (nello
+// specifico, una stringa di cifre).
+// INPUT:
+// • (std::vector<std::string>) input: l'input dell'utente separato "parola per parola" dal metodo 'separa_spazi'
+// OUTPUT:
+// 'true' se l'input è nella forma corretta, 'false' altrimenti.
+bool input_partita_personalizzata_lecito(std::vector<std::string> input)
 {
 	return input.size() == 3 && solo_numeri(input[0]) && solo_numeri(input[1]) && solo_numeri(input[2]);
 }
+
+// Funzione contenente il menù della creazione di una partita personalizzata. Rimane nel loop (e ripropone all'utente il prompt) finché l'input
+// non viene dato correttamente.
+// OUTPUT:
+// • (Campo): il campo personalizzato
 
 void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con campo personalizzato, se scelta nel menu
 {
@@ -45,7 +61,7 @@ void partita_personalizzata(Campo& campo) //Si entra nella modalità di gioco con
 	while (true)
 	{
 		std::vector<std::string> input = leggi_input();
-		if (input_personalizzata_lecito(input))
+		if (input_partita_personalizzata_lecito(input))
 		{
 			int altezza = std::stoi(input[0]);
 			int larghezza = std::stoi(input[1]);
@@ -181,7 +197,7 @@ void menu_opzioni(Campo& partita, bool& uscita_programma, bool& in_risolutore, b
 				return;
 			case 2:
 				partita.reset_campo_visibile();
-				partita.reset_numero_bandiere();
+				partita.reset_bandiere();
 
 				prima_mossa_effettuata = false;
 				return;

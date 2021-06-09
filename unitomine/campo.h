@@ -30,6 +30,15 @@ std::map<int, std::string > mappa_conversione
 
 typedef std::pair<int, int> Coord;
 
+/* CLASSE CAMPO */
+// Implementa il campo da gioco di Campo Minato. 
+// Usiamo una matrice Booleana ('campo_nascosto') per contenere le informazioni sulla posizione delle mine, mentre una matrice di interi ('campo_visibile')
+// contiene le informazioni visibili al giocatore (celle non scavate, numeri, celle vuote, bandiere ed eventualmente le mine esplose), che vengono stampati in modo visualmente carino
+// tramite la mappa qui sopra definita. Nei campi privati sono contenuti alcune informazioni globali della partita, come l'altezza e la larghezza del
+// campo, il numero delle mine ('mine'), il numero delle bandiere ('bandiere') e la situazione della partita.
+// I metodi privati comprendono metodi che operano direttamente con il campo nascosto, che non deve essere chiaramente accessibile ad un giocatore.
+// ...
+
 class Campo
 {
 private:
@@ -37,7 +46,7 @@ private:
 	int larghezza;						// 1 < larghezza < 50
 	int mine;							// 0 < mine < altezza * larghezza
 
-	int numero_bandiere;				// 0 <= numero_bandiere <= altezza * larghezza
+	int bandiere;						// 0 <= bandiere <= altezza * larghezza
 
 	char status;						// '-': nè persa, nè vinta; 'S': sconfitta; 'V': vittoria.
 
@@ -45,7 +54,8 @@ private:
 	Matrice<int> campo_visibile;
 
 /* METODI DI GIOCO */
-	void scava_celle(int, int);				// metodo che 'scava' le celle (utilizzando l'algoritmo di Fill usato ad es. in Microsoft Paint)
+	// Metodo che 'scava' le celle.
+	void scava_celle(int, int);				
 	void aggiorna_cella(int, int);
 
 /* METODI DI LETTURA DI GIOCO */
@@ -73,7 +83,7 @@ public:
 	// Restituisce il numero di mine presenti nel campo di gioco (nascosto).
 	int _mine() const { return mine; };
 	// Restituisce il numero di bandiere piazzate nel campo di gioco (visibile) 
-	int _numero_bandiere() const { return numero_bandiere; };
+	int _bandiere() const { return bandiere; };
 	// Restituisce lo status della partita.
 	char _status() const { return status; };
 	// Restituisce il campo visibile al giocatore.
@@ -92,10 +102,10 @@ public:
 	void reset_campo_visibile() { campo_visibile.sostituisci_tutti(-3); };
 	// Resetta lo status del campo a '-'.
 	void reset_status() { status = '-'; };
-	// Resetta il numero delle bandiere piazzata a 0.
-	void reset_numero_bandiere() { numero_bandiere = 0; };
+	// Resetta il numero delle bandiere piazzate a 0.
+	void reset_bandiere() { bandiere = 0; };
 	// Resetta il campo nascosto, il campo visibile, lo status e il numero delle bandiere piazzate contemporaneamente.
-	void reset();											
+	void reset();										
 
 /* METODI DI GIOCO */
 
@@ -135,7 +145,7 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 	altezza = input_altezza;
 	larghezza = input_larghezza;
 	mine = input_mine;
-	numero_bandiere = 0;
+	bandiere = 0;
 	status = '-';
 }
 
@@ -153,7 +163,7 @@ Campo::Campo(Matrice<bool> campo_input)
 	altezza = campo_input._righe();
 	larghezza = campo_input._colonne();
 	mine = campo_input.conta_tutti_elementi(true);
-	numero_bandiere = 0;
+	bandiere = 0;
 	status = '-';
 }
 
@@ -340,12 +350,12 @@ void Campo::gioca(int i, int j, char comando)
 	if (comando == 'B' && campo_visibile[i][j] == -3) // Se la cella visibile non è ancora stata scavata l'aggiorna mettendoci una bandiera e aumentando il contatore del numero di bandiere.
 	{
 		campo_visibile[i][j] = -2;
-		numero_bandiere++;
+		bandiere++;
 	}
 	else if (comando == 'T' && campo_visibile[i][j] == -2) // Se la cella visibile è una bandiera l'aggiorna togliendola (ripristinando la cella ad una non scavata) e diminuendo il contatore del numero di bandiere.
 	{
 		campo_visibile[i][j] = -3;
-		numero_bandiere--;
+		bandiere--;
 	}
 	else if (campo_visibile[i][j] != -2) // Se la cella scavata è una mina segnala la sconfitta, altrimenti esegue l'operazione di scavo e aggiorna il campo.
 	{
@@ -403,7 +413,7 @@ void Campo::reset()
 	reset_campo_nascosto();
 	reset_campo_visibile();
 	reset_status();
-	reset_numero_bandiere();
+	reset_bandiere();
 }
 
 // Svela il campo completamente scavato con anche le mine del campo.

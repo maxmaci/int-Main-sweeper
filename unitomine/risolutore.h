@@ -81,9 +81,9 @@ public:
 // •  (const Campo&) campo: il campo della partita da risolvere in automatico
 Risolutore::Risolutore(const Campo& campo)
 {
-	if (campo._numero_bandiere() != 0) throw std::domain_error("Il campo non deve avere alcuna bandiera piazzata");
+	if (campo._bandiere() != 0) throw std::domain_error("Il campo non deve avere alcuna bandiera piazzata");
 	partita = campo;
-	bandiere_precedenti = campo._numero_bandiere();
+	bandiere_precedenti = campo._bandiere();
 	celle_non_scavate_precedenti = campo._campo_visibile().conta_tutti_elementi(-3);
 }
 
@@ -543,7 +543,7 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 	// FASE 1.2. Contiamo il numero di mine rimanenti. Questo ci permette, soprattutto quando ci avviamo alla conclusione della partita,
 	// di limitare molto il calcolo delle combinazioni possibili.
 
-	int mine_rimanenti = partita._mine() - partita._numero_bandiere();
+	int mine_rimanenti = partita._mine() - partita._bandiere();
 
 	// FASE 1.3. Elenchiamo, per ciascuna sezione, le possibili disposizioni delle mine lecite (cioè che soddisfano le condizioni
 	// imposte dai numeri) su tale sezione di bordo. Inoltre, per ciascuna sezione separiamo le disposizioni con un mappa le cui chiavi
@@ -694,8 +694,8 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 	// che segnalerà al metodo casuale di scavare una cella non sul bordo.
 
 	long double probabilita_media = long double(partita._campo_visibile().conta_tutti_elementi(-3)) / long double(mine_rimanenti);
-	if (partita._numero_bandiere() != bandiere_precedenti || partita._campo_visibile().conta_tutti_elementi(-3) != celle_non_scavate_precedenti) return false;
-	else if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti && probabilita_minore < probabilita_media)
+	if (partita._bandiere() != bandiere_precedenti || partita._campo_visibile().conta_tutti_elementi(-3) != celle_non_scavate_precedenti) return false;
+	else if (partita._bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti && probabilita_minore < probabilita_media)
 	{
 		partita.gioca(bordo_separato[indice_minore.first][indice_minore.second].first, bordo_separato[indice_minore.first][indice_minore.second].second, 'S');
 		std::cout << u8"Scaverò la cella (" << bordo_separato[indice_minore.first][indice_minore.second].first + 1 << ", " << bordo_separato[indice_minore.first][indice_minore.second].second + 1 << u8"), che ha probabilità di essere una mina pari a " << probabilita_per_sezione[indice_minore.first][indice_minore.second] * 100 << "%." << std::endl;
@@ -739,7 +739,7 @@ void Risolutore::stampa_situazione()
 {
 	std::cout << partita << std::endl;
 	std::cout << "STATUS: " << partita._status() << std::endl;
-	std::cout << "NUMERO BANDIERE: " << partita._numero_bandiere() << "/" << partita._mine() << ", NUMERO BANDIERE AL PASSO PRECEDENTE: " << bandiere_precedenti << "/" << partita._mine() << std::endl;
+	std::cout << "NUMERO BANDIERE: " << partita._bandiere() << "/" << partita._mine() << ", NUMERO BANDIERE AL PASSO PRECEDENTE: " << bandiere_precedenti << "/" << partita._mine() << std::endl;
 	std::cout << "CELLE RIMANENTI: " << partita._campo_visibile().conta_tutti_elementi(-3) << ", CELLE RIMANENTI AL PASSO PRECEDENTE: " << celle_non_scavate_precedenti << std::endl;
 	system("PAUSE");
 }
@@ -763,7 +763,7 @@ void Risolutore::risolvi(int dimensione_massima)
 		metodo_meccanico();
 		stampa_situazione();
 
-		if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti)
+		if (partita._bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti)
 		{
 			std::cout << u8"Non ho messo nuove bandiere nè scavato celle, applico ora il metodo Gaussiano." << std::endl << std::endl;
 
@@ -774,7 +774,7 @@ void Risolutore::risolvi(int dimensione_massima)
 			metodo_gaussiano(bordo_separato, numeri_separati);
 			stampa_situazione();
 
-			if (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti)
+			if (partita._bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti)
 			{
 				bool passare_al_metodo_casuale = true;
 				
@@ -790,7 +790,7 @@ void Risolutore::risolvi(int dimensione_massima)
 					system("PAUSE");
 				}
 
-				if (passare_al_metodo_casuale)// (partita._numero_bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti)
+				if (passare_al_metodo_casuale)
 				{
 					std::cout << u8"Non ho messo nuove bandiere nè scavato celle, applico ora metodo casuale." << std::endl << std::endl;
 
@@ -801,7 +801,7 @@ void Risolutore::risolvi(int dimensione_massima)
 			}
 		}
 
-		bandiere_precedenti = partita._numero_bandiere();
+		bandiere_precedenti = partita._bandiere();
 		celle_non_scavate_precedenti = partita._campo_visibile().conta_tutti_elementi(-3);
 
 	}
