@@ -6,7 +6,7 @@ PROBLEMA: Il programma cerca di implementare in C++ il gioco del Campo Minato e 
 •  Il gioco ha diverse difficoltà di gioco predefinite (FACILE: 9x9 con 10 mine, INTERMEDIO: 16x16 con 40 mine, DIFFICILE: 16x30 con 99 mine), nonchè una
    modalità per creare campi di dimensione PERSONALIZZATA (con un campo di dimensioni minime 2x2 fino a 50x50, con un numero di mine compreso fra 1 e 'altezza * larghezza - 1').
    È anche disponibile una modalità EPICA di dimensione e numero di mine sconosciuto all'utente, con schema fisso e che non viene generato casualmente.
-•  Dopo aver scelto la modalità di gioco è possibile decidere se giocare personalmente o utilizzare invece Il Risolutore™ per vincere¹ la partita al posto del giocatore!
+•  Dopo aver scelto la modalità di gioco è possibile decidere se giocare personalmente o utilizzare invece Il Risolutore™ per vincere¹ la partita per voi!
 
 
 CLASSI: 
@@ -23,25 +23,26 @@ CLASSI:
 
 INDICAZIONI SULL'USO:
 • Il programma deve essere compilato con argomento 'game.cpp <dimensione massima della sezione di incognite che Il Risolutore™ può controllare per il metodo probabilistico>';
-infatti, uno dei metodi di risoluzione automatica è particolarmente intensivo computazionalmente e sopra il valore sperimentale ottimale di '20' può impiegare
-parecchio tempo. Lasciamo tuttavia la possibilità di cambiare il parametro e verificare il funzionamento del metodo probabilistico anche con valori maggiori, a rischio e pericolo dell'utente (e della sua macchina).
+  infatti, uno dei metodi di risoluzione automatica è particolarmente intensivo computazionalmente e sopra il valore sperimentale ottimale di '20' può impiegare
+  parecchio tempo. Lasciamo tuttavia la possibilità di cambiare il parametro e verificare il funzionamento del metodo probabilistico anche con valori maggiori, 
+  a rischio e pericolo dell'utente (e della sua macchina).
 • Il programma necessita di font che supportino i caratteri unicode seguenti:
 
-CHAR | NOME								 | CODE
+CHAR     | NOME								 | CODE
 -----+-----------------------------------+--------
-✱	 | Heavy Asterisk					 | U+2731
-⚑	 | Black Flag						 | U+2691
-⎕	 | APL Functional Symbol Quad		 | U+2395
-┌	 | Box Drawings Light Down and Right | U+250C
-└	 | Box Drawings Light Up and Right	 | U+2514
-┐	 | Box Drawings Light Down and Left	 | U+2510
-┘	 | Box Drawings Light Up and Left	 | U+2518
-─	 | Box Drawings Light Horizontal	 | U+2500
-│	 | Box Drawings Light Vertical		 | U+2502
+✱	 | Heavy Asterisk						 | U+2731
+⚑	 | Black Flag							 | U+2691
+⎕	 | APL Functional Symbol Quad		 			 | U+2395
+┌	 | Box Drawings Light Down and Right				 | U+250C
+└	 | Box Drawings Light Up and Right				 | U+2514
+┐	 | Box Drawings Light Down and Left				 | U+2510
+┘	 | Box Drawings Light Up and Left				 | U+2518
+─	 | Box Drawings Light Horizontal				 | U+2500
+│	 | Box Drawings Light Vertical					 | U+2502
 
 In particolare, è ottimizzato per l'utilizzo del font DejaVuSansMono.
 -	Per l'utenza Windows: alleghiamo il un file .zip contenente i .ttf del font, bisognerà aprire il file denominato "DejaVuSansMono" e cliccare su
-	"Installa". A questo punto è necessario cercare e aprire "Editor del Registro di sistema". All'interno dell'Editor copiate e inserite:
+	"Installa". A questo punto è necessario cercare e aprire "Editor del Registro di sistema" dalla barra di ricerca di Windows. All'interno dell'Editor copiate e inserite:
 		HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
 	come percorso. Bisognerà ora utilizzare "Click destro > Nuovo > Valore stringa". Scegliete un numero che NON sia già presente tra l'elenco dei font 
 	in questa schermata (ES: "001"). Fate doppio click e in "Dati valore" inserite il nome del font ("DejaVuSansMono", comprese le maiuscole e senza spazi).
