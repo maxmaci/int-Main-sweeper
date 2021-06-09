@@ -52,7 +52,7 @@ private:
 	std::vector<std::vector<Coord> > separa_numeri(const std::vector<std::vector<Coord> >&);
 
 	// Verifica che una eventuale disposizione delle mine sul bordo sia lecita sulla base delle informazioni date dai numeri accanto al bordo.
-	bool disposizione_lecita(const std::vector<Coord>&, const std::vector<Coord>&, std::vector<bool>&);
+	bool disposizione_lecita(const std::vector<Coord>&, const std::vector<Coord>&, const std::vector<bool>&);
 
 /* METODI RISOLUTIVI */
 	void metodo_meccanico();
@@ -88,6 +88,8 @@ Risolutore::Risolutore(const Campo& campo)
 }
 
 // Restituisce un vettore con le coordinate dei numeri che hanno ancora delle celle non scavate e non bandierate attorno.
+// OUTPUT: 
+// • (std::vector<Coord>) : il vettore sopracitato.
 std::vector<Coord> Risolutore::estrai_numeri_bordo()
 {
 	std::vector<Coord> numeri;
@@ -111,6 +113,8 @@ std::vector<Coord> Risolutore::estrai_numeri_bordo()
 }
 
 // Restituisce un vettore con le coordinate delle celle non scavate che hanno accanto dei numeri (ovvero il 'bordo' delle celle non scavate con quelle scavate).
+// OUTPUT: 
+// • (std::vector<Coord>) : il vettore sopracitato.
 std::vector<Coord> Risolutore::estrai_incognite_bordo()
 {
 	std::set<Coord> incognite;
@@ -142,6 +146,8 @@ std::vector<Coord> Risolutore::estrai_incognite_bordo()
 }
 
 // Restituisce un vettore con le coordinate delle celle non scavate che NON hanno accanto dei numeri
+// OUTPUT: 
+// • (std::vector<Coord>) : il vettore sopracitato.
 std::vector<Coord> Risolutore::estrai_incognite_non_bordo()
 {
 	std::vector<Coord> incognite;
@@ -487,7 +493,17 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_
 }
 
 /* METODO PROBABILISTICO */
-bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, const std::vector<Coord>& numeri_separati, std::vector<bool>& disposizione)
+
+// Verifica se una potenziale disposizione delle mine sulla sezione di bordo di incognite è lecita o no (cioè se rispetta le condizioni date dai numeri
+// attorno - tenuto conto di eventuali bandiere già piazziate).
+// INPUT:
+// • (const std::vector<Coord>>&) bordo_separato: una sezione di bordo di incognite ottenuta con il metodo 'separa_incognite_bordo'
+// • (const std::vector<Coord>>&) numeri_separati: una sezione di numeri accanto al bordo ottenuta con il metodo 'separa_numeri'
+// • (const std::vector<bool>&) disposizione: un vettore di booleani che rappresenta una potenziale disposizione delle mine su una sezione di bordo; se
+// il vettore all'elemento i-esimo ha 'true', significa che ci sarà una mina nella cella corrispondente all'elemento i-esimo della sezione di bordo corrispondente.
+// OUTPUT: 
+// • (bool) : 'true' se è lecita, 'false' altrimenti.
+bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, const std::vector<Coord>& numeri_separati, const std::vector<bool>& disposizione)
 {
 	for (int i = 0; i < numeri_separati.size(); i++)
 	{
