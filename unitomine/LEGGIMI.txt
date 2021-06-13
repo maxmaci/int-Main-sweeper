@@ -28,17 +28,16 @@ INDICAZIONI SULL'USO:
   a rischio e pericolo dell'utente (e della sua macchina).
 • Il programma necessita di font che supportino i caratteri unicode seguenti:
 
-CHAR | NOME								 | CODE
------+-----------------------------------+--------
-✱	 | Heavy Asterisk					 | U+2731
-⚑	 | Black Flag						 | U+2691
-⎕	 | APL Functional Symbol Quad		 | U+2395
-┌	 | Box Drawings Light Down and Right | U+250C
-└	 | Box Drawings Light Up and Right	 | U+2514
-┐	 | Box Drawings Light Down and Left	 | U+2510
-┘	 | Box Drawings Light Up and Left	 | U+2518
-─	 | Box Drawings Light Horizontal	 | U+2500
-│	 | Box Drawings Light Vertical		 | U+2502
+CARATTERE : NOME; CODICE
+✱ : Heavy Asterisk; U+2731
+⚑ : Black Flag; U+2691
+⎕ : APL Functional Symbol Quad; U+2395
+┌ : Box Drawings Light Down and Right; U+250C
+└ : Box Drawings Light Up and Right; U+2514
+┐ : Box Drawings Light Down and Left; U+2510
+┘ : Box Drawings Light Up and Left; U+2518
+─ : Box Drawings Light Horizontal; U+2500
+│ : Box Drawings Light Vertical; U+2502
 
 In particolare, è ottimizzato per l'utilizzo del font DejaVuSansMono.
 -	Per l'utenza Windows: alleghiamo il un file .zip contenente i .ttf del font, bisognerà aprire il file denominato "DejaVuSansMono" e cliccare su
