@@ -1,4 +1,9 @@
-﻿#ifndef __CAMPO_H__
+﻿// AUTORI:
+// Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
+//
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// 
+#ifndef __CAMPO_H__
 #define __CAMPO_H__
 
 #include <utility>		// classe pair

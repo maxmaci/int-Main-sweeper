@@ -1,3 +1,8 @@
+// AUTORI:
+// Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
+//
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// 
 #ifndef __MENU_H__
 #define __MENU_H__
 #include <fstream>

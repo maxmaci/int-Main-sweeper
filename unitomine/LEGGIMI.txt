@@ -28,17 +28,17 @@ INDICAZIONI SULL'USO:
   a rischio e pericolo dell'utente (e della sua macchina).
 • Il programma necessita di font che supportino i caratteri unicode seguenti:
 
-CHAR     | NOME								 | CODE
+CHAR | NOME								 | CODE
 -----+-----------------------------------+--------
-✱	 | Heavy Asterisk						 | U+2731
-⚑	 | Black Flag							 | U+2691
-⎕	 | APL Functional Symbol Quad		 			 | U+2395
-┌	 | Box Drawings Light Down and Right				 | U+250C
-└	 | Box Drawings Light Up and Right				 | U+2514
-┐	 | Box Drawings Light Down and Left				 | U+2510
-┘	 | Box Drawings Light Up and Left				 | U+2518
-─	 | Box Drawings Light Horizontal				 | U+2500
-│	 | Box Drawings Light Vertical					 | U+2502
+✱	 | Heavy Asterisk					 | U+2731
+⚑	 | Black Flag						 | U+2691
+⎕	 | APL Functional Symbol Quad		 | U+2395
+┌	 | Box Drawings Light Down and Right | U+250C
+└	 | Box Drawings Light Up and Right	 | U+2514
+┐	 | Box Drawings Light Down and Left	 | U+2510
+┘	 | Box Drawings Light Up and Left	 | U+2518
+─	 | Box Drawings Light Horizontal	 | U+2500
+│	 | Box Drawings Light Vertical		 | U+2502
 
 In particolare, è ottimizzato per l'utilizzo del font DejaVuSansMono.
 -	Per l'utenza Windows: alleghiamo il un file .zip contenente i .ttf del font, bisognerà aprire il file denominato "DejaVuSansMono" e cliccare su
@@ -51,6 +51,13 @@ In particolare, è ottimizzato per l'utilizzo del font DejaVuSansMono.
 		Predefinite > Tipo di carattere
 	e scegliete DejaVuSansMono, dopodiché cliccate su "OK". A questo punto DejaVuSansMono sarà il font predefinito per il vostro terminale!
  
+
+COME USARE: il programma mostra le istruzioni su come giocare a schermo. Qui di seguito spieghiamo brevemente il funzionamento de Il Risolutore™:
+• // TO DO: metodo meccanico
+• // TO DO: metodo Gaussiano
+• // TO DO: metodo probabilistico
+• // TO DO: metodo casuale
+
 
 RIFERIMENTI:
 • Per l'algoritmo di base del metodo gaussiano e del metodo probabilistico rimandiamo al paper di A. Fowler, A. Young "Minesweeper: A Statistical and Computational Analysis": https://research.wsulibs.wsu.edu/xmlui/bitstream/handle/2376/2460/Fowler%2C%20A.%20and%20Young%20A.%20%20Minesweeper%20a%20statistical%20and%20computational.pdf .

@@ -1,4 +1,9 @@
-﻿#ifndef __MATRICE_H__
+﻿// AUTORI:
+// Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
+//
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// 
+#ifndef __MATRICE_H__
 #define __MATRICE_H__
 
 #include <iomanip>		// std::setw() / std::setfill()

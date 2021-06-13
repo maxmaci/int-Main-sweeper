@@ -1,3 +1,8 @@
+// AUTORI:
+// Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
+//
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// 
 #ifndef __RISOLUTORE_H__
 #define __RISOLUTORE_H__
 #include <set>
@@ -30,6 +35,7 @@ bool ordina_per_dimensione(const std::vector<Coord>& p, const std::vector<Coord>
 }
 
 /* Classe Risolutore */
+// TO DO: copiare dal leggimi.
 class Risolutore
 {
 private:

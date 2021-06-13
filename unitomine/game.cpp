@@ -1,4 +1,10 @@
-﻿#include <ctime>
+﻿// AUTORI:
+// Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
+//
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// 
+
+#include <ctime>
 
 #include "risolutore.h"
 

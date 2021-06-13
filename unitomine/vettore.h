@@ -1,3 +1,8 @@
+// AUTORI:
+// Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
+//
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// 
 #ifndef __VETTORE_H__
 #define __VETTORE_H__
 
