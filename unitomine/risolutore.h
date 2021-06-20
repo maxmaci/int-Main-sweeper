@@ -17,11 +17,11 @@
 // •  (int)  n.
 // •  (int)  k: deve essere tale per cui 0 <= k <= n
 // OUTPUT:
-// •  (long double) : il coefficiente binomiale
+// •  (double) : il coefficiente binomiale
 
-long double bin(int n, int k) {
-	long double res = 1;
-	for (int i = 1; i <= k; i++) res *= (n + 1 - i) / long double(i);
+double bin(int n, int k) {
+	double res = 1;
+	for (int i = 1; i <= k; i++) res *= (n + 1 - i) / double(i);
 	return res;
 }
 
@@ -425,7 +425,7 @@ void Risolutore::metodo_meccanico()
 
 	auto diff = end - start;
 
-	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+	std::cout << "TEMPO IMPIEGATO: " << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
 
 }
 
@@ -556,7 +556,7 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord> >& bordo
 
 	auto diff = end - start;
 
-	std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+	std::cout << "TEMPO IMPIEGATO: " << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
 
 }
 
@@ -685,20 +685,20 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord> >& 
 	// FASE 2.2: per ogni singola cella del bordo calcoliamo la sua probabilità di essere una mina. Per informazioni più specifiche su come viene calcolata
 	// rimandiamo al paper presente nelle fonti del file "LEGGIMI.txt"
 
-	std::vector<std::vector<long double> > probabilita_per_sezione;
+	std::vector<std::vector<double> > probabilita_per_sezione;
 
 	for (int i = 0; i < possibilita_per_sezione.size(); i++)
 	{
-		std::vector<long double> probabilita_singola_sezione;
+		std::vector<double> probabilita_singola_sezione;
 
 		for (int j = 0; j < bordo_separato[i].size(); j++)
 		{
-			long double numeratore = 0;
-			long double denominatore = 0;
+			double numeratore = 0;
+			double denominatore = 0;
 
 			for (std::map<int, Matrice<bool> >::const_iterator it = possibilita_per_sezione[i].cbegin(); it != possibilita_per_sezione[i].cend(); it++)
 			{
-				long double calcolo_parziale = 0;
+				double calcolo_parziale = 0;
 
 				if (celle_non_scavate_fuori_bordo == 0) calcolo_parziale = 1;
 				else
@@ -749,7 +749,7 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord> >& 
 	// FASE 3.2: Cerchiamo la probabilità più bassa; al contempo qualunque cella con probabilità quasi certa 0 o 1 viene opportunamente scavata o bandierata.
 
 	Coord indice_minore;
-	long double probabilita_minore = 1;
+	double probabilita_minore = 1;
 
 	for (int i = 0; i < probabilita_per_sezione.size(); i++)
 	{
@@ -777,7 +777,7 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord> >& 
 	// Se la probabilità più bassa del bordo è più alta della probabilità media di beccare una mina casualmente saltiamo il passaggio e restituiamo un booleano
 	// che segnalerà al metodo casuale di scavare una cella non sul bordo.
 
-	long double probabilita_media = long double(partita._campo_visibile().conta_tutti_elementi(-3)) / long double(mine_rimanenti);
+	double probabilita_media = double(partita._campo_visibile().conta_tutti_elementi(-3)) / double(mine_rimanenti);
 	if (partita._bandiere() != bandiere_precedenti || partita._campo_visibile().conta_tutti_elementi(-3) != celle_non_scavate_precedenti) return false;
 	else if (partita._bandiere() == bandiere_precedenti && partita._campo_visibile().conta_tutti_elementi(-3) == celle_non_scavate_precedenti && probabilita_minore < probabilita_media)
 	{
@@ -788,7 +788,7 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord> >& 
 
 		auto diff = end - start;
 
-		std::cout << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
+		std::cout << "TEMPO IMPIEGATO: " << std::chrono::duration <double, std::milli>(diff).count() << " ms" << std::endl;
 		return false;
 	}
 	return true;
