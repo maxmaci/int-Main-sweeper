@@ -77,7 +77,7 @@ public:
 	// Costruisce un Campo vuoto di dimensioni altezza x larghezza con un numero di mine dato in input. Il costruttore NON piazza mine di suo.
 	Campo(int = 9, int = 9, int = 10);
 	// Costruisce un Campo partendo dal campo delle mine, che viene dato in input come matrice booleana.
-	Campo(Matrice<bool>);
+	Campo(const Matrice<bool>&);
 
 /* LEGGI CAMPI PRIVATI */
 
@@ -126,7 +126,7 @@ public:
 	// Conta il numero di bandiere presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
 	int conta_bandiere_vicine(int, int) const;
 	// Conta quanti numeri sono presenti nelle 8 (se nell'interno della matrice), nelle 5 (se sul bordo) o nelle 3 posizioni (se nell'angolo) attorno alla cella (i, j).
-	int conta_numeri_vicini(int i, int j) const; // TO DO: l'unico uso che ne facciamo è di verificare se ce ne sono, non quanti. Potrebbe sostituirlo con un conta se numeri vicini
+	int conta_numeri_vicini(int i, int j) const;
 
 	/* FUNZIONI DI STAMPA */
 	// Stampa in modo carino il campo, con attorno le coordinate per facilitare l'utente.
@@ -157,7 +157,7 @@ Campo::Campo(int input_altezza, int input_larghezza, int input_mine)
 // COSTRUTTORE: Genera il campo di gioco a partire dallo schema con mine fornito in input, verificando che sia valido (rettangolare, con condizioni sulle dimensioni e sulle mine come l'altro costruttore).
 // INPUT: 
 // •  Matrice<bool> campo_input: campo nascosto con le mine già piazzate
-Campo::Campo(Matrice<bool> campo_input)
+Campo::Campo(const Matrice<bool>& campo_input)
 {
 	if (campo_input._righe() < 2 || campo_input._righe() > 50 || campo_input._colonne() < 2 || campo_input._colonne() > 50) throw std::domain_error("dimensioni del campo invalide");
 	if (campo_input.conta_tutti_elementi(true) < 1 || campo_input.conta_tutti_elementi(true) >= campo_input._righe() * campo_input._colonne()) throw std::domain_error("numero delle mine illegale");

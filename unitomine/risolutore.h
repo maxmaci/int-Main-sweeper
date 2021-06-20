@@ -35,7 +35,23 @@ bool ordina_per_dimensione(const std::vector<Coord>& p, const std::vector<Coord>
 }
 
 /* Classe Risolutore */
-// TO DO: copiare dal leggimi.
+// Implementa Il Risolutore™ automatico a partire da una partita di Campo Minato; per risolvere al meglio la partita usa 4 metodi differenti, da quelli
+// assolutamente certi di scavare (o  bandierare) correttamente le celle per arrivare a quelli che utilizzano metodi probabilistici o casuali per risolvere eventuali empasse
+// ottenuti coi metodi precedenti. I metodi utilizzati sono i seguenti:
+// 1) METODO MECCANICO:
+// Il metodo itera ogni cella del campo e fa due controlli alternativi su ciascuna di essa:
+// • Se la cella è un numero n e ci sono attorno n celle non scavate (con potenzialmente già delle bandierine) mette delle bandierine su tutte le celle non scavate attorno
+// • Se la cella è un numero n e ci sono attorno già n celle bandierinate scava tutte le celle non scavate attorno.
+// 2) METODO GAUSSIANO:
+// Il metodo legge le informazioni del campo (indizi/numeri e incognite), le interpreta come se fosse un sistema di equazioni lineari e cerca
+// alcune soluzioni certe a partire da tale sistema.
+// 3) METODO PROBABILISTICO:
+// Il metodo calcola per ciascuna cella la probabilità di essere o meno una mina sulla base di diversi fattori: le possibili disposizioni lecite delle mine
+// sulle sezioni di bordo, come poter porre nelle celle rimanenti tutte le mine non poste sul bordo e quante volte una mina è presente in una data cella al variare delle disposizioni.
+// Se ci sono celle la cui probabilità è 1 (quasi certamente una mina) o 0 (quasi certamente non una mina) tali celle vengono opportunamente bandierate o scavate, rispettivamente e si esce dal metodo.
+// Se non ci sono celle quasi certe si prende la probabilità più bassa, si scava la prima cella con tale probabilità e si esce dal metodo. 
+// 4) METODO CASUALE:
+// Il metodo sceglie una cella a caso e la scava.
 class Risolutore
 {
 private:
@@ -62,9 +78,9 @@ private:
 
 /* METODI RISOLUTIVI */
 	void metodo_meccanico();
-	void metodo_gaussiano(const std::vector< std::vector<Coord>>&, const std::vector< std::vector<Coord>>&);
-	bool metodo_probabilistico(const std::vector< std::vector<Coord>>&, const std::vector< std::vector<Coord>>&);
-	void metodo_casuale(const std::vector< std::vector<Coord>>&);
+	void metodo_gaussiano(const std::vector< std::vector<Coord> >&, const std::vector< std::vector<Coord> >&);
+	bool metodo_probabilistico(const std::vector< std::vector<Coord> >&, const std::vector< std::vector<Coord> >&);
+	void metodo_casuale(const std::vector< std::vector<Coord> >&);
 
 	// Stampa a schermo un breve report sulla situazione attuale (lo status della partita, le bandiere piazzate sul totale del mine, le celle rimanenti - cioè non scavate o bandierate) confrontato al passo precedente.
 	void stampa_situazione();
@@ -169,7 +185,9 @@ std::vector<Coord> Risolutore::estrai_incognite_non_bordo()
 	return incognite;
 }
 
-// Partiziona le celle incognite del bordo in sezioni indipendenti l'una dall'altra (cioè tali per cui i numeri accanto ad una certa sezione influiscono solo ed esclusivamente su quella sezione).
+// Partiziona le celle incognite del bordo in sezioni indipendenti l'una dall'altra (cioè tali per cui i numeri accanto ad una certa sezione influiscono
+// solo ed esclusivamente su quella sezione).
+// Il metodo utilizza una versione modificata dell'algoritmo di Fill usato nel metodo 'scava_celle' della classe Campo.
 // OUTPUT: 
 // •  (const std::vector<std::vector<Coord> >&): un vettore di vettori di coordinate; ogni elemento del vettore 'esterno' contiene una sezione del bordo
 std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
@@ -195,12 +213,20 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 			Coord cella = coda.front();
 			coda.pop();
 
+			// se la cella esiste davvero, non è già stata inclusa nella regione ed è presente nel vettore di incognite allora viene aggiunta alla regione. 
 			if (partita._campo_visibile().indici_leciti(cella.first, cella.second) && !trova_elemento(incognite_separate_regione, cella) && trova_elemento(incognite, cella))
 			{
 				incognite_separate_regione.push_back(cella);
 				incognite.erase(incognite.begin() + trova_indice_elemento(incognite, cella));
 
-				// bordi laterali
+				// Controllo delle celle confinanti: se nelle celle attorno quella appena inclusa ci sono dei numeri considera le celle accanto a tali
+				// numeri, dato che i numeri danno informazioni anche su tali celle. Se ci sono bandiere che 'bloccano' il contatto diretto con celle influenzate da tali numeri vengono "saltate".
+				// BORDI LATERALI: controlla nella direzione orizzontale/verticale se ci sono numeri, in caso affermativo controlla aggiunge le celle fra le 8 attorno a C che confinano con N.
+				//		
+				//	#N#
+				//	#C#
+				//	---
+				//
 				if (partita._campo_visibile().indici_leciti(cella.first - 1, cella.second) && partita._campo_visibile()[cella.first - 1][cella.second] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first - 1, cella.second - 1)); // NORD-OVEST 
@@ -208,6 +234,11 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first - 1, cella.second + 1)); // NORD-EST
 					else coda.push(Coord(cella.first, cella.second + 1)); // EST
 				}
+				//		
+				//	---
+				//	#C#
+				//	#N#
+				//
 				if (partita._campo_visibile().indici_leciti(cella.first + 1, cella.second) && partita._campo_visibile()[cella.first + 1][cella.second] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first + 1, cella.second - 1)); // SUD-OVEST
@@ -215,6 +246,11 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first + 1, cella.second + 1)); // SUD-EST
 					else coda.push(Coord(cella.first, cella.second + 1)); // EST
 				}
+				//		
+				//	##-
+				//	NC-
+				//	##-
+				//
 				if (partita._campo_visibile().indici_leciti(cella.first, cella.second - 1) && partita._campo_visibile()[cella.first][cella.second - 1] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 1, cella.second - 1)); // NORD-OVEST
@@ -222,6 +258,11 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first + 1, cella.second, -2)) coda.push(Coord(cella.first + 1, cella.second - 1)); // SUD-OVEST
 					else coda.push(Coord(cella.first + 1, cella.second)); // SUD
 				}
+				//		
+				//	-##
+				//	-CN
+				//	-##
+				//
 				if (partita._campo_visibile().indici_leciti(cella.first, cella.second + 1) && partita._campo_visibile()[cella.first][cella.second + 1] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 1, cella.second + 1)); // NORD-EST
@@ -229,7 +270,12 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first + 1, cella.second, -2)) coda.push(Coord(cella.first + 1, cella.second + 1)); // SUD-EST
 					else coda.push(Coord(cella.first + 1, cella.second)); // SUD
 				}
-				// angoli
+				// ANGOLI: controlla negli angoli se ci sono numeri, in caso affermativo controlla aggiunge le celle fra le 8 attorno a C che confinano con N.
+				//	 #	
+				//	N#-
+				// ##C-
+				//	---
+				//
 				if ((partita._campo_visibile().indici_leciti(cella.first - 1, cella.second - 1) && partita._campo_visibile()[cella.first - 1][cella.second - 1] > 0))
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first, cella.second - 2)); // OVEST-OVEST
@@ -237,13 +283,23 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 2, cella.second)); // NORD-NORD
 					else coda.push(Coord(cella.first - 1, cella.second)); // NORD	
 				}
+				//	 #	
+				//	-#N
+				//	-C##
+				//	---
+				//
 				if ((partita._campo_visibile().indici_leciti(cella.first - 1, cella.second + 1) && partita._campo_visibile()[cella.first - 1][cella.second + 1] > 0))
 				{
-					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first, cella.second + 2)); // OVEST-OVEST
+					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first, cella.second + 2)); // EST-EST
 					else coda.push(Coord(cella.first, cella.second + 1)); // EST
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 2, cella.second)); // NORD-NORD
 					else coda.push(Coord(cella.first - 1, cella.second)); // NORD
 				}
+				//	 	
+				//	---
+				// ##C-
+				//  N#-
+				//	 #
 				if ((partita._campo_visibile().indici_leciti(cella.first + 1, cella.second - 1) && partita._campo_visibile()[cella.first + 1][cella.second - 1] > 0))
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first, cella.second - 2)); // OVEST-OVEST
@@ -251,6 +307,11 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first + 1, cella.second, -2)) coda.push(Coord(cella.first + 2, cella.second)); // NORD-NORD
 					else coda.push(Coord(cella.first + 1, cella.second)); // NORD
 				}
+				//	 	
+				//	---
+				//	-C##
+				//  -#N
+				//	 #
 				if ((partita._campo_visibile().indici_leciti(cella.first + 1, cella.second + 1) && partita._campo_visibile()[cella.first + 1][cella.second + 1] > 0))
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first, cella.second + 2)); // OVEST-OVEST
@@ -259,6 +320,7 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					else coda.push(Coord(cella.first + 1, cella.second)); // SUD
 				}
 			}
+			// Aggiunge le altre celle non scavate.
 			if (partita._campo_visibile().indici_leciti(cella.first, cella.second) && partita._campo_visibile()[cella.first][cella.second] > 0 && partita.conta_non_scavati_vicini(cella.first, cella.second) > 0)
 			{
 				if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second - 1, -3))	coda.push(Coord(cella.first - 1, cella.second - 1));
@@ -372,9 +434,9 @@ void Risolutore::metodo_meccanico()
 // alcune soluzioni certe a partire da tale sistema. Il metodo opera in diverse fasi (spiegate più in dettaglio nel codice) e si ripete per ciascuna
 // sezione in cui è separato il bordo per semplificare i calcoli.
 // INPUT:
-// • (const std::vector< std::vector<Coord>>&) bordo_separato: il bordo di incognite separato per sezioni ottenuto con il metodo 'separa_incognite_bordo'
-// • (const std::vector< std::vector<Coord>>&) numeri_separati: i numeri accanto al bordo separati per sezioni ottenuti con il metodo 'separa_numeri'
-void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati)
+// • (const std::vector< std::vector<Coord> >&) bordo_separato: il bordo di incognite separato per sezioni ottenuto con il metodo 'separa_incognite_bordo'
+// • (const std::vector< std::vector<Coord> >&) numeri_separati: i numeri accanto al bordo separati per sezioni ottenuti con il metodo 'separa_numeri'
+void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord> >& bordo_separato, const std::vector< std::vector<Coord> >& numeri_separati)
 {
 	auto start = std::chrono::steady_clock::now();
 
@@ -409,7 +471,7 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_
 
 		// • FASE 2: riduciamo la matrice e il termine noto con la riduzione Gaussiana definita come metodo della classe matrice.
 
-		std::pair<Matrice<int>, std::vector<int>> matrice_completa = matrice.riduzione_gaussiana_con_termine_noto(termine_noto);
+		std::pair<Matrice<int>, std::vector<int> > matrice_completa = matrice.riduzione_gaussiana_con_termine_noto(termine_noto);
 
 		// • FASE 3: controlliamo i risultati ottenuti. Eliminiamo tutte le righe vuote della matrice ridotta (e di conseguenza eliminiamo i valori corrispondenti dal termine_noto;
 		//   poiché ogni incognite è Booleana (mina presente/mina non presente) per ogni riga della matrice - che rappresenta una equazione con termine noto - possiamo calcolare il valore massimo e minimo assunto da essa
@@ -503,8 +565,8 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord>>& bordo_
 // Verifica se una potenziale disposizione delle mine sulla sezione di bordo di incognite è lecita o no (cioè se rispetta le condizioni date dai numeri
 // attorno - tenuto conto di eventuali bandiere già piazziate).
 // INPUT:
-// • (const std::vector<Coord>>&) bordo_separato: una sezione di bordo di incognite ottenuta con il metodo 'separa_incognite_bordo'
-// • (const std::vector<Coord>>&) numeri_separati: una sezione di numeri accanto al bordo ottenuta con il metodo 'separa_numeri'
+// • (const std::vector<Coord> >&) bordo_separato: una sezione di bordo di incognite ottenuta con il metodo 'separa_incognite_bordo'
+// • (const std::vector<Coord> >&) numeri_separati: una sezione di numeri accanto al bordo ottenuta con il metodo 'separa_numeri'
 // • (const std::vector<bool>&) disposizione: un vettore di booleani che rappresenta una potenziale disposizione delle mine su una sezione di bordo; se
 // il vettore all'elemento i-esimo ha 'true', significa che ci sarà una mina nella cella corrispondente all'elemento i-esimo della sezione di bordo corrispondente.
 // OUTPUT: 
@@ -535,11 +597,11 @@ bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, c
 // Se ci sono celle la cui probabilità è 1 (quasi certamente una mina) o 0 (quasi certamente non una mina) tali celle vengono opportunamente bandierate o scavate, rispettivamente e si esce dal metodo.
 // Se non ci sono celle quasi certe si prende la probabilità più bassa, si scava la prima cella con tale probabilità e si esce dal metodo. 
 // INPUT:
-// • (const std::vector< std::vector<Coord>>&) bordo_separato: il bordo di incognite separato per sezioni ottenuto con il metodo 'separa_incognite_bordo'
-// • (const std::vector< std::vector<Coord>>&) numeri_separati: i numeri accanto al bordo separati per sezioni ottenuti con il metodo 'separa_numeri'
+// • (const std::vector< std::vector<Coord> >&) bordo_separato: il bordo di incognite separato per sezioni ottenuto con il metodo 'separa_incognite_bordo'
+// • (const std::vector< std::vector<Coord> >&) numeri_separati: i numeri accanto al bordo separati per sezioni ottenuti con il metodo 'separa_numeri'
 // OUTPUT:
 // • (bool): flag che serve per il metodo casuale nel caso non convenga per motivi probabilistic scavare alcuna cella del bordo.
-bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& bordo_separato, const std::vector< std::vector<Coord>>& numeri_separati)
+bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord> >& bordo_separato, const std::vector< std::vector<Coord> >& numeri_separati)
 {
 	auto start = std::chrono::steady_clock::now();
 
@@ -573,14 +635,14 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 	// Una disposizione delle mine sulla sezione è posta come un vettore booleano, corrispondente 1 a 1 con il vettore di coordinate 'sezione_bordo':
 	// se l'elemento n-esimo della disposizione è 'true', significa che la coordinata (i, j), pari all'elemento n-esimo di 'sezione_bordo', sarà una mina.
 
-	std::vector<std::map<int, Matrice<bool>>> possibilita_per_sezione;
+	std::vector<std::map<int, Matrice<bool> > > possibilita_per_sezione;
 
 	for (int a = 0; a < bordo_separato.size(); a++)
 	{
 		std::vector<Coord> sezione_numeri = numeri_separati[a];
 		std::vector<Coord> sezione_bordo = bordo_separato[a];
 
-		std::map<int, Matrice<bool>> disposizioni_per_sezione;
+		std::map<int, Matrice<bool> > disposizioni_per_sezione;
 
 		std::vector<int> estremi;
 		estremi.push_back(mine_max_separate[a]);
@@ -634,7 +696,7 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 			long double numeratore = 0;
 			long double denominatore = 0;
 
-			for (std::map<int, Matrice<bool>>::const_iterator it = possibilita_per_sezione[i].cbegin(); it != possibilita_per_sezione[i].cend(); it++)
+			for (std::map<int, Matrice<bool> >::const_iterator it = possibilita_per_sezione[i].cbegin(); it != possibilita_per_sezione[i].cend(); it++)
 			{
 				long double calcolo_parziale = 0;
 
@@ -645,7 +707,7 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 					{
 						if (k != i)
 						{
-							for (std::map<int, Matrice<bool>>::const_iterator kt = possibilita_per_sezione[k].cbegin(); kt != possibilita_per_sezione[k].cend(); kt++)
+							for (std::map<int, Matrice<bool> >::const_iterator kt = possibilita_per_sezione[k].cbegin(); kt != possibilita_per_sezione[k].cend(); kt++)
 							{
 								calcolo_parziale += bin(celle_non_scavate_fuori_bordo, mine_rimanenti - (*it).first - (*kt).first);
 							}
@@ -734,8 +796,8 @@ bool Risolutore::metodo_probabilistico(const std::vector< std::vector<Coord>>& b
 
 	// Il metodo sceglie casualmente una cella (sul bordo se esiste, altrimenti una cella incognita qualunque) e la scava.
 	// INPUT:
-	// • (const std::vector< std::vector<Coord>>&) bordo_separato: il bordo di incognite separato per sezioni ottenuto con il metodo 'separa_incognite_bordo'
-void Risolutore::metodo_casuale(const std::vector< std::vector<Coord>>& bordo_separato)
+	// • (const std::vector< std::vector<Coord> >&) bordo_separato: il bordo di incognite separato per sezioni ottenuto con il metodo 'separa_incognite_bordo'
+void Risolutore::metodo_casuale(const std::vector< std::vector<Coord> >& bordo_separato)
 {
 	if (bordo_separato.size() == 0)
 	{
@@ -763,20 +825,27 @@ void Risolutore::stampa_situazione()
 	std::cout << "STATUS: " << partita._status() << std::endl;
 	std::cout << "NUMERO BANDIERE: " << partita._bandiere() << "/" << partita._mine() << ", NUMERO BANDIERE AL PASSO PRECEDENTE: " << bandiere_precedenti << "/" << partita._mine() << std::endl;
 	std::cout << "CELLE RIMANENTI: " << partita._campo_visibile().conta_tutti_elementi(-3) << ", CELLE RIMANENTI AL PASSO PRECEDENTE: " << celle_non_scavate_precedenti << std::endl;
-	system("PAUSE");
+	pausa();
 }
 
-// Inizia il processo risolutivo, chiamando i vari metodi risolutivi definiti privatamente.
+// Inizia il processo risolutivo, chiamando i vari metodi risolutivi definiti precedemente. Il procedimento risolutivo è il seguente.
+// 1) Applica il metodo meccanico. Se il campo è stato modificato in alcun modo (celle scavate o bandierine messe) si ripete il punto 1, altrimenti si passa al 2.
+// 2) Applico il metodo gaussiano. Se il campo è stato modificato in alcun modo (celle scavate o bandierine messe) si torna al punto 1, altrimenti si passa al 3.
+// 3) Controllo se è applicabile il metodo probabilistico controllando che le sezioni di bordo da studiare siano di lunghezza inferiori alla dimensione_massima.
+//	  Se è così, si applica il metodo probabilistico. In caso una sezione del bordo sia di lunghezza maggiore a dimensione_massima oppure il campo NON è
+//	  stato modificato in alcun modo (celle scavate o bandierine messe) si passa al punto 4, altrimenti si ritorna al punto 1.
+// 4) Applico il metodo casuale. Si ritorna al punto 1.
+// Se in qualunque momento lo status della partita è 'S' (evidentemente è stata scavata una mina) si esce dal metodo.
 // INPUT:
 // • (int) dimensione_massima: parametro di compilazione che definisce la dimensione massima delle sezioni di bordo di incognite che viene analizzato dal metodo
-// probabilistico: se la lunghezza di una sezione supera tale valore, il metodo probabilistico (per motivi computazionali) viene bypassato e
+// probabilistico: se la lunghezza di una sezione supera tale valore, il metodo probabilistico (per motivi computazionali) viene saltato e
 // si passa al metodo casuale.
 void Risolutore::risolvi(int dimensione_massima)
 {
 	if (dimensione_massima <= 0) throw std::domain_error("la lunghezza massima deve essere positiva");
 	celle_non_scavate_precedenti = partita._campo_visibile().conta_tutti_elementi(-3);
 
-	system("PAUSE");
+	pausa();
 
 	while (partita._status() == '-')
 	{
@@ -809,7 +878,7 @@ void Risolutore::risolvi(int dimensione_massima)
 				else
 				{
 					std::cout << u8"Per motivi computazionali non applicherò il metodo probabilistico." << std::endl;
-					system("PAUSE");
+					pausa();
 				}
 
 				if (passare_al_metodo_casuale)

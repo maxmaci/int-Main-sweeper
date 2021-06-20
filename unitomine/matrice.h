@@ -73,7 +73,7 @@ public:
 /* RIDUSSIONE GAUSSIANA */
 	
 	// Opera la riduzione Gaussiana sulla matrice e su un opportuno termine noto. La matrice e il termine noto ridotto vengono restituiti come pair. 
-	std::pair<Matrice<T>, std::vector<T>> riduzione_gaussiana_con_termine_noto(const std::vector<T>&);
+	std::pair<Matrice<T>, std::vector<T> > riduzione_gaussiana_con_termine_noto(const std::vector<T>&);
 };
 
 // COSTRUTTORE: Crea una matrice di tipo T con ogni elemento di essa pari ad un elemento dato in input, verificando che le dimensioni fornite dall'utente siano accettabile (ergo non negative).

@@ -60,4 +60,14 @@ std::vector<std::string> leggi_input()
 	return std::vector<std::string>() = separa_spazi(input_gioco);
 }
 
+// Mette in "pausa" il programma, aspettando che il giocatore premi INVIO per proseguire. Sostituisce il System("PAUSE") nativo di Windows per
+// compatibilità multipiattaforma.
+
+void pausa()
+{
+	std::cout << "Premere il tasto INVIO per continuare . . ." << std::endl;
+	std::cin.get();
+	std::cin.clear();
+}
+
 #endif // __INPUT_H__

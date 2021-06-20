@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 	}	
 	else
 	{
-		/* OPZIONI ESCLUSIVE PER WINDOWS PER FAR SÌ CHE VISUALIZZI CARATTERI UNICODE */
+		/* OPZIONI ESCLUSIVE PER WINDOWS PER FAR SÌ CHE VISUALIZZI CARATTERI UNICODE E VISUALIZZARE COLORI */
 
 #ifdef _WIN32
 	// Mette la code page della console in UTF8 cosicché la console sa interpretare le stringhe unicode

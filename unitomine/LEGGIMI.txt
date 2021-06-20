@@ -6,7 +6,7 @@ PROBLEMA: Il programma cerca di implementare in C++ il gioco del Campo Minato e 
 •  Il gioco ha diverse difficoltà di gioco predefinite (FACILE: 9x9 con 10 mine, INTERMEDIO: 16x16 con 40 mine, DIFFICILE: 16x30 con 99 mine), nonchè una
    modalità per creare campi di dimensione PERSONALIZZATA (con un campo di dimensioni minime 2x2 fino a 50x50, con un numero di mine compreso fra 1 e 'altezza * larghezza - 1').
    È anche disponibile una modalità EPICA di dimensione e numero di mine sconosciuto all'utente, con schema fisso e che non viene generato casualmente.
-•  Dopo aver scelto la modalità di gioco è possibile decidere se giocare personalmente o utilizzare invece Il Risolutore™ per vincere¹ la partita per voi!
+•  Dopo aver scelto la modalità di gioco è possibile decidere se giocare personalmente o utilizzare invece Il Risolutore™ per vincere¹ la partita al posto vostro!
 
 
 CLASSI: 
@@ -22,6 +22,7 @@ CLASSI:
 
 
 INDICAZIONI SULL'USO:
+• Per la compilazione è necessario C++11 o una sua versione successiva.
 • Il programma deve essere compilato con argomento 'game.cpp <dimensione massima della sezione di incognite che Il Risolutore™ può controllare per il metodo probabilistico>';
   infatti, uno dei metodi di risoluzione automatica è particolarmente intensivo computazionalmente e sopra il valore sperimentale ottimale di '20' può impiegare
   parecchio tempo. Lasciamo tuttavia la possibilità di cambiare il parametro e verificare il funzionamento del metodo probabilistico anche con valori maggiori, 
@@ -51,11 +52,8 @@ In particolare, è ottimizzato per l'utilizzo del font DejaVuSansMono.
 	e scegliete DejaVuSansMono, dopodiché cliccate su "OK". A questo punto DejaVuSansMono sarà il font predefinito per il vostro terminale!
  
 
-COME USARE: il programma mostra le istruzioni su come giocare a schermo. Qui di seguito spieghiamo brevemente il funzionamento de Il Risolutore™:
-• // TO DO: metodo meccanico
-• // TO DO: metodo Gaussiano
-• // TO DO: metodo probabilistico
-• // TO DO: metodo casuale
+COME USARE IL PROGRAMMA: il programma mostra le istruzioni a schermo sia per come inserire input di gioco, sia per attivare il risolutore.
+Il Risolutore™ può essere attivato solamente alla prima mossa; dall'interno del risolutore non è possibile tornare indietro alla partita e giocarla manualmente.
 
 
 RIFERIMENTI:
