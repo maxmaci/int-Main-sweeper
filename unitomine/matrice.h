@@ -1,7 +1,7 @@
 ﻿// AUTORI:
 // Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
 //
-// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 915640
 // 
 #ifndef __MATRICE_H__
 #define __MATRICE_H__

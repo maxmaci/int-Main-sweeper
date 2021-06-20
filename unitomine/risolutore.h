@@ -1,7 +1,7 @@
 // AUTORI:
 // Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
 //
-// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 915640
 // 
 #ifndef __RISOLUTORE_H__
 #define __RISOLUTORE_H__
@@ -36,20 +36,22 @@ bool ordina_per_dimensione(const std::vector<Coord>& p, const std::vector<Coord>
 
 /* Classe Risolutore */
 // Implementa Il Risolutore™ automatico a partire da una partita di Campo Minato; per risolvere al meglio la partita usa 4 metodi differenti, da quelli
-// assolutamente certi di scavare (o  bandierare) correttamente le celle per arrivare a quelli che utilizzano metodi probabilistici o casuali per risolvere eventuali empasse
-// ottenuti coi metodi precedenti. I metodi utilizzati sono i seguenti:
+// assolutamente certi di scavare (o  bandierare) correttamente le celle per arrivare a quelli che utilizzano metodi probabilistici o casuali per 
+// risolvere eventuali empasse ottenuti coi metodi precedenti. I metodi utilizzati sono i seguenti:
 // 1) METODO MECCANICO:
 // Il metodo itera ogni cella del campo e fa due controlli alternativi su ciascuna di essa:
-// • Se la cella è un numero n e ci sono attorno n celle non scavate (con potenzialmente già delle bandierine) mette delle bandierine su tutte le celle non scavate attorno
+// • Se la cella è un numero n e ci sono attorno n celle non scavate (con potenzialmente già delle bandierine) mette delle bandierine su tutte 
+// le celle non scavate attorno
 // • Se la cella è un numero n e ci sono attorno già n celle bandierinate scava tutte le celle non scavate attorno.
 // 2) METODO GAUSSIANO:
 // Il metodo legge le informazioni del campo (indizi/numeri e incognite), le interpreta come se fosse un sistema di equazioni lineari e cerca
 // alcune soluzioni certe a partire da tale sistema.
 // 3) METODO PROBABILISTICO:
-// Il metodo calcola per ciascuna cella la probabilità di essere o meno una mina sulla base di diversi fattori: le possibili disposizioni lecite delle mine
-// sulle sezioni di bordo, come poter porre nelle celle rimanenti tutte le mine non poste sul bordo e quante volte una mina è presente in una data cella al variare delle disposizioni.
-// Se ci sono celle la cui probabilità è 1 (quasi certamente una mina) o 0 (quasi certamente non una mina) tali celle vengono opportunamente bandierate o scavate, rispettivamente e si esce dal metodo.
-// Se non ci sono celle quasi certe si prende la probabilità più bassa, si scava la prima cella con tale probabilità e si esce dal metodo. 
+// Il metodo calcola per ciascuna cella la probabilità di essere o meno una mina sulla base di diversi fattori: le possibili disposizioni lecite delle 
+// mine sulle sezioni di bordo, come poter porre nelle celle rimanenti tutte le mine non poste sul bordo e quante volte una mina è presente in una 
+// data cella al variare delle disposizioni. Se ci sono celle la cui probabilità è 1 (sicuramente una mina) o 0 (sicuramente non una mina)
+// tali celle vengono opportunamente bandierate o scavate, rispettivamente e si esce dal metodo. Se non ci sono celle "sicure" si prende la 
+// probabilità più bassa, si scava la prima cella con tale probabilità e si esce dal metodo. 
 // 4) METODO CASUALE:
 // Il metodo sceglie una cella a caso e la scava.
 class Risolutore
@@ -473,9 +475,12 @@ void Risolutore::metodo_gaussiano(const std::vector< std::vector<Coord> >& bordo
 
 		std::pair<Matrice<int>, std::vector<int> > matrice_completa = matrice.riduzione_gaussiana_con_termine_noto(termine_noto);
 
-		// • FASE 3: controlliamo i risultati ottenuti. Eliminiamo tutte le righe vuote della matrice ridotta (e di conseguenza eliminiamo i valori corrispondenti dal termine_noto;
-		//   poiché ogni incognite è Booleana (mina presente/mina non presente) per ogni riga della matrice - che rappresenta una equazione con termine noto - possiamo calcolare il valore massimo e minimo assunto da essa
-		//   al variare delle possibili mine: se uno di questi valori massimo/minimo corrisponde al valore nel termine noto abbiamo la certezza se alcune specifiche incognite saranno mine e quali no (secondo delle regole che dipendono dal segno del coefficiente dell'incognita).
+		// • FASE 3: controlliamo i risultati ottenuti. Eliminiamo tutte le righe vuote della matrice ridotta (e di conseguenza eliminiamo i valori
+		//   corrispondenti dal termine_noto;
+		//   poiché ogni incognite è Booleana (mina presente/mina non presente) per ogni riga della matrice - che rappresenta una equazione con termine
+		//   noto - possiamo calcolare il valore massimo e minimo assunto da essa
+		//   al variare delle possibili mine: se uno di questi valori massimo/minimo corrisponde al valore nel termine noto abbiamo la certezza se alcune
+		//   specifiche incognite saranno mine e quali no (secondo delle regole che dipendono dal segno del coefficiente dell'incognita).
 
 		Matrice<int> matrice_ridotta(0, matrice_completa.first._colonne());
 		std::vector<int> termine_noto_ridotto;
@@ -594,8 +599,8 @@ bool Risolutore::disposizione_lecita(const std::vector<Coord>& bordo_separato, c
 
 // Il metodo calcola per ciascuna cella la probabilità di essere o meno una mina sulla base di diversi fattori: le possibili disposizioni lecite delle mine
 // sulle sezioni di bordo, come poter porre nelle celle rimanenti tutte le mine non poste sul bordo e quante volte una mina è presente in una data cella al variare delle disposizioni.
-// Se ci sono celle la cui probabilità è 1 (quasi certamente una mina) o 0 (quasi certamente non una mina) tali celle vengono opportunamente bandierate o scavate, rispettivamente e si esce dal metodo.
-// Se non ci sono celle quasi certe si prende la probabilità più bassa, si scava la prima cella con tale probabilità e si esce dal metodo. 
+// Se ci sono celle la cui probabilità è 1 (sicuramente una mina) o 0 (sicuramente non una mina) tali celle vengono opportunamente bandierate o scavate, rispettivamente e si esce dal metodo.
+// Se non ci sono celle "sicure" si prende la probabilità più bassa, si scava la prima cella con tale probabilità e si esce dal metodo. 
 // INPUT:
 // • (const std::vector< std::vector<Coord> >&) bordo_separato: il bordo di incognite separato per sezioni ottenuto con il metodo 'separa_incognite_bordo'
 // • (const std::vector< std::vector<Coord> >&) numeri_separati: i numeri accanto al bordo separati per sezioni ottenuti con il metodo 'separa_numeri'
