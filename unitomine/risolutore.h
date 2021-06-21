@@ -213,20 +213,15 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 			Coord cella = coda.front();
 			coda.pop();
 
-			// se la cella esiste davvero, non è già stata inclusa nella regione ed è presente nel vettore di incognite allora viene aggiunta alla regione. 
+			// Se la cella esiste davvero, non è già stata inclusa nella regione ed è presente nel vettore di incognite allora viene aggiunta alla regione. 
 			if (partita._campo_visibile().indici_leciti(cella.first, cella.second) && !trova_elemento(incognite_separate_regione, cella) && trova_elemento(incognite, cella))
 			{
 				incognite_separate_regione.push_back(cella);
 				incognite.erase(incognite.begin() + trova_indice_elemento(incognite, cella));
 
-				// Controllo delle celle confinanti: se nelle celle attorno quella appena inclusa ci sono dei numeri considera le celle accanto a tali
+				// Controllo delle celle confinanti: se nelle celle attorno quella appena inclusa ci sono dei numeri aggiunge alla coda alcune celle accanto a tali
 				// numeri, dato che i numeri danno informazioni anche su tali celle. Se ci sono bandiere che 'bloccano' il contatto diretto con celle influenzate da tali numeri vengono "saltate".
-				// BORDI LATERALI: controlla nella direzione orizzontale/verticale se ci sono numeri, in caso affermativo controlla aggiunge le celle fra le 8 attorno a C che confinano con N.
-				//		
-				//	#N#
-				//	#C#
-				//	---
-				//
+				// CONTROLLO SUI BORDI LATERALI.
 				if (partita._campo_visibile().indici_leciti(cella.first - 1, cella.second) && partita._campo_visibile()[cella.first - 1][cella.second] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first - 1, cella.second - 1)); // NORD-OVEST 
@@ -234,11 +229,6 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first - 1, cella.second + 1)); // NORD-EST
 					else coda.push(Coord(cella.first, cella.second + 1)); // EST
 				}
-				//		
-				//	---
-				//	#C#
-				//	#N#
-				//
 				if (partita._campo_visibile().indici_leciti(cella.first + 1, cella.second) && partita._campo_visibile()[cella.first + 1][cella.second] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first + 1, cella.second - 1)); // SUD-OVEST
@@ -246,11 +236,6 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first + 1, cella.second + 1)); // SUD-EST
 					else coda.push(Coord(cella.first, cella.second + 1)); // EST
 				}
-				//		
-				//	##-
-				//	NC-
-				//	##-
-				//
 				if (partita._campo_visibile().indici_leciti(cella.first, cella.second - 1) && partita._campo_visibile()[cella.first][cella.second - 1] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 1, cella.second - 1)); // NORD-OVEST
@@ -258,11 +243,6 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first + 1, cella.second, -2)) coda.push(Coord(cella.first + 1, cella.second - 1)); // SUD-OVEST
 					else coda.push(Coord(cella.first + 1, cella.second)); // SUD
 				}
-				//		
-				//	-##
-				//	-CN
-				//	-##
-				//
 				if (partita._campo_visibile().indici_leciti(cella.first, cella.second + 1) && partita._campo_visibile()[cella.first][cella.second + 1] > 0)
 				{
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 1, cella.second + 1)); // NORD-EST
@@ -270,12 +250,7 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first + 1, cella.second, -2)) coda.push(Coord(cella.first + 1, cella.second + 1)); // SUD-EST
 					else coda.push(Coord(cella.first + 1, cella.second)); // SUD
 				}
-				// ANGOLI: controlla negli angoli se ci sono numeri, in caso affermativo controlla aggiunge le celle fra le 8 attorno a C che confinano con N.
-				//	 #	
-				//	N#-
-				// ##C-
-				//	---
-				//
+				// CONTROLLO SUGLI ANGOLI
 				if ((partita._campo_visibile().indici_leciti(cella.first - 1, cella.second - 1) && partita._campo_visibile()[cella.first - 1][cella.second - 1] > 0))
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first, cella.second - 2)); // OVEST-OVEST
@@ -283,11 +258,6 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 2, cella.second)); // NORD-NORD
 					else coda.push(Coord(cella.first - 1, cella.second)); // NORD	
 				}
-				//	 #	
-				//	-#N
-				//	-C##
-				//	---
-				//
 				if ((partita._campo_visibile().indici_leciti(cella.first - 1, cella.second + 1) && partita._campo_visibile()[cella.first - 1][cella.second + 1] > 0))
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first, cella.second + 2)); // EST-EST
@@ -295,11 +265,6 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first - 1, cella.second, -2)) coda.push(Coord(cella.first - 2, cella.second)); // NORD-NORD
 					else coda.push(Coord(cella.first - 1, cella.second)); // NORD
 				}
-				//	 	
-				//	---
-				// ##C-
-				//  N#-
-				//	 #
 				if ((partita._campo_visibile().indici_leciti(cella.first + 1, cella.second - 1) && partita._campo_visibile()[cella.first + 1][cella.second - 1] > 0))
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second - 1, -2)) coda.push(Coord(cella.first, cella.second - 2)); // OVEST-OVEST
@@ -307,11 +272,6 @@ std::vector<std::vector<Coord> > Risolutore::separa_incognite_bordo()
 					if (partita._campo_visibile().is_elemento(cella.first + 1, cella.second, -2)) coda.push(Coord(cella.first + 2, cella.second)); // NORD-NORD
 					else coda.push(Coord(cella.first + 1, cella.second)); // NORD
 				}
-				//	 	
-				//	---
-				//	-C##
-				//  -#N
-				//	 #
 				if ((partita._campo_visibile().indici_leciti(cella.first + 1, cella.second + 1) && partita._campo_visibile()[cella.first + 1][cella.second + 1] > 0))
 				{
 					if (partita._campo_visibile().is_elemento(cella.first, cella.second + 1, -2)) coda.push(Coord(cella.first, cella.second + 2)); // OVEST-OVEST
