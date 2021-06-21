@@ -1,7 +1,7 @@
 ﻿// AUTORI:
 // Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
 //
-// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 915640
 // 
 #ifndef __CAMPO_H__
 #define __CAMPO_H__
@@ -42,7 +42,6 @@ typedef std::pair<int, int> Coord;
 // tramite la mappa qui sopra definita. Nei campi privati sono contenuti alcune informazioni globali della partita, come l'altezza e la larghezza del
 // campo, il numero delle mine ('mine'), il numero delle bandiere ('bandiere') e la situazione della partita.
 // I metodi privati comprendono metodi che operano direttamente con il campo nascosto, che non deve essere chiaramente accessibile ad un giocatore.
-// ...
 
 class Campo
 {

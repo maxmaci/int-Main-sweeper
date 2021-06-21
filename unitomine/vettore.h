@@ -1,14 +1,14 @@
 // AUTORI:
 // Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
 //
-// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 915640
 // 
 #ifndef __VETTORE_H__
 #define __VETTORE_H__
 
 #ifdef _WIN32
 // Se compilato su un computer con Windows includiamo la libreria windows.h, necessaria per la compatibilità UTF-8.
-// Per motivi di incompatibilità di macro della libreria, useremo la notazione con parentesi per (std::min) and (std::max).
+// Per motivi di incompatibilità di macro della libreria, useremo la notazione con parentesi per (std::min) e (std::max).
 #include <windows.h>
 #endif
 

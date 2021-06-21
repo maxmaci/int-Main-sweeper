@@ -1,7 +1,7 @@
 ﻿// AUTORI:
 // Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
 //
-// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 915640
 // 
 
 #include <ctime>
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 					<< u8"• B: mette la bandierina (se non presente)\n"
 					<< u8"• T: toglie la bandierina (se presente)\n"
 					<< u8"• S: scava la cella (se non è presente la bandierina)\n"
-					<< u8"• R: scava la cella indicata e attiva il Risolutore™ automatico (può essere solo attivato alla prima mossa)" << std::endl;
+					<< u8"• R: scava la cella indicata e attiva Il Risolutore™ automatico (può essere solo attivato alla prima mossa)" << std::endl;
 				while (!in_risolutore && partita._status() == '-')
 				{
 					int riga = 1;

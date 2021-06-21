@@ -1,7 +1,7 @@
 // AUTORI:
 // Massimo Bertolotti - massimo.bertolott86@edu.unito.it - Matricola n° 919899
 //
-// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 919899
+// Guido Buffa		  - guido.buffa@edu.unito.it		 - Matricola n° 915640
 // 
 #ifndef __MENU_H__
 #define __MENU_H__
@@ -113,7 +113,7 @@ Campo menu_principale(bool& uscita_programma, bool& in_gioco, bool& campo_genera
 				in_gioco = true;
 				return Campo(16, 30, 99);
 			case 4: // EPIC MODE: easter egg, legge il campo contenuto in f: il campo contiene la scritta
-					// "NEVER GONNA GIVE YOU UP" dall'omonima canzone di Rick Astley. La funzione può essere generalizzata in "carica campo personalizzato",
+					// "NEVER GONNA GIVE YOU UP!" dall'omonima canzone di Rick Astley. La funzione può essere generalizzata in "carica campo personalizzato",
 					// se desiderato, modificando opportunamente il file .txt . 
 				std::cout << "We're no stranger to love..." << std::endl;
 				campo_generato = true;  // Visto che viene utilizzato uno schema predefinito dal file .txt campo_generato passa a true, evita che venga
@@ -126,7 +126,8 @@ Campo menu_principale(bool& uscita_programma, bool& in_gioco, bool& campo_genera
 			case 6: // ESCI DALLA PARTITA
 				uscita_programma = true;
 				return Campo(9, 9, 10);		// Restituiamo un campo del tutto futile, dato che non verrà giocato.
-			case 42: // EASTER EGG basato sulla "Guida Galattica per Autostoppisti", da cui è tratta la citazione stampata a schermo e il numero 42, usato per le dimensioni del campo.
+			case 42: // EASTER EGG basato sulla "Guida Galattica per Autostoppisti", da cui è tratta la citazione stampata a schermo
+				     // e il numero 42, usato per le dimensioni del campo.
 				std::cout << u8"\"La Vita, l'Universo, e il Tutto. C'è una risposta. Ma ci devo pensare.\"" << std::endl;
 				in_gioco = true;
 				return Campo(42, 42, 420);
