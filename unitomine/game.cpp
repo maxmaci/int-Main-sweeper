@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
 		/* VARIABILI DI GIOCO/OPZIONI */
 
-			// resetta il clock per rendere la generazione (pseudo)-casuale 'più casuale'
+		// resetta il clock per rendere la generazione (pseudo)-casuale 'più casuale'
 
 		std::srand(static_cast<int>(std::time(nullptr)));
 

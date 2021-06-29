@@ -54,9 +54,9 @@ bool trova_elemento(const std::vector<T>& vettore, T elemento)
 // OUTPUT:
 // •  (int) : la somma di tutti gli elementi
 template <typename T>
-int somma_elementi(const std::vector<T>& vettore)
+T somma_elementi(const std::vector<T>& vettore)
 {
-	int res = 0;
+	T res = 0;
 	for (int i = 0; i < vettore.size(); i++) res += vettore[i];
 	return res;
 }
